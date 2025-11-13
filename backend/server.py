@@ -45,7 +45,11 @@ SHOPIFY_API_KEY = os.environ.get('SHOPIFY_API_KEY', '')
 SHOPIFY_API_SECRET = os.environ.get('SHOPIFY_API_SECRET', '')
 SHOPIFY_SHOP_NAME = os.environ.get('SHOPIFY_SHOP_NAME', '')
 SHOPIFY_ACCESS_TOKEN = os.environ.get('SHOPIFY_ACCESS_TOKEN', '')
-SHOPIFY_API_VERSION = "2024-01"
+SHOPIFY_API_VERSION = "2024-10"
+
+# Initialize Shopify Session setup
+if SHOPIFY_API_KEY and SHOPIFY_API_SECRET:
+    shopify.Session.setup(api_key=SHOPIFY_API_KEY, secret=SHOPIFY_API_SECRET)
 
 # Google Sheets Configuration
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
