@@ -236,6 +236,8 @@ async def sync_orders():
                     "customer_email": order.customer.email if order.customer else "",
                     "customer_name": f"{order.customer.first_name} {order.customer.last_name}" if order.customer else "",
                     "stage": "clay",
+                    "clay_status": "sculpting",
+                    "paint_status": "pending",
                     "clay_proofs": [],
                     "paint_proofs": [],
                     "clay_approval": None,
