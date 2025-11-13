@@ -166,7 +166,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className="grid gap-6">
-          {orders.length === 0 && !loading && (
+          {filteredOrders.length === 0 && !loading && !searchQuery && (
             <Card>
               <CardContent className="py-12 text-center">
                 <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
