@@ -104,6 +104,8 @@ class Order(BaseModel):
     paint_proofs: List[ProofImage] = []
     clay_approval: Optional[ApprovalRequest] = None
     paint_approval: Optional[ApprovalRequest] = None
+    last_updated_by: str = "admin"  # admin or customer
+    last_updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
