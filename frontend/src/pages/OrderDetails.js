@@ -95,6 +95,16 @@ const OrderDetails = () => {
     }
   };
 
+  const handlePingCustomer = async (stage) => {
+    try {
+      await axios.post(`${API}/admin/orders/${orderId}/ping-customer?stage=${stage}`);
+      toast.success(`Reminder sent to customer for ${stage} stage`);
+    } catch (error) {
+      toast.error("Failed to send reminder");
+      console.error(error);
+    }
+  };
+
   if (!order) {
     return (
       <div className="min-h-screen flex items-center justify-center">
