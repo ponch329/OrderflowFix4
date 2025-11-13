@@ -373,33 +373,23 @@ async def approve_stage(
     
     await db.orders.update_one({"id": order_id}, {"$set": update_data})
     
-    # Send email notification
-    subject = f"Order #{order['order_number']} - {stage.capitalize()} Stage {'Approved' if request.status == 'approved' else 'Changes Requested'}"
-    
+    # Send email notification using templates
     if request.status == "approved":
-        html_content = f"""
-        <html>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #4CAF50;">✓ {stage.capitalize()} Stage Approved</h2>
-            <p><strong>Order Number:</strong> {order['order_number']}</p>
-            <p><strong>Customer:</strong> {order['customer_name']} ({order['customer_email']})</p>
-            <p>The customer has approved the {stage} stage proofs.</p>
-        </body>
-        </html>
-        """
+        subject, html_content = get_approval_email(
+            order['order_number'],
+            order['customer_name'],
+            order['customer_email'],
+            stage
+        )
     else:
-        html_content = f"""
-        <html>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #FF9800;">⚠ Changes Requested</h2>
-            <p><strong>Order Number:</strong> {order['order_number']}</p>
-            <p><strong>Customer:</strong> {order['customer_name']} ({order['customer_email']})</p>
-            <p><strong>Requested Changes:</strong></p>
-            <p style="background: #f5f5f5; padding: 15px; border-left: 4px solid #FF9800;">{request.message or 'No message provided'}</p>
-            {f'<p><strong>Additional Images Attached:</strong> {len(additional_images)}</p>' if additional_images else ''}
-        </body>
-        </html>
-        """
+        subject, html_content = get_changes_requested_email(
+            order['order_number'],
+            order['customer_name'],
+            order['customer_email'],
+            stage,
+            request.message,
+            len(additional_images)
+        )
     
     try:
         await send_email(SMTP_FROM_EMAIL, subject, html_content)
