@@ -420,6 +420,64 @@ async def approve_stage(
     
     return {"message": "Response recorded", "approval": approval}
 
+@api_router.post("/admin/orders/{order_id}/ping-customer")
+async def ping_customer(order_id: str, stage: str):
+    """Send reminder email to customer to review proofs"""
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Check if proofs exist for this stage
+    proofs = order.get(f"{stage}_proofs", [])
+    if not proofs:
+        raise HTTPException(status_code=400, detail=f"No {stage} proofs uploaded yet")
+    
+    # Send reminder email
+    subject = f"Reminder: Please Review Order #{order['order_number']} - {stage.capitalize()} Proofs"
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #2196F3;">🔔 Proof Review Reminder</h2>
+        <p>Hi {order['customer_name']},</p>
+        <p>This is a friendly reminder that your bobblehead proofs are ready for review!</p>
+        
+        <div style="background: #f0f8ff; padding: 20px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <p><strong>Order Number:</strong> #{order['order_number']}</p>
+            <p><strong>Stage:</strong> {stage.capitalize()}</p>
+            <p><strong>Proofs Available:</strong> {len(proofs)} image(s)</p>
+        </div>
+        
+        <p>Please review your proofs and let us know if you'd like to:</p>
+        <ul>
+            <li>✓ Approve the {stage} stage</li>
+            <li>📝 Request any changes</li>
+        </ul>
+        
+        <p style="text-align: center; margin: 30px 0;">
+            <a href="https://proofs.allbobbleheads.com/customer" 
+               style="background: #2196F3; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Review Your Proofs
+            </a>
+        </p>
+        
+        <p style="color: #666; font-size: 14px;">To view your order, visit the customer portal and enter your email and order number.</p>
+        
+        <p>Thank you!</p>
+        <p style="color: #888; font-size: 12px; margin-top: 30px;">
+            AllBobbleheads.com | orders@allbobbleheads.com
+        </p>
+    </body>
+    </html>
+    """
+    
+    try:
+        await send_email(order['customer_email'], subject, html_content)
+        await log_to_sheets(order['order_number'], "Customer Pinged", f"{stage.capitalize()} - Reminder sent")
+        return {"message": "Reminder email sent successfully"}
+    except Exception as e:
+        logger.error(f"Failed to send reminder email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send reminder email")
+
 # Google Sheets OAuth
 @api_router.get("/oauth/sheets/login")
 async def sheets_login():
