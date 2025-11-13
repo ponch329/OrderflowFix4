@@ -94,8 +94,8 @@ class Order(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     shopify_order_id: str
     order_number: str
-    customer_email: str
-    customer_name: str
+    customer_email: Optional[str] = ""
+    customer_name: Optional[str] = ""
     stage: str = "clay"  # clay, paint, shipped
     clay_proofs: List[ProofImage] = []
     paint_proofs: List[ProofImage] = []
