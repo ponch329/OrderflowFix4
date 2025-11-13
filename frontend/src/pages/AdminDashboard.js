@@ -95,12 +95,22 @@ const AdminDashboard = () => {
       await axios.post(`${API}/admin/orders/${selectedOrder}/proofs`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      toast.success("Proofs uploaded successfully!");
+      toast.success("Proofs uploaded! Status updated to 'Feedback Needed'");
       setUploadDialogOpen(false);
       setUploadFiles([]);
       fetchOrders();
     } catch (error) {
       toast.error("Failed to upload proofs");
+      console.error(error);
+    }
+  };
+
+  const handlePingCustomer = async (orderId, orderNumber, stage) => {
+    try {
+      await axios.post(`${API}/admin/orders/${orderId}/ping-customer?stage=${stage}`);
+      toast.success(`Reminder sent to customer for Order #${orderNumber}`);
+    } catch (error) {
+      toast.error("Failed to send reminder");
       console.error(error);
     }
   };
