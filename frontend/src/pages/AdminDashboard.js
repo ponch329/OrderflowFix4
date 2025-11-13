@@ -399,6 +399,31 @@ const AdminDashboard = () => {
             </Card>
           ))}
         </div>
+
+        {/* Upload Dialog */}
+        <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+          <DialogContent className="max-w-2xl" data-testid="upload-dialog">
+            <DialogHeader>
+              <DialogTitle>Upload Proofs - {uploadStage.charAt(0).toUpperCase() + uploadStage.slice(1)} Stage</DialogTitle>
+              <DialogDescription>
+                Upload proof images for Order #{selectedOrderObj?.order_number}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Files (Drag & Drop or Click)</Label>
+                <DragDropUpload
+                  onFilesSelected={setUploadFiles}
+                  accept="image/*,.zip"
+                  multiple={true}
+                />
+              </div>
+              <Button onClick={handleUploadProofs} className="w-full" data-testid="upload-submit-btn" disabled={uploadFiles.length === 0}>
+                Upload {uploadFiles.length > 0 && `(${uploadFiles.length} file${uploadFiles.length > 1 ? 's' : ''})`}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
