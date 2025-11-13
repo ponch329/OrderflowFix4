@@ -381,6 +381,8 @@ async def approve_stage(
     update_data = {
         field: approval, 
         status_field: request.status if request.status == "changes_requested" else "approved",
+        "last_updated_by": "customer",
+        "last_updated_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
