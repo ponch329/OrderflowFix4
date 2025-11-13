@@ -178,7 +178,19 @@ const AdminDashboard = () => {
             </Card>
           )}
 
-          {orders.map((order) => (
+          {filteredOrders.length === 0 && !loading && searchQuery && (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Search className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600 mb-4">No orders found matching "{searchQuery}"</p>
+                <Button variant="outline" onClick={() => setSearchQuery("")}>
+                  Clear Search
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {filteredOrders.map((order) => (
             <Card key={order.id} className="hover:shadow-lg transition-shadow" data-testid={`order-card-${order.id}`}>
               <CardHeader>
                 <div className="flex justify-between items-start">
