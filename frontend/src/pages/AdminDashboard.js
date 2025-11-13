@@ -21,9 +21,12 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [stageFilter, setStageFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrderObj, setSelectedOrderObj] = useState(null);
   const [uploadStage, setUploadStage] = useState("clay");
   const [uploadFiles, setUploadFiles] = useState([]);
 
