@@ -48,7 +48,12 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const response = await axios.get(`${API}/admin/orders`);
-      setOrders(response.data);
+      // Sort by created_at descending (newest first)
+      const sortedOrders = response.data.sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+      );
+      setOrders(sortedOrders);
+      setFilteredOrders(sortedOrders);
     } catch (error) {
       toast.error("Failed to load orders");
       console.error(error);
