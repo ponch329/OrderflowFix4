@@ -132,6 +132,32 @@ const AdminDashboard = () => {
     }
   };
 
+  const openUploadDialog = (order, stage) => {
+    setSelectedOrder(order.id);
+    setSelectedOrderObj(order);
+    setUploadStage(stage);
+    setUploadDialogOpen(true);
+  };
+
+  const formatTimestamp = (timestamp, updatedBy) => {
+    if (!timestamp) return "No updates yet";
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    let timeAgo;
+    if (diffMins < 1) timeAgo = "just now";
+    else if (diffMins < 60) timeAgo = `${diffMins}m ago`;
+    else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
+    else timeAgo = `${diffDays}d ago`;
+
+    const by = updatedBy === "customer" ? "by Customer" : "by Admin";
+    return `${timeAgo} ${by}`;
+  };
+
   const getStageColor = (stage) => {
     switch(stage) {
       case "clay": return "bg-yellow-500";
