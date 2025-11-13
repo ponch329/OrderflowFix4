@@ -146,6 +146,25 @@ const AdminDashboard = () => {
           </Button>
         </div>
 
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search by order number, email, or name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-12"
+              data-testid="search-input"
+            />
+          </div>
+          {searchQuery && (
+            <p className="text-sm text-gray-600 mt-2">
+              Found {filteredOrders.length} order(s) matching "{searchQuery}"
+            </p>
+          )}
+        </div>
+
         <div className="grid gap-6">
           {orders.length === 0 && !loading && (
             <Card>
