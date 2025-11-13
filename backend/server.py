@@ -223,10 +223,13 @@ async def sync_orders():
                 # Use Shopify's created_at date instead of current time
                 shopify_created_at = order.created_at if hasattr(order, 'created_at') else datetime.now(timezone.utc)
                 
+                # Prepend "20" to order number
+                order_number = f"20{order.order_number}"
+                
                 order_doc = {
                     "id": str(uuid.uuid4()),
                     "shopify_order_id": str(order.id),
-                    "order_number": str(order.order_number),
+                    "order_number": order_number,
                     "customer_email": order.customer.email if order.customer else "",
                     "customer_name": f"{order.customer.first_name} {order.customer.last_name}" if order.customer else "",
                     "stage": "clay",
