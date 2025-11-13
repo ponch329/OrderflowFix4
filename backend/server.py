@@ -98,6 +98,8 @@ class Order(BaseModel):
     customer_email: Optional[str] = ""
     customer_name: Optional[str] = ""
     stage: str = "clay"  # clay, paint, shipped
+    clay_status: str = "sculpting"  # sculpting, feedback_needed, approved, changes_requested
+    paint_status: str = "pending"  # pending, feedback_needed, approved, changes_requested
     clay_proofs: List[ProofImage] = []
     paint_proofs: List[ProofImage] = []
     clay_approval: Optional[ApprovalRequest] = None
