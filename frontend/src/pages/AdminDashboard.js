@@ -235,21 +235,53 @@ const AdminDashboard = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                      <span className="font-semibold">Clay Stage</span>
+                      <div className="flex-1">
+                        <span className="font-semibold">Clay Stage</span>
+                        <div className="mt-1">
+                          {getStatusBadge(order.clay_status)}
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
-                        {getApprovalIcon(order.clay_approval)}
+                        {getApprovalIcon(order, "clay")}
                         <span className="text-sm">{order.clay_proofs?.length || 0} proofs</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                      <span className="font-semibold">Paint Stage</span>
+                      <div className="flex-1">
+                        <span className="font-semibold">Paint Stage</span>
+                        <div className="mt-1">
+                          {getStatusBadge(order.paint_status)}
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
-                        {getApprovalIcon(order.paint_approval)}
+                        {getApprovalIcon(order, "paint")}
                         <span className="text-sm">{order.paint_proofs?.length || 0} proofs</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex flex-col gap-3">
+                    {shouldShowPingButton(order, "clay") && order.stage === "clay" && (
+                      <Button 
+                        variant="outline"
+                        className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                        onClick={() => handlePingCustomer(order.id, order.order_number, "clay")}
+                        data-testid={`ping-customer-clay-${order.id}`}
+                      >
+                        <Bell className="w-4 h-4 mr-2" />
+                        Ping Customer (Clay)
+                      </Button>
+                    )}
+                    {shouldShowPingButton(order, "paint") && order.stage === "paint" && (
+                      <Button 
+                        variant="outline"
+                        className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                        onClick={() => handlePingCustomer(order.id, order.order_number, "paint")}
+                        data-testid={`ping-customer-paint-${order.id}`}
+                      >
+                        <Bell className="w-4 h-4 mr-2" />
+                        Ping Customer (Paint)
+                      </Button>
+                    )}
                     <Dialog open={uploadDialogOpen && selectedOrder === order.id} onOpenChange={setUploadDialogOpen}>
                       <DialogTrigger asChild>
                         <Button 
@@ -261,7 +293,7 @@ const AdminDashboard = () => {
                           Upload Proofs
                         </Button>
                       </DialogTrigger>
-                      <DialogContent data-testid="upload-dialog">
+                      <DialogContent className="max-w-2xl" data-testid="upload-dialog">
                         <DialogHeader>
                           <DialogTitle>Upload Proofs</DialogTitle>
                           <DialogDescription>
@@ -282,20 +314,15 @@ const AdminDashboard = () => {
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <Label>Files (Images or ZIP)</Label>
-                            <Input
-                              type="file"
-                              multiple
+                            <Label>Files (Drag & Drop or Click)</Label>
+                            <DragDropUpload
+                              onFilesSelected={setUploadFiles}
                               accept="image/*,.zip"
-                              onChange={(e) => setUploadFiles(Array.from(e.target.files))}
-                              data-testid="file-input"
+                              multiple={true}
                             />
-                            {uploadFiles.length > 0 && (
-                              <p className="text-sm text-gray-600">{uploadFiles.length} file(s) selected</p>
-                            )}
                           </div>
                           <Button onClick={handleUploadProofs} className="w-full" data-testid="upload-submit-btn">
-                            Upload
+                            Upload {uploadFiles.length > 0 && `(${uploadFiles.length} file${uploadFiles.length > 1 ? 's' : ''})`}
                           </Button>
                         </div>
                       </DialogContent>
