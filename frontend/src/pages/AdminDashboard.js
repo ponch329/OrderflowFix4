@@ -35,19 +35,33 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    // Filter orders based on search query
-    if (!searchQuery.trim()) {
-      setFilteredOrders(orders);
-    } else {
+    // Filter orders based on search query, stage, and status
+    let filtered = orders;
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      const filtered = orders.filter(order => 
+      filtered = filtered.filter(order => 
         order.order_number.toLowerCase().includes(query) ||
         (order.customer_email && order.customer_email.toLowerCase().includes(query)) ||
         (order.customer_name && order.customer_name.toLowerCase().includes(query))
       );
-      setFilteredOrders(filtered);
     }
-  }, [searchQuery, orders]);
+    
+    // Apply stage filter
+    if (stageFilter !== "all") {
+      filtered = filtered.filter(order => order.stage === stageFilter);
+    }
+    
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(order => 
+        order.clay_status === statusFilter || order.paint_status === statusFilter
+      );
+    }
+    
+    setFilteredOrders(filtered);
+  }, [searchQuery, stageFilter, statusFilter, orders]);
 
   const fetchOrders = async () => {
     setLoading(true);
