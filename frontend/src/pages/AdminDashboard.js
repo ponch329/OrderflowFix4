@@ -29,6 +29,21 @@ const AdminDashboard = () => {
     fetchOrders();
   }, []);
 
+  useEffect(() => {
+    // Filter orders based on search query
+    if (!searchQuery.trim()) {
+      setFilteredOrders(orders);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = orders.filter(order => 
+        order.order_number.toLowerCase().includes(query) ||
+        (order.customer_email && order.customer_email.toLowerCase().includes(query)) ||
+        (order.customer_name && order.customer_name.toLowerCase().includes(query))
+      );
+      setFilteredOrders(filtered);
+    }
+  }, [searchQuery, orders]);
+
   const fetchOrders = async () => {
     setLoading(true);
     try {
