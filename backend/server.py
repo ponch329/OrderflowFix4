@@ -307,14 +307,21 @@ async def upload_proofs(
             }
             uploaded_proofs.append(proof)
     
-    # Update order with proofs
+    # Update order with proofs and change status to feedback_needed
     field = f"{stage}_proofs"
+    status_field = f"{stage}_status"
     await db.orders.update_one(
         {"id": order_id},
-        {"$push": {field: {"$each": uploaded_proofs}}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+        {
+            "$push": {field: {"$each": uploaded_proofs}}, 
+            "$set": {
+                status_field: "feedback_needed",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
     )
     
-    await log_to_sheets(order['order_number'], f"Proofs Uploaded - {stage}", f"{len(uploaded_proofs)} images")
+    await log_to_sheets(order['order_number'], f"Proofs Uploaded - {stage}", f"{len(uploaded_proofs)} images - Status: Feedback Needed")
     
     return {"message": f"Uploaded {len(uploaded_proofs)} proofs", "proofs": uploaded_proofs}
 
