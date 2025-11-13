@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { ArrowLeft, CheckCircle, XCircle, Image as ImageIcon, Upload } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Image as ImageIcon, Upload, Bell } from "lucide-react";
 import { toast } from "sonner";
+import { getStatusInfo, shouldShowPingButton } from "@/utils/orderHelpers";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
