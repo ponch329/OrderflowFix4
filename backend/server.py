@@ -373,12 +373,18 @@ async def approve_stage(
     
     # Update order
     field = f"{stage}_approval"
-    update_data = {field: approval, "updated_at": datetime.now(timezone.utc).isoformat()}
+    status_field = f"{stage}_status"
+    update_data = {
+        field: approval, 
+        status_field: request.status if request.status == "changes_requested" else "approved",
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
     
     # Move to next stage if approved
     if request.status == "approved":
         if stage == "clay":
             update_data["stage"] = "paint"
+            update_data["paint_status"] = "sculpting"  # Start paint stage
         elif stage == "paint":
             update_data["stage"] = "shipped"
     
