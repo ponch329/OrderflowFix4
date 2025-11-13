@@ -318,6 +318,8 @@ async def upload_proofs(
             "$push": {field: {"$each": uploaded_proofs}}, 
             "$set": {
                 status_field: "feedback_needed",
+                "last_updated_by": "admin",
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
         }
