@@ -220,6 +220,9 @@ async def sync_orders():
         for order in orders:
             existing = await db.orders.find_one({"shopify_order_id": str(order.id)})
             if not existing:
+                # Use Shopify's created_at date instead of current time
+                shopify_created_at = order.created_at if hasattr(order, 'created_at') else datetime.now(timezone.utc)
+                
                 order_doc = {
                     "id": str(uuid.uuid4()),
                     "shopify_order_id": str(order.id),
@@ -231,7 +234,7 @@ async def sync_orders():
                     "paint_proofs": [],
                     "clay_approval": None,
                     "paint_approval": None,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_at": shopify_created_at.isoformat() if hasattr(shopify_created_at, 'isoformat') else shopify_created_at,
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
                 await db.orders.insert_one(order_doc)
