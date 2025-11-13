@@ -17,6 +17,8 @@ const API = `${BACKEND_URL}/api`;
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
