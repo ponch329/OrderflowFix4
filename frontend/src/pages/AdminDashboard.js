@@ -124,10 +124,24 @@ const AdminDashboard = () => {
     }
   };
 
-  const getApprovalIcon = (approval) => {
-    if (!approval) return <Clock className="w-4 h-4 text-gray-400" />;
-    if (approval.status === "approved") return <CheckCircle className="w-4 h-4 text-green-500" />;
-    return <XCircle className="w-4 h-4 text-orange-500" />;
+  const getApprovalIcon = (order, stage) => {
+    const statusField = `${stage}_status`;
+    const status = order[statusField];
+    
+    if (status === "sculpting") return <Clock className="w-4 h-4 text-gray-400" />;
+    if (status === "feedback_needed") return <Bell className="w-4 h-4 text-blue-500" />;
+    if (status === "approved") return <CheckCircle className="w-4 h-4 text-green-500" />;
+    if (status === "changes_requested") return <XCircle className="w-4 h-4 text-orange-500" />;
+    return <Clock className="w-4 h-4 text-gray-400" />;
+  };
+
+  const getStatusBadge = (status) => {
+    const info = getStatusInfo(status);
+    return (
+      <Badge className={`${info.color} text-white text-xs`}>
+        {info.adminLabel}
+      </Badge>
+    );
   };
 
   return (
