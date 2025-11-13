@@ -215,7 +215,7 @@ const AdminDashboard = () => {
           </Button>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 space-y-4">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
@@ -227,9 +227,44 @@ const AdminDashboard = () => {
               data-testid="search-input"
             />
           </div>
-          {searchQuery && (
-            <p className="text-sm text-gray-600 mt-2">
-              Found {filteredOrders.length} order(s) matching "{searchQuery}"
+
+          <div className="flex gap-4">
+            <div className="w-48">
+              <Select value={stageFilter} onValueChange={setStageFilter}>
+                <SelectTrigger data-testid="stage-filter">
+                  <SelectValue placeholder="Filter by Stage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Stages</SelectItem>
+                  <SelectItem value="clay">Clay</SelectItem>
+                  <SelectItem value="paint">Paint</SelectItem>
+                  <SelectItem value="shipped">Shipped</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="w-64">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger data-testid="status-filter">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="sculpting">Sculpting</SelectItem>
+                  <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="changes_requested">Changes Requested</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {(searchQuery || stageFilter !== "all" || statusFilter !== "all") && (
+            <p className="text-sm text-gray-600">
+              Found {filteredOrders.length} order(s)
+              {searchQuery && ` matching "${searchQuery}"`}
+              {stageFilter !== "all" && ` in ${stageFilter} stage`}
+              {statusFilter !== "all" && ` with status: ${statusFilter}`}
             </p>
           )}
         </div>
