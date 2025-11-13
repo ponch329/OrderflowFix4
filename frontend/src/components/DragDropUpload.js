@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Upload, X } from 'lucide-react';
 
 const DragDropUpload = ({ onFilesSelected, accept = "image/*,.zip", multiple = true }) => {
