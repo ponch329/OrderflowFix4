@@ -123,7 +123,10 @@ const OrderDetails = () => {
   };
 
   const renderProofSection = (stage, proofs, approval) => {
-    const canInteract = !isAdmin && order.stage === stage && !approval;
+    const statusField = `${stage}_status`;
+    const status = order[statusField];
+    const statusInfo = getStatusInfo(status);
+    const canInteract = !isAdmin && status === "feedback_needed" && !approval;
 
     return (
       <Card className="mb-6" data-testid={`${stage}-section`}>
@@ -134,6 +137,11 @@ const OrderDetails = () => {
               <CardDescription>
                 {proofs?.length || 0} proof image(s)
               </CardDescription>
+              <div className="mt-2">
+                <Badge className={`${statusInfo.color} text-white`}>
+                  {isAdmin ? statusInfo.adminLabel : statusInfo.customerLabel}
+                </Badge>
+              </div>
             </div>
             {approval && (
               <Badge 
@@ -144,6 +152,17 @@ const OrderDetails = () => {
               </Badge>
             )}
           </div>
+          {isAdmin && shouldShowPingButton(order, stage) && (
+            <Button 
+              variant="outline"
+              className="mt-4 border-blue-500 text-blue-600 hover:bg-blue-50"
+              onClick={() => handlePingCustomer(stage)}
+              data-testid={`ping-customer-${stage}-btn`}
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              Send Reminder to Customer
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {proofs && proofs.length > 0 ? (
