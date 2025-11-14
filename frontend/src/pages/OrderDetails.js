@@ -128,7 +128,7 @@ const OrderDetails = () => {
   const renderProofSection = (stage, proofs, approval) => {
     const statusField = `${stage}_status`;
     const status = order[statusField];
-    const statusInfo = getStatusInfo(status);
+    const statusInfo = getStatusInfo(status, stage);
     const canInteract = !isAdmin && status === "feedback_needed" && !approval;
     
     // Get the date proofs were uploaded (use first proof's uploaded_at)
