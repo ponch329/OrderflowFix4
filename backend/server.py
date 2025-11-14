@@ -388,7 +388,7 @@ async def approve_stage(
     }
     
     # Move to next stage if approved
-    if request.status == "approved":
+    if status == "approved":
         if stage == "clay":
             update_data["stage"] = "paint"
             update_data["paint_status"] = "sculpting"  # Start paint stage
@@ -398,7 +398,7 @@ async def approve_stage(
     await db.orders.update_one({"id": order_id}, {"$set": update_data})
     
     # Send email notification using templates
-    if request.status == "approved":
+    if status == "approved":
         subject, html_content = get_approval_email(
             order['order_number'],
             order['customer_name'],
@@ -411,7 +411,7 @@ async def approve_stage(
             order['customer_name'],
             order['customer_email'],
             stage,
-            request.message,
+            message,
             len(additional_images)
         )
     
