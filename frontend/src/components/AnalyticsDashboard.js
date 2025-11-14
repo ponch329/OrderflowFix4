@@ -73,20 +73,22 @@ export default function AnalyticsDashboard() {
       {/* Total Orders Card */}
       <Card className="bg-gradient-to-br from-purple-50 to-blue-50">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">Total Orders</CardTitle>
+          <CardTitle className="text-sm font-medium text-gray-600">Total Orders (All Time)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-end justify-between">
             <div>
               <div className="text-3xl font-bold text-gray-900">{currentMetrics.total}</div>
               <div className="flex items-center gap-1 mt-1">
-                {getTrendIcon(totalChange)}
-                <span className={`text-sm font-medium ${
-                  totalChange > 0 ? 'text-green-600' : totalChange < 0 ? 'text-red-600' : 'text-gray-500'
-                }`}>
-                  {totalChange > 0 ? '+' : ''}{totalChange}%
+                <span className="text-xs text-gray-500">
+                  {currentPeriodCount} new in last {period} days
                 </span>
-                <span className="text-xs text-gray-500">vs previous period</span>
+                {getTrendIcon(newOrdersChange)}
+                <span className={`text-xs font-medium ${
+                  newOrdersChange > 0 ? 'text-green-600' : newOrdersChange < 0 ? 'text-red-600' : 'text-gray-500'
+                }`}>
+                  {newOrdersChange > 0 ? '+' : ''}{newOrdersChange}%
+                </span>
               </div>
             </div>
           </div>
