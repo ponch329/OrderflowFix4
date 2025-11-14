@@ -266,3 +266,158 @@ def get_proofs_uploaded_notification(order_number, stage, num_images):
     """
     
     return subject, html_content
+
+
+def get_customer_proofs_ready_email(order_number, customer_name, stage, num_images, portal_url="https://proofs.allbobbleheads.com/customer"):
+    """
+    Template for customer notification when proofs are ready for review
+    
+    Args:
+        order_number: The order number
+        customer_name: Customer's full name
+        stage: Stage name ("clay" or "paint")
+        num_images: Number of proof images uploaded
+        portal_url: URL to the customer portal
+    """
+    subject = f"Your Bobblehead Proofs Are Ready! - Order #{order_number}"
+    
+    html_content = f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+            }}
+            .container {{
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+            }}
+            .header {{
+                background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                color: white;
+                padding: 30px 20px;
+                text-align: center;
+                border-radius: 8px 8px 0 0;
+            }}
+            .header h1 {{
+                margin: 0;
+                font-size: 28px;
+            }}
+            .content {{
+                background: #ffffff;
+                padding: 30px 20px;
+                border: 1px solid #e0e0e0;
+                border-top: none;
+            }}
+            .info-box {{
+                background: #f0f8ff;
+                padding: 20px;
+                border-left: 4px solid #2196F3;
+                margin: 20px 0;
+                border-radius: 4px;
+            }}
+            .info-row {{
+                margin: 10px 0;
+            }}
+            .label {{
+                font-weight: bold;
+                color: #555;
+            }}
+            .cta-button {{
+                background: #2196F3;
+                color: white;
+                padding: 15px 40px;
+                text-decoration: none;
+                border-radius: 5px;
+                display: inline-block;
+                margin: 20px 0;
+                font-weight: bold;
+                font-size: 16px;
+            }}
+            .footer {{
+                text-align: center;
+                padding: 20px;
+                color: #888;
+                font-size: 12px;
+                border-radius: 0 0 8px 8px;
+                background: #f5f5f5;
+            }}
+            .emoji {{
+                font-size: 48px;
+                margin-bottom: 10px;
+            }}
+            .instructions {{
+                background: #fff9e6;
+                padding: 15px;
+                border-radius: 4px;
+                margin: 20px 0;
+                border-left: 4px solid #FFC107;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="emoji">🎨</div>
+                <h1>Your Proofs Are Ready!</h1>
+            </div>
+            
+            <div class="content">
+                <p>Hi {customer_name},</p>
+                
+                <p>Great news! Your custom bobblehead proofs for the <strong>{stage} stage</strong> are now ready for your review.</p>
+                
+                <div class="info-box">
+                    <div class="info-row">
+                        <span class="label">Order Number:</span> #{order_number}
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Stage:</span> {stage.capitalize()}
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Images Available:</span> {num_images} proof image(s)
+                    </div>
+                </div>
+                
+                <p style="text-align: center;">
+                    <a href="{portal_url}" class="cta-button">
+                        👀 Review Your Proofs Now
+                    </a>
+                </p>
+                
+                <div class="instructions">
+                    <strong>📝 How to Review:</strong>
+                    <ol style="margin: 10px 0;">
+                        <li>Click the button above to access the customer portal</li>
+                        <li>Enter your email and order number to view your order</li>
+                        <li>Review the proof images carefully</li>
+                        <li>Choose to either:
+                            <ul>
+                                <li>✓ <strong>Approve</strong> - if everything looks perfect</li>
+                                <li>📝 <strong>Request Changes</strong> - if you need any adjustments</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+                
+                <p>We're excited to bring your custom bobblehead to life! Please review at your earliest convenience so we can move forward with your order.</p>
+                
+                <p>If you have any questions, feel free to reply to this email.</p>
+                
+                <p>Thank you!<br>
+                <strong>The AllBobbleheads Team</strong></p>
+            </div>
+            
+            <div class="footer">
+                <p>This email was sent because proofs are ready for Order #{order_number}</p>
+                <p><strong>AllBobbleheads.com</strong> | orders@allbobbleheads.com</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return subject, html_content
