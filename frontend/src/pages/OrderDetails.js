@@ -296,51 +296,6 @@ const OrderDetails = () => {
       </Card>
     );
   };
-              </div>
-
-              {canInteract && (
-                <div className="flex gap-4">
-                  <Button 
-                    className="flex-1 bg-green-600 hover:bg-green-700 h-12"
-                    onClick={() => handleApprove(stage)}
-                    disabled={loading}
-                    data-testid={`approve-${stage}-btn`}
-                  >
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Approve
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="flex-1 border-orange-500 text-orange-600 hover:bg-orange-50 h-12"
-                    onClick={() => setCurrentStage(stage)}
-                    data-testid={`request-changes-${stage}-btn`}
-                  >
-                    <XCircle className="w-5 h-5 mr-2" />
-                    Request Changes
-                  </Button>
-                </div>
-              )}
-
-              {approval && approval.status === "changes_requested" && (
-                <div className="mt-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
-                  <p className="font-semibold mb-2">Requested Changes:</p>
-                  <p className="text-gray-700">{approval.message || "No message provided"}</p>
-                  {approval.images && approval.images.length > 0 && (
-                    <p className="text-sm text-gray-600 mt-2">{approval.images.length} reference image(s) attached</p>
-                  )}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <ImageIcon className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-              <p>No proofs uploaded yet</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-white">
