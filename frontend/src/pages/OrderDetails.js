@@ -49,8 +49,11 @@ const OrderDetails = () => {
   const handleApprove = async (stage) => {
     setLoading(true);
     try {
-      await axios.post(`${API}/customer/orders/${orderId}/approve?stage=${stage}`, {
-        status: "approved"
+      const formData = new FormData();
+      formData.append("status", "approved");
+      
+      await axios.post(`${API}/customer/orders/${orderId}/approve?stage=${stage}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
       toast.success(`${stage.charAt(0).toUpperCase() + stage.slice(1)} stage approved!`);
       fetchOrder();
