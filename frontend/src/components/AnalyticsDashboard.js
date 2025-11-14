@@ -98,25 +98,21 @@ export default function AnalyticsDashboard() {
       {/* Orders by Stage */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Orders by Stage</CardTitle>
+          <CardTitle className="text-lg">Orders by Stage (Current State)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {['clay', 'paint', 'fulfilled', 'canceled'].map((stage) => {
               const currentCount = currentMetrics.by_stage[stage] || 0;
-              const compareCount = compareMetrics.by_stage[stage] || 0;
-              const change = calculateChange(currentCount, compareCount);
+              const percentage = currentMetrics.total > 0 ? ((currentCount / currentMetrics.total) * 100).toFixed(1) : 0;
               
               return (
                 <div key={stage} className="p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm font-medium text-gray-600 capitalize mb-2">{stage}</div>
                   <div className="text-2xl font-bold text-gray-900">{currentCount}</div>
                   <div className="flex items-center gap-1 mt-1">
-                    {getTrendIcon(change)}
-                    <span className={`text-xs font-medium ${
-                      change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-500'
-                    }`}>
-                      {change > 0 ? '+' : ''}{change}%
+                    <span className="text-xs text-gray-500">
+                      {percentage}% of total
                     </span>
                   </div>
                 </div>
