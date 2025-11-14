@@ -297,29 +297,38 @@ const AdminDashboard = () => {
         {/* Analytics Dashboard */}
         <AnalyticsDashboard />
 
-        <div className="mb-6 space-y-4">
-          <div className="flex gap-3 items-center">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                type="text"
-                placeholder="Search by order number, email, or name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-12"
-                data-testid="search-input"
-              />
+        {/* Sticky Search and Filter Bar */}
+        <div className="sticky top-0 z-10 bg-white shadow-md border-b mb-6 py-4 -mx-8 px-8">
+          <div className="space-y-4">
+            <div className="flex gap-3 items-center">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  type="text"
+                  placeholder="Search by order number, email, or name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-12"
+                  data-testid="search-input"
+                />
+              </div>
+              <Button
+                onClick={() => setCreateOrderDialogOpen(true)}
+                className="bg-green-600 hover:bg-green-700 h-12"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Order
+              </Button>
+              <Button
+                onClick={() => setShowArchived(!showArchived)}
+                variant={showArchived ? "default" : "outline"}
+                className="h-12"
+              >
+                {showArchived ? "Show Active" : "Show Archived"}
+              </Button>
             </div>
-            <Button
-              onClick={() => setCreateOrderDialogOpen(true)}
-              className="bg-green-600 hover:bg-green-700 h-12"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Order
-            </Button>
-          </div>
 
-          <div className="flex gap-4">
+            <div className="flex gap-4">
             <div className="w-48">
               <Select value={stageFilter} onValueChange={setStageFilter}>
                 <SelectTrigger data-testid="stage-filter">
