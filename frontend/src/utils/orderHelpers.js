@@ -65,11 +65,6 @@ export const canCustomerInteract = (order, stage) => {
 };
 
 export const shouldShowPingButton = (order, stage) => {
-  const statusField = `${stage}_status`;
-  const status = order[statusField];
-  const proofsField = `${stage}_proofs`;
-  const proofs = order[proofsField] || [];
-  
-  // Show ping button if proofs exist and feedback is needed
-  return status === "feedback_needed" && proofs.length > 0;
+  // Always show ping button for admin - they may need to remind customer anytime
+  return true;
 };
