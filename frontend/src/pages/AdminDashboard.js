@@ -127,7 +127,19 @@ const AdminDashboard = () => {
       await axios.post(`${API}/admin/orders/${orderId}/ping-customer?stage=${stage}`);
       toast.success(`Reminder sent to customer for Order #${orderNumber}`);
     } catch (error) {
-      toast.error("Failed to send reminder");
+      toast.error(error.response?.data?.detail || "Failed to send reminder");
+      console.error(error);
+    }
+  };
+
+  const handleStatusChange = async (orderId, orderNumber, field, value) => {
+    try {
+      const params = { [field]: value };
+      await axios.patch(`${API}/admin/orders/${orderId}/update-status`, null, { params });
+      toast.success(`${field} updated to: ${value}`);
+      fetchOrders();
+    } catch (error) {
+      toast.error("Failed to update status");
       console.error(error);
     }
   };
