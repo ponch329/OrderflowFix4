@@ -429,8 +429,23 @@ const AdminDashboard = () => {
                             data-testid={`upload-clay-btn-${order.id}`}
                           >
                             <Upload className="w-3 h-3 mr-1" />
-                            Upload Proofs
+                            Upload
                           </Button>
+                          {order.clay_proofs?.length > 0 && (
+                            <Button 
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-2 text-xs border-purple-500 text-purple-600 hover:bg-purple-50"
+                              onClick={() => {
+                                setSelectedOrderObj(order);
+                                setViewProofsStage("clay");
+                                setViewProofsDialogOpen(true);
+                              }}
+                            >
+                              <Eye className="w-3 h-3 mr-1" />
+                              View
+                            </Button>
+                          )}
                           <Button 
                             size="sm"
                             variant="outline"
