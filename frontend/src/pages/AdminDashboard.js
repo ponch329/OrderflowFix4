@@ -562,8 +562,16 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          ))}
+          );
+          })}
         </div>
+
+        {/* Create Order Dialog */}
+        <CreateOrderDialog 
+          open={createOrderDialogOpen}
+          onOpenChange={setCreateOrderDialogOpen}
+          onOrderCreated={fetchOrders}
+        />
 
         {/* Upload Dialog */}
         <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
