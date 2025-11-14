@@ -366,14 +366,32 @@ const AdminDashboard = () => {
             </Card>
           )}
 
-          {filteredOrders.map((order) => (
-            <Card key={order.id} className="hover:shadow-lg transition-shadow" data-testid={`order-card-${order.id}`}>
+          {filteredOrders.map((order) => {
+            const isFulfilled = order.shopify_fulfillment_status === 'fulfilled' || order.stage === 'fulfilled';
+            return (
+            <Card 
+              key={order.id} 
+              className={`hover:shadow-lg transition-shadow ${isFulfilled ? 'bg-gray-50 opacity-70' : ''}`}
+              data-testid={`order-card-${order.id}`}
+            >
               <CardContent className="p-6">
                 <div className="grid grid-cols-[300px_1fr] gap-6">
                   {/* Left side - Order Info */}
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-2xl font-bold mb-2">Order #{order.order_number}</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-2xl font-bold">Order #{order.order_number}</h3>
+                        {order.is_manual_order && (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
+                            Manual
+                          </Badge>
+                        )}
+                        {isFulfilled && (
+                          <Badge className="bg-green-500 text-white">
+                            Fulfilled
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-gray-700">{order.customer_name}</p>
                       <p className="text-gray-600 text-sm">{order.customer_email}</p>
                       <p className="text-xs text-gray-500 mt-2">
