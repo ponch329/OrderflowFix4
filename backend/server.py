@@ -276,15 +276,20 @@ async def sync_orders():
                 # Prepend "20" to order number
                 order_number = f"20{order.order_number}"
                 
+                # Get fulfillment status
+                fulfillment_status = order.fulfillment_status if hasattr(order, 'fulfillment_status') else None
+                
                 order_doc = {
                     "id": str(uuid.uuid4()),
                     "shopify_order_id": str(order.id),
                     "order_number": order_number,
                     "customer_email": order.customer.email if order.customer else "",
                     "customer_name": f"{order.customer.first_name} {order.customer.last_name}" if order.customer else "",
-                    "stage": "clay",
+                    "stage": "fulfilled" if fulfillment_status == "fulfilled" else "clay",
                     "clay_status": "sculpting",
                     "paint_status": "pending",
+                    "is_manual_order": False,
+                    "shopify_fulfillment_status": fulfillment_status,
                     "clay_proofs": [],
                     "paint_proofs": [],
                     "clay_approval": None,
