@@ -143,51 +143,63 @@ backend:
 
   - task: "Manual Order Creation"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented POST /api/admin/orders/create endpoint for manual order creation with is_manual_order=True flag. Needs comprehensive testing."
+        - working: true
+          agent: "testing"
+          comment: "✅ Manual order creation fully functional. POST /api/admin/orders/create successfully creates orders with is_manual_order=True, order appears in database, duplicate order numbers correctly rejected with 400 error. Fixed MongoDB ObjectId serialization issue during testing."
 
   - task: "Analytics Dashboard"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented GET /api/admin/analytics endpoint with days parameter, current_period and compare_period metrics, by_stage and by_status aggregation. Needs testing with different parameters."
+        - working: true
+          agent: "testing"
+          comment: "✅ Analytics dashboard fully functional. GET /api/admin/analytics works with days=1,7,30 parameters. Response includes current_period and compare_period metrics with proper by_stage (clay, paint, fulfilled, canceled) and by_status aggregation of both clay_status and paint_status fields."
 
   - task: "Shopify Fulfillment Status Sync"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Enhanced sync-orders endpoint to update shopify_fulfillment_status and set stage to 'fulfilled' for fulfilled orders. Needs testing to verify sync behavior."
+        - working: true
+          agent: "testing"
+          comment: "✅ Shopify fulfillment sync working correctly. POST /api/admin/sync-orders updates existing orders with shopify_fulfillment_status field, sets stage='fulfilled' for fulfilled orders, and ensures is_manual_order field exists for all orders. Found 106 fulfilled orders with correct stage assignment."
 
   - task: "New Stages Support"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Added support for 'fulfilled' and 'canceled' stages in Order model and update-status endpoint. Needs testing to verify stage transitions work correctly."
+        - working: true
+          agent: "testing"
+          comment: "✅ New stages support fully functional. PATCH /api/admin/orders/{order_id}/update-status successfully updates order stages to 'fulfilled' and 'canceled'. Stage transitions work correctly and persist in database."
 
 frontend:
   # No frontend testing requested
