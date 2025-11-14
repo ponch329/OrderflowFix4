@@ -479,7 +479,12 @@ const AdminDashboard = () => {
                     {/* Clay Stage */}
                     <div className="relative p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200 min-w-0">
                       <Badge className="absolute top-2 right-2 bg-yellow-500 text-white text-xs">CLAY</Badge>
-                      <h4 className="font-bold text-base md:text-lg mb-3 pr-12">Clay Stage</h4>
+                      <h4 className="font-bold text-base md:text-lg mb-1 pr-12">Clay Stage</h4>
+                      {order.clay_entered_at && (
+                        <p className="text-xs text-gray-500 mb-3">
+                          Entered: {formatStageTimestamp(order.clay_entered_at)}
+                        </p>
+                      )}
                       
                       <div className="space-y-3">
                         <Select 
