@@ -351,7 +351,8 @@ async def lookup_order(email: str, order_number: str):
 async def approve_stage(
     order_id: str,
     stage: str,
-    request: ApprovalRequestCreate,
+    status: str = Form(...),
+    message: Optional[str] = Form(None),
     files: Optional[List[UploadFile]] = File(None)
 ):
     """Customer approves or requests changes for a stage"""
@@ -369,8 +370,8 @@ async def approve_stage(
     
     approval = {
         "id": str(uuid.uuid4()),
-        "status": request.status,
-        "message": request.message,
+        "status": status,
+        "message": message,
         "images": additional_images,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
