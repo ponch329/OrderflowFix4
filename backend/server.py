@@ -225,19 +225,19 @@ async def root():
 
 # Admin Routes
 @api_router.post("/admin/login")
-async def admin_login(username: str = Form(...), password: str = Form(...)):
+async def admin_login(login_data: AdminLoginRequest):
     """Admin login endpoint"""
     # Hash the provided password
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    password_hash = hashlib.sha256(login_data.password.encode()).hexdigest()
     
     # Verify credentials
-    if username != ADMIN_USERNAME or password_hash != ADMIN_PASSWORD_HASH:
+    if login_data.username != ADMIN_USERNAME or password_hash != ADMIN_PASSWORD_HASH:
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
     # Create JWT token
     expiration = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
     token_data = {
-        "username": username,
+        "username": login_data.username,
         "exp": expiration
     }
     token = jwt.encode(token_data, JWT_SECRET, algorithm=JWT_ALGORITHM)
