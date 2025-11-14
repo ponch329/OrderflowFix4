@@ -127,14 +127,36 @@ const OrderDetails = () => {
     const status = order[statusField];
     const statusInfo = getStatusInfo(status);
     const canInteract = !isAdmin && status === "feedback_needed" && !approval;
+    
+    // Get the date proofs were uploaded (use first proof's uploaded_at)
+    const proofsUploadedDate = proofs && proofs.length > 0 && proofs[0].uploaded_at
+      ? new Date(proofs[0].uploaded_at).toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        })
+      : null;
+    
+    // Get customer response date
+    const customerResponseDate = approval && approval.created_at
+      ? new Date(approval.created_at).toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        })
+      : null;
 
     return (
-      <Card className="mb-6" data-testid={`${stage}-section`}>
-        <CardHeader>
+      <Card className="mb-6 border-2 border-gray-200" data-testid={`${stage}-section`}>
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b-2 border-blue-200">
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="text-2xl capitalize">{stage} Stage</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-2xl capitalize text-blue-900">{stage} Stage</CardTitle>
+              <CardDescription className="text-blue-700">
                 {proofs?.length || 0} proof image(s)
               </CardDescription>
               <div className="mt-2">
@@ -145,7 +167,7 @@ const OrderDetails = () => {
             </div>
             {approval && (
               <Badge 
-                className={approval.status === "approved" ? "bg-green-500" : "bg-orange-500"}
+                className={approval.status === "approved" ? "bg-green-600 text-white" : "bg-orange-600 text-white"}
                 data-testid={`${stage}-approval-badge`}
               >
                 {approval.status === "approved" ? "✓ Approved" : "⚠ Changes Requested"}
@@ -155,7 +177,7 @@ const OrderDetails = () => {
           {isAdmin && shouldShowPingButton(order, stage) && (
             <Button 
               variant="outline"
-              className="mt-4 border-blue-500 text-blue-600 hover:bg-blue-50"
+              className="mt-4 border-blue-600 text-blue-700 hover:bg-blue-50"
               onClick={() => handlePingCustomer(stage)}
               data-testid={`ping-customer-${stage}-btn`}
             >
@@ -164,27 +186,116 @@ const OrderDetails = () => {
             </Button>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
+          {/* Timeline */}
+          {proofs && proofs.length > 0 && (
+            <div className="mb-6 bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
+              <h4 className="font-semibold text-blue-900 mb-3">Order Timeline</h4>
+              <div className="space-y-3">
+                {proofsUploadedDate && (
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3"></div>
+                    <div>
+                      <p className="font-medium text-gray-900">Proofs Sent</p>
+                      <p className="text-sm text-gray-600">{proofsUploadedDate}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {approval && customerResponseDate && (
+                  <div className="flex items-start">
+                    <div className={`w-2 h-2 rounded-full mt-2 mr-3 ${approval.status === 'approved' ? 'bg-green-600' : 'bg-orange-600'}`}></div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {approval.status === 'approved' ? 'Customer Approved' : 'Changes Requested'}
+                      </p>
+                      <p className="text-sm text-gray-600">{customerResponseDate}</p>
+                      {approval.message && (
+                        <p className="text-sm text-gray-700 mt-1 italic">"{approval.message}"</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {!approval && status === 'feedback_needed' && (
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 animate-pulse"></div>
+                    <div>
+                      <p className="font-medium text-gray-900">Awaiting Your Response</p>
+                      <p className="text-sm text-gray-600">Please review and approve or request changes</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {proofs && proofs.length > 0 ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {proofs.map((proof, idx) => (
                   <div 
                     key={proof.id} 
-                    className="relative group cursor-pointer"
+                    className="relative group cursor-pointer border-2 border-gray-200 rounded-lg overflow-hidden hover:border-blue-600 transition-all"
                     onClick={() => setSelectedImage(proof.url)}
                     data-testid={`proof-image-${stage}-${idx}`}
                   >
                     <img 
                       src={proof.url} 
                       alt={proof.filename}
-                      className="w-full h-48 object-cover rounded-lg shadow-md group-hover:shadow-xl transition-shadow"
+                      className="w-full h-48 object-cover"
                     />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-lg flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
                       <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={32} />
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {canInteract && (
+                <div className="flex gap-4">
+                  <Button 
+                    className="flex-1 bg-green-600 hover:bg-green-700 h-12"
+                    onClick={() => handleApprove(stage)}
+                    disabled={loading}
+                    data-testid={`approve-${stage}-btn`}
+                  >
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Approve
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="flex-1 border-2 border-orange-500 text-orange-700 hover:bg-orange-50 h-12"
+                    onClick={() => setCurrentStage(stage)}
+                    data-testid={`request-changes-${stage}-btn`}
+                  >
+                    <XCircle className="w-5 h-5 mr-2" />
+                    Request Changes
+                  </Button>
+                </div>
+              )}
+
+              {approval && approval.status === "changes_requested" && (
+                <div className="mt-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
+                  <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
+                  <p className="text-gray-700">{approval.message || "No message provided"}</p>
+                  {approval.images && approval.images.length > 0 && (
+                    <p className="text-sm text-gray-600 mt-2">{approval.images.length} reference image(s) attached</p>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+              <ImageIcon className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+              <p>No proofs uploaded yet</p>
+              <p className="text-sm mt-1">You'll be notified when proofs are ready for review</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
               </div>
 
               {canInteract && (
