@@ -765,13 +765,45 @@ async def delete_proof(order_id: str, proof_id: str, stage: str):
     await log_to_sheets(
         order['order_number'],
         f"Proof Deleted - {stage.capitalize()}",
-        f"Removed 1 image. {len(updated_proofs)} remaining"
+        f"Removed 1 image. {len(updated_proofs)} remaining",
+        stage=order.get('stage', ''),
+        status=order.get(f"{stage}_status", '')
     )
     
     return {
         "message": "Proof deleted successfully",
         "remaining_proofs": len(updated_proofs)
     }
+
+@api_router.patch("/admin/orders/{order_id}/archive")
+async def toggle_archive_order(order_id: str, archive: bool = True):
+    """Archive or unarchive an order"""
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "is_archived": archive,
+                "last_updated_by": "admin",
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    action = "Archived" if archive else "Unarchived"
+    await log_to_sheets(
+        order['order_number'],
+        f"Order {action}",
+        f"Order {action.lower()} by admin",
+        stage=order.get('stage', ''),
+        status=order.get('clay_status', '')
+    )
+    
+    return {"message": f"Order {action.lower()} successfully", "archived": archive}
 
 # Google Sheets OAuth
 @api_router.get("/oauth/sheets/login")
