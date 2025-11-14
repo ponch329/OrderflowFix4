@@ -308,149 +308,148 @@ const AdminDashboard = () => {
 
           {filteredOrders.map((order) => (
             <Card key={order.id} className="hover:shadow-lg transition-shadow" data-testid={`order-card-${order.id}`}>
-              <CardHeader>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <CardTitle className="text-2xl">Order #{order.order_number}</CardTitle>
-                    <CardDescription className="text-base mt-1">
-                      {order.customer_name} • {order.customer_email}
-                    </CardDescription>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Last updated: {formatTimestamp(order.last_updated_at, order.last_updated_by)}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge className={`${getStageColor(order.stage)} text-white`} data-testid={`stage-badge-${order.id}`}>
-                      {order.stage.toUpperCase()}
-                    </Badge>
-                  </div>
-                </div>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-[300px_1fr] gap-6">
+                  {/* Left side - Order Info */}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-2xl font-bold mb-2">Order #{order.order_number}</h3>
+                      <p className="text-gray-700">{order.customer_name}</p>
+                      <p className="text-gray-600 text-sm">{order.customer_email}</p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Last updated: {formatTimestamp(order.last_updated_at, order.last_updated_by)}
+                      </p>
+                    </div>
+                    
+                    {/* Admin Controls */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-600">Admin Controls</Label>
+                      <Select 
+                        value={order.stage} 
+                        onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'stage', value)}
+                      >
+                        <SelectTrigger className="h-9" data-testid={`stage-control-${order.id}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="clay">Stage: Clay</SelectItem>
+                          <SelectItem value="paint">Stage: Paint</SelectItem>
+                          <SelectItem value="shipped">Stage: Shipped</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {/* Manual Stage Control */}
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                  <Label className="text-xs font-semibold text-gray-600 mb-2 block">Admin Controls</Label>
-                  <div className="flex gap-2">
-                    <Select 
-                      value={order.stage} 
-                      onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'stage', value)}
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => navigate(`/order/${order.id}`, { state: { order, isAdmin: true } })}
+                      data-testid={`view-details-btn-${order.id}`}
                     >
-                      <SelectTrigger className="h-9" data-testid={`stage-control-${order.id}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="clay">Stage: Clay</SelectItem>
-                        <SelectItem value="paint">Stage: Paint</SelectItem>
-                        <SelectItem value="shipped">Stage: Shipped</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Clay Stage */}
-                  <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <span className="font-semibold text-lg">Clay Stage</span>
-                        <div className="mt-2 flex items-center gap-2">
-                          <Select 
-                            value={order.clay_status} 
-                            onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'clay_status', value)}
-                          >
-                            <SelectTrigger className="h-8 w-48" data-testid={`clay-status-control-${order.id}`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="sculpting">Sculpting</SelectItem>
-                              <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
-                              <SelectItem value="approved">Approved</SelectItem>
-                              <SelectItem value="changes_requested">Changes Requested</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <span className="text-sm text-gray-600">{order.clay_proofs?.length || 0} proofs</span>
-                        </div>
-                      </div>
-                      {getApprovalIcon(order, "clay")}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm"
-                        onClick={() => openUploadDialog(order, "clay")}
-                        data-testid={`upload-clay-btn-${order.id}`}
-                        className="flex-1"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Proofs
-                      </Button>
-                      <Button 
-                        size="sm"
-                        variant="outline"
-                        className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                        onClick={() => handlePingCustomer(order.id, order.order_number, "clay")}
-                        data-testid={`ping-clay-btn-${order.id}`}
-                      >
-                        <Bell className="w-4 h-4" />
-                      </Button>
-                    </div>
+                      View Details
+                    </Button>
                   </div>
 
-                  {/* Paint Stage */}
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <span className="font-semibold text-lg">Paint Stage</span>
-                        <div className="mt-2 flex items-center gap-2">
-                          <Select 
-                            value={order.paint_status} 
-                            onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'paint_status', value)}
+                  {/* Right side - Stages (Horizontal) */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Clay Stage */}
+                    <div className="relative p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
+                      <Badge className="absolute top-2 right-2 bg-yellow-500 text-white">CLAY</Badge>
+                      <h4 className="font-bold text-lg mb-3">Clay Stage</h4>
+                      
+                      <div className="space-y-3">
+                        <Select 
+                          value={order.clay_status} 
+                          onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'clay_status', value)}
+                        >
+                          <SelectTrigger className="h-8 text-sm" data-testid={`clay-status-control-${order.id}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sculpting">Sculpting</SelectItem>
+                            <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
+                            <SelectItem value="approved">Approved</SelectItem>
+                            <SelectItem value="changes_requested">Changes Requested</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          {getApprovalIcon(order, "clay")}
+                          <span>{order.clay_proofs?.length || 0} proofs</span>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm"
+                            className="flex-1 h-8 text-xs"
+                            onClick={() => openUploadDialog(order, "clay")}
+                            data-testid={`upload-clay-btn-${order.id}`}
                           >
-                            <SelectTrigger className="h-8 w-48" data-testid={`paint-status-control-${order.id}`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="sculpting">Sculpting</SelectItem>
-                              <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
-                              <SelectItem value="approved">Approved</SelectItem>
-                              <SelectItem value="changes_requested">Changes Requested</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <span className="text-sm text-gray-600">{order.paint_proofs?.length || 0} proofs</span>
+                            <Upload className="w-3 h-3 mr-1" />
+                            Upload Proofs
+                          </Button>
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0 border-blue-500 text-blue-600 hover:bg-blue-50"
+                            onClick={() => handlePingCustomer(order.id, order.order_number, "clay")}
+                            data-testid={`ping-clay-btn-${order.id}`}
+                          >
+                            <Bell className="w-3 h-3" />
+                          </Button>
                         </div>
                       </div>
-                      {getApprovalIcon(order, "paint")}
                     </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm"
-                        onClick={() => openUploadDialog(order, "paint")}
-                        data-testid={`upload-paint-btn-${order.id}`}
-                        className="flex-1"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Proofs
-                      </Button>
-                      <Button 
-                        size="sm"
-                        variant="outline"
-                        className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                        onClick={() => handlePingCustomer(order.id, order.order_number, "paint")}
-                        data-testid={`ping-paint-btn-${order.id}`}
-                      >
-                        <Bell className="w-4 h-4" />
-                      </Button>
+
+                    {/* Paint Stage */}
+                    <div className="relative p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                      <Badge className="absolute top-2 right-2 bg-blue-500 text-white">PAINT</Badge>
+                      <h4 className="font-bold text-lg mb-3">Paint Stage</h4>
+                      
+                      <div className="space-y-3">
+                        <Select 
+                          value={order.paint_status} 
+                          onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'paint_status', value)}
+                        >
+                          <SelectTrigger className="h-8 text-sm" data-testid={`paint-status-control-${order.id}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="sculpting">Painting</SelectItem>
+                            <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
+                            <SelectItem value="approved">Approved</SelectItem>
+                            <SelectItem value="changes_requested">Changes Requested</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          {getApprovalIcon(order, "paint")}
+                          <span>{order.paint_proofs?.length || 0} proofs</span>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm"
+                            className="flex-1 h-8 text-xs"
+                            onClick={() => openUploadDialog(order, "paint")}
+                            data-testid={`upload-paint-btn-${order.id}`}
+                          >
+                            <Upload className="w-3 h-3 mr-1" />
+                            Upload Proofs
+                          </Button>
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0 border-blue-500 text-blue-600 hover:bg-blue-50"
+                            onClick={() => handlePingCustomer(order.id, order.order_number, "paint")}
+                            data-testid={`ping-paint-btn-${order.id}`}
+                          >
+                            <Bell className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => navigate(`/order/${order.id}`, { state: { order, isAdmin: true } })}
-                    data-testid={`view-details-btn-${order.id}`}
-                  >
-                    View Details
-                  </Button>
                 </div>
               </CardContent>
             </Card>
