@@ -9,7 +9,9 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import jwt
+import hashlib
 import shopify
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request as GoogleRequest
