@@ -354,7 +354,20 @@ const AdminDashboard = () => {
                       <div className="flex-1">
                         <span className="font-semibold text-lg">Clay Stage</span>
                         <div className="mt-2 flex items-center gap-2">
-                          {getStatusBadge(order.clay_status)}
+                          <Select 
+                            value={order.clay_status} 
+                            onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'clay_status', value)}
+                          >
+                            <SelectTrigger className="h-8 w-48" data-testid={`clay-status-control-${order.id}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="sculpting">Sculpting</SelectItem>
+                              <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
+                              <SelectItem value="approved">Approved</SelectItem>
+                              <SelectItem value="changes_requested">Changes Requested</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <span className="text-sm text-gray-600">{order.clay_proofs?.length || 0} proofs</span>
                         </div>
                       </div>
@@ -370,17 +383,15 @@ const AdminDashboard = () => {
                         <Upload className="w-4 h-4 mr-2" />
                         Upload Proofs
                       </Button>
-                      {shouldShowPingButton(order, "clay") && (
-                        <Button 
-                          size="sm"
-                          variant="outline"
-                          className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                          onClick={() => handlePingCustomer(order.id, order.order_number, "clay")}
-                          data-testid={`ping-clay-btn-${order.id}`}
-                        >
-                          <Bell className="w-4 h-4" />
-                        </Button>
-                      )}
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                        onClick={() => handlePingCustomer(order.id, order.order_number, "clay")}
+                        data-testid={`ping-clay-btn-${order.id}`}
+                      >
+                        <Bell className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
 
@@ -390,7 +401,21 @@ const AdminDashboard = () => {
                       <div className="flex-1">
                         <span className="font-semibold text-lg">Paint Stage</span>
                         <div className="mt-2 flex items-center gap-2">
-                          {getStatusBadge(order.paint_status)}
+                          <Select 
+                            value={order.paint_status} 
+                            onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'paint_status', value)}
+                          >
+                            <SelectTrigger className="h-8 w-48" data-testid={`paint-status-control-${order.id}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="sculpting">Sculpting</SelectItem>
+                              <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
+                              <SelectItem value="approved">Approved</SelectItem>
+                              <SelectItem value="changes_requested">Changes Requested</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <span className="text-sm text-gray-600">{order.paint_proofs?.length || 0} proofs</span>
                         </div>
                       </div>
@@ -406,17 +431,15 @@ const AdminDashboard = () => {
                         <Upload className="w-4 h-4 mr-2" />
                         Upload Proofs
                       </Button>
-                      {shouldShowPingButton(order, "paint") && (
-                        <Button 
-                          size="sm"
-                          variant="outline"
-                          className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                          onClick={() => handlePingCustomer(order.id, order.order_number, "paint")}
-                          data-testid={`ping-paint-btn-${order.id}`}
-                        >
-                          <Bell className="w-4 h-4" />
-                        </Button>
-                      )}
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                        onClick={() => handlePingCustomer(order.id, order.order_number, "paint")}
+                        data-testid={`ping-paint-btn-${order.id}`}
+                      >
+                        <Bell className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
 
