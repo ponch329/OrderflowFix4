@@ -320,6 +320,7 @@ const OrderDetails = () => {
             </div>
           )}
         </CardContent>
+        )}
       </Card>
     );
   };
