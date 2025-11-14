@@ -33,8 +33,17 @@ const OrderDetails = () => {
     if (!order) {
       // Fetch order if not in state
       fetchOrder();
+    } else {
+      // Set collapse state based on current stage
+      if (order.stage === 'paint') {
+        setClayExpanded(false); // Minimize clay when on paint
+        setPaintExpanded(true);
+      } else if (order.stage === 'shipped') {
+        setClayExpanded(false); // Minimize both when shipped
+        setPaintExpanded(false);
+      }
     }
-  }, [orderId]);
+  }, [orderId, order]);
 
   const fetchOrder = async () => {
     try {
