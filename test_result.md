@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the following new features implemented in the bobblehead proof approval system: 1. Admin Login Authentication, 2. Automated Customer Email Notifications, 3. Proof Deletion"
+user_problem_statement: "Test the newly implemented features for the bobblehead proof approval system: 1. Manual Order Creation, 2. Analytics Dashboard, 3. Shopify Fulfillment Status Sync, 4. New Stages Support (fulfilled/canceled)"
 
 backend:
   - task: "Admin Login Authentication"
@@ -140,6 +140,54 @@ backend:
         - working: true
           agent: "testing"
           comment: "✅ Proof deletion fully functional. DELETE /api/admin/orders/{order_id}/proofs/{proof_id}?stage=clay successfully deletes specific proof images, returns remaining_proofs count, and removes proof from database. Invalid proof_id correctly returns 404. Invalid stage parameter returns 400. All deletion scenarios working correctly."
+
+  - task: "Manual Order Creation"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented POST /api/admin/orders/create endpoint for manual order creation with is_manual_order=True flag. Needs comprehensive testing."
+
+  - task: "Analytics Dashboard"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented GET /api/admin/analytics endpoint with days parameter, current_period and compare_period metrics, by_stage and by_status aggregation. Needs testing with different parameters."
+
+  - task: "Shopify Fulfillment Status Sync"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Enhanced sync-orders endpoint to update shopify_fulfillment_status and set stage to 'fulfilled' for fulfilled orders. Needs testing to verify sync behavior."
+
+  - task: "New Stages Support"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added support for 'fulfilled' and 'canceled' stages in Order model and update-status endpoint. Needs testing to verify stage transitions work correctly."
 
 frontend:
   # No frontend testing requested
