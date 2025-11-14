@@ -343,24 +343,24 @@ const OrderDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
         <Button 
           variant="ghost" 
           onClick={() => navigate(isAdmin ? '/admin' : '/customer')}
-          className="mb-6"
+          className="mb-6 text-blue-700"
           data-testid="back-btn"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
+          {isAdmin ? 'Back to Dashboard' : 'Back to Search'}
         </Button>
 
-        <Card className="mb-6">
-          <CardHeader>
+        <Card className="mb-6 border-2 border-blue-200">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700">
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-3xl">Order #{order.order_number}</CardTitle>
-                <CardDescription className="text-lg mt-2">
+                <CardTitle className="text-3xl text-white">Order #{order.order_number}</CardTitle>
+                <CardDescription className="text-lg mt-2 text-blue-100">
                   {order.customer_name} • {order.customer_email}
                 </CardDescription>
               </div>
