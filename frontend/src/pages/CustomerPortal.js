@@ -49,12 +49,14 @@ const CustomerPortal = () => {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img 
-              src="https://customer-assets.emergentagent.com/job_order-status-10/artifacts/x0gohm3x_checkoutpage%20banner.png" 
-              alt="AllBobbleheads" 
-              className="h-32 object-contain"
+              src="https://customer-assets.emergentagent.com/job_order-status-10/artifacts/eprlbu95_Allbobbleheads.com%20logo_color%20512x512.png" 
+              alt="AllBobbleheads Logo" 
+              className="h-32 w-32 object-contain"
             />
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-2">AllBobbleheads</h1>
+          <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-teal-500 to-blue-600 bg-clip-text text-transparent">
+            AllBobbleheads
+          </h1>
           <p className="text-xl text-gray-600">Order Approval System</p>
         </div>
 
