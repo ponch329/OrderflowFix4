@@ -220,6 +220,30 @@ async def root():
     return {"message": "Bobblehead Order Approval System API"}
 
 # Admin Routes
+@api_router.post("/admin/login")
+async def admin_login(username: str = Form(...), password: str = Form(...)):
+    """Admin login endpoint"""
+    # Hash the provided password
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    
+    # Verify credentials
+    if username != ADMIN_USERNAME or password_hash != ADMIN_PASSWORD_HASH:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    # Create JWT token
+    expiration = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
+    token_data = {
+        "username": username,
+        "exp": expiration
+    }
+    token = jwt.encode(token_data, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    
+    return {
+        "success": True,
+        "token": token,
+        "expires_at": expiration.isoformat()
+    }
+
 @api_router.post("/admin/sync-orders")
 async def sync_orders():
     """Sync orders from Shopify"""
