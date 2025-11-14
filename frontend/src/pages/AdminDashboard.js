@@ -394,11 +394,11 @@ const AdminDashboard = () => {
                   </div>
 
                   {/* Right side - Stages (Horizontal) */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                     {/* Clay Stage */}
-                    <div className="relative p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
-                      <Badge className="absolute top-2 right-2 bg-yellow-500 text-white">CLAY</Badge>
-                      <h4 className="font-bold text-lg mb-3">Clay Stage</h4>
+                    <div className="relative p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200 min-w-0">
+                      <Badge className="absolute top-2 right-2 bg-yellow-500 text-white text-xs">CLAY</Badge>
+                      <h4 className="font-bold text-base md:text-lg mb-3 pr-12">Clay Stage</h4>
                       
                       <div className="space-y-3">
                         <Select 
