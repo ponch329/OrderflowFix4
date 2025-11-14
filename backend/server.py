@@ -696,7 +696,13 @@ async def ping_customer(order_id: str, stage: str):
     
     try:
         await send_email(order['customer_email'], subject, html_content)
-        await log_to_sheets(order['order_number'], "Customer Pinged", f"{stage.capitalize()} - Reminder sent")
+        await log_to_sheets(
+            order['order_number'], 
+            "Customer Pinged", 
+            f"{stage.capitalize()} - Reminder sent",
+            stage=order.get('stage', ''),
+            status=order.get(f"{stage}_status", '')
+        )
         return {"message": "Reminder email sent successfully"}
     except Exception as e:
         logger.error(f"Failed to send reminder email: {e}")
