@@ -130,6 +130,29 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteProof = async (orderId, proofId, stage) => {
+    if (!window.confirm("Are you sure you want to delete this proof image?")) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/admin/orders/${orderId}/proofs/${proofId}?stage=${stage}`);
+      toast.success("Proof deleted successfully");
+      fetchOrders();
+      
+      // Update the selectedOrderObj if viewing proofs
+      if (selectedOrderObj && selectedOrderObj.id === orderId) {
+        const updatedOrder = orders.find(o => o.id === orderId);
+        if (updatedOrder) {
+          setSelectedOrderObj(updatedOrder);
+        }
+      }
+    } catch (error) {
+      toast.error("Failed to delete proof");
+      console.error(error);
+    }
+  };
+
   const handlePingCustomer = async (orderId, orderNumber, stage) => {
     try {
       await axios.post(`${API}/admin/orders/${orderId}/ping-customer?stage=${stage}`);
