@@ -178,8 +178,8 @@ async def get_sheets_creds():
     
     return creds
 
-async def log_to_sheets(order_number: str, action: str, details: str):
-    """Log action to Google Sheets"""
+async def log_to_sheets(order_number: str, action: str, details: str, stage: str = "", status: str = ""):
+    """Log action to Google Sheets with Stage, Status, and Timestamp"""
     try:
         creds = await get_sheets_creds()
         if not creds or not SPREADSHEET_ID:
@@ -187,14 +187,15 @@ async def log_to_sheets(order_number: str, action: str, details: str):
             return
         
         service = build('sheets', 'v4', credentials=creds)
-        timestamp = datetime.now(timezone.utc).isoformat()
-        values = [[timestamp, order_number, action, details]]
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        # Format: Timestamp, Order Number, Action, Details, Stage, Status
+        values = [[timestamp, order_number, action, details, stage, status]]
         body = {"values": values}
         
         await asyncio.to_thread(
             service.spreadsheets().values().append(
                 spreadsheetId=SPREADSHEET_ID,
-                range="Sheet1!A:D",
+                range="Sheet1!A:F",  # Extended to column F
                 valueInputOption="RAW",
                 body=body
             ).execute
