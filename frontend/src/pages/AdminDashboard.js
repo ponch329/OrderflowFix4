@@ -222,15 +222,28 @@ const AdminDashboard = () => {
               Admin Dashboard
             </h1>
           </div>
-          <Button 
-            onClick={syncOrders} 
-            disabled={loading}
-            className="bg-purple-600 hover:bg-purple-700"
-            data-testid="sync-orders-btn"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Sync from Shopify
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={syncOrders} 
+              disabled={loading}
+              className="bg-purple-600 hover:bg-purple-700"
+              data-testid="sync-orders-btn"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Sync from Shopify
+            </Button>
+            <Button
+              onClick={() => {
+                localStorage.removeItem('admin_token');
+                navigate('/admin/login');
+                toast.success('Logged out successfully');
+              }}
+              variant="outline"
+              className="border-red-200 text-red-600 hover:bg-red-50"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
 
         <div className="mb-6 space-y-4">
