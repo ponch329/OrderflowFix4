@@ -361,33 +361,36 @@ async def create_manual_order(order_data: ManualOrderCreate):
 
 @api_router.get("/admin/analytics")
 async def get_analytics(days: int = 7, compare_days: int = 7):
-    """Get dashboard analytics with comparison"""
+    """Get dashboard analytics - shows current state of all orders with comparison"""
     now = datetime.now(timezone.utc)
     current_start = now - timedelta(days=days)
     compare_start = current_start - timedelta(days=compare_days)
     compare_end = current_start
     
-    # Get current period orders
-    current_orders = await db.orders.find({
+    # Get ALL orders for current state metrics
+    all_orders = await db.orders.find({}, {"_id": 0}).to_list(1000)
+    
+    # Get orders created in current period for comparison
+    current_period_orders = await db.orders.find({
         "created_at": {"$gte": current_start.isoformat()}
     }, {"_id": 0}).to_list(1000)
     
-    # Get comparison period orders
-    compare_orders = await db.orders.find({
+    # Get orders created in comparison period
+    compare_period_orders = await db.orders.find({
         "created_at": {
             "$gte": compare_start.isoformat(),
             "$lt": compare_end.isoformat()
         }
     }, {"_id": 0}).to_list(1000)
     
-    # Calculate metrics for current period
+    # Calculate CURRENT STATE metrics (all orders)
     current_metrics = {
-        "total": len(current_orders),
+        "total": len(all_orders),
         "by_stage": {},
         "by_status": {}
     }
     
-    for order in current_orders:
+    for order in all_orders:
         stage = order.get("stage", "unknown")
         current_metrics["by_stage"][stage] = current_metrics["by_stage"].get(stage, 0) + 1
         
@@ -396,26 +399,21 @@ async def get_analytics(days: int = 7, compare_days: int = 7):
         current_metrics["by_status"][clay_status] = current_metrics["by_status"].get(clay_status, 0) + 1
         current_metrics["by_status"][paint_status] = current_metrics["by_status"].get(paint_status, 0) + 1
     
-    # Calculate metrics for comparison period
-    compare_metrics = {
-        "total": len(compare_orders),
-        "by_stage": {},
-        "by_status": {}
-    }
+    # Calculate metrics for orders CREATED in current period (for comparison)
+    current_period_count = len(current_period_orders)
     
-    for order in compare_orders:
-        stage = order.get("stage", "unknown")
-        compare_metrics["by_stage"][stage] = compare_metrics["by_stage"].get(stage, 0) + 1
-        
-        clay_status = order.get("clay_status", "unknown")
-        paint_status = order.get("paint_status", "unknown")
-        compare_metrics["by_status"][clay_status] = compare_metrics["by_status"].get(clay_status, 0) + 1
-        compare_metrics["by_status"][paint_status] = compare_metrics["by_status"].get(paint_status, 0) + 1
+    # Calculate metrics for orders CREATED in comparison period
+    compare_period_count = len(compare_period_orders)
     
     return {
+        "current_state": {
+            "description": "Current state of all orders",
+            "metrics": current_metrics
+        },
         "current_period": {
             "days": days,
-            "metrics": current_metrics
+            "orders_created": current_period_count,
+            "description": f"Orders created in last {days} days"
         },
         "compare_period": {
             "days": compare_days,
