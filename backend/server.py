@@ -114,7 +114,13 @@ class Order(BaseModel):
     clay_status: str = "sculpting"  # sculpting, feedback_needed, approved, changes_requested
     paint_status: str = "pending"  # pending, painting, feedback_needed, approved, changes_requested
     is_manual_order: bool = False  # True if created manually (not from Shopify)
+    is_archived: bool = False  # True if order is archived
     shopify_fulfillment_status: Optional[str] = None  # fulfilled, partial, null
+    # Stage timestamps
+    clay_entered_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
+    paint_entered_at: Optional[datetime] = None
+    fulfilled_at: Optional[datetime] = None
+    canceled_at: Optional[datetime] = None
     clay_proofs: List[ProofImage] = []
     paint_proofs: List[ProofImage] = []
     clay_approval: Optional[ApprovalRequest] = None
