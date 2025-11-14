@@ -141,6 +141,8 @@ const OrderDetails = () => {
     const status = order[statusField];
     const statusInfo = getStatusInfo(status, stage);
     const canInteract = !isAdmin && status === "feedback_needed" && !approval;
+    const isExpanded = stage === 'clay' ? clayExpanded : paintExpanded;
+    const setExpanded = stage === 'clay' ? setClayExpanded : setPaintExpanded;
     
     // Get the date proofs were uploaded (use first proof's uploaded_at)
     const proofsUploadedDate = proofs && proofs.length > 0 && proofs[0].uploaded_at
@@ -166,10 +168,16 @@ const OrderDetails = () => {
 
     return (
       <Card className="mb-6 border-2 border-gray-200" data-testid={`${stage}-section`}>
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b-2 border-blue-200">
+        <CardHeader 
+          className="bg-gradient-to-r from-blue-50 to-blue-100 border-b-2 border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+          onClick={() => setExpanded(!isExpanded)}
+        >
           <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="text-2xl capitalize text-blue-900">{stage} Stage</CardTitle>
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <CardTitle className="text-2xl capitalize text-blue-900">{stage} Stage</CardTitle>
+                {isExpanded ? <ChevronUp className="w-5 h-5 text-blue-700" /> : <ChevronDown className="w-5 h-5 text-blue-700" />}
+              </div>
               <CardDescription className="text-blue-700">
                 {proofs?.length || 0} proof image(s)
               </CardDescription>
@@ -188,11 +196,14 @@ const OrderDetails = () => {
               </Badge>
             )}
           </div>
-          {isAdmin && shouldShowPingButton(order, stage) && (
+          {isAdmin && shouldShowPingButton(order, stage) && isExpanded && (
             <Button 
               variant="outline"
               className="mt-4 border-blue-600 text-blue-700 hover:bg-blue-50"
-              onClick={() => handlePingCustomer(stage)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePingCustomer(stage);
+              }}
               data-testid={`ping-customer-${stage}-btn`}
             >
               <Bell className="w-4 h-4 mr-2" />
@@ -200,7 +211,9 @@ const OrderDetails = () => {
             </Button>
           )}
         </CardHeader>
-        <CardContent className="pt-6">
+        
+        {isExpanded && (
+          <CardContent className="pt-6">
           {/* Timeline */}
           {proofs && proofs.length > 0 && (
             <div className="mb-6 bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
