@@ -412,7 +412,8 @@ const AdminDashboard = () => {
                         <SelectContent>
                           <SelectItem value="clay">Stage: Clay</SelectItem>
                           <SelectItem value="paint">Stage: Paint</SelectItem>
-                          <SelectItem value="shipped">Stage: Shipped</SelectItem>
+                          <SelectItem value="fulfilled">Stage: Fulfilled</SelectItem>
+                          <SelectItem value="canceled">Stage: Canceled</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
