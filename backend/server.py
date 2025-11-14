@@ -697,14 +697,25 @@ async def update_order_status(order_id: str, stage: str = None, clay_status: str
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
+    now = datetime.now(timezone.utc)
     update_data = {
         "last_updated_by": "admin",
-        "last_updated_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "last_updated_at": now.isoformat(),
+        "updated_at": now.isoformat()
     }
     
-    if stage:
+    # Track stage changes with timestamps
+    if stage and stage != order.get('stage'):
         update_data["stage"] = stage
+        # Update stage timestamp
+        if stage == "clay":
+            update_data["clay_entered_at"] = now.isoformat()
+        elif stage == "paint":
+            update_data["paint_entered_at"] = now.isoformat()
+        elif stage == "fulfilled":
+            update_data["fulfilled_at"] = now.isoformat()
+        elif stage == "canceled":
+            update_data["canceled_at"] = now.isoformat()
     
     if clay_status:
         update_data["clay_status"] = clay_status
