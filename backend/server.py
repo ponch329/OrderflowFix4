@@ -106,13 +106,15 @@ class Order(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    shopify_order_id: str
+    shopify_order_id: Optional[str] = None  # None for manual orders
     order_number: str
     customer_email: Optional[str] = ""
     customer_name: Optional[str] = ""
-    stage: str = "clay"  # clay, paint, shipped
+    stage: str = "clay"  # clay, paint, fulfilled, canceled
     clay_status: str = "sculpting"  # sculpting, feedback_needed, approved, changes_requested
-    paint_status: str = "pending"  # pending, feedback_needed, approved, changes_requested
+    paint_status: str = "pending"  # pending, painting, feedback_needed, approved, changes_requested
+    is_manual_order: bool = False  # True if created manually (not from Shopify)
+    shopify_fulfillment_status: Optional[str] = None  # fulfilled, partial, null
     clay_proofs: List[ProofImage] = []
     paint_proofs: List[ProofImage] = []
     clay_approval: Optional[ApprovalRequest] = None
