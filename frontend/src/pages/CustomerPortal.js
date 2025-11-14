@@ -45,19 +45,25 @@ const CustomerPortal = () => {
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-md mx-auto mt-16">
+        {/* Header - Outside login box */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_order-status-10/artifacts/x0gohm3x_checkoutpage%20banner.png" 
+              alt="AllBobbleheads" 
+              className="h-32 object-contain"
+            />
+          </div>
+          <h1 className="text-5xl font-bold text-gray-900 mb-2">AllBobbleheads</h1>
+          <p className="text-xl text-gray-600">Order Approval System</p>
+        </div>
+
+        {/* Login Box */}
+        <div className="max-w-md mx-auto">
           <Card className="shadow-xl border border-gray-200" data-testid="lookup-card">
-            <CardHeader className="text-center pb-4 bg-white">
-              <div className="flex justify-center mb-4">
-                <img 
-                  src="https://customer-assets.emergentagent.com/job_order-status-10/artifacts/x0gohm3x_checkoutpage%20banner.png" 
-                  alt="AllBobbleheads" 
-                  className="h-24 object-contain"
-                />
-              </div>
-              <CardTitle className="text-4xl font-bold text-gray-900">AllBobbleheads</CardTitle>
-              <p className="text-lg text-gray-600 mt-2">Order Approval System</p>
-              <CardDescription className="text-base text-gray-700 mt-4">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-2xl font-bold">Find Your Order</CardTitle>
+              <CardDescription className="text-base mt-2">
                 Enter your email and order number to view your bobblehead's progress
               </CardDescription>
             </CardHeader>
