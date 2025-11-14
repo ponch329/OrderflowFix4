@@ -47,8 +47,11 @@ const AdminDashboard = () => {
   }, [navigate]);
 
   useEffect(() => {
-    // Filter orders based on search query, stage, and status
+    // Filter orders based on search query, stage, status, and archive state
     let filtered = orders;
+    
+    // Apply archive filter
+    filtered = filtered.filter(order => showArchived ? order.is_archived : !order.is_archived);
     
     // Apply search filter
     if (searchQuery.trim()) {
@@ -73,7 +76,7 @@ const AdminDashboard = () => {
     }
     
     setFilteredOrders(filtered);
-  }, [searchQuery, stageFilter, statusFilter, orders]);
+  }, [orders, searchQuery, stageFilter, statusFilter, showArchived]);
 
   const fetchOrders = async () => {
     setLoading(true);
