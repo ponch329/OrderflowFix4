@@ -328,15 +328,24 @@ const OrderDetails = () => {
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(isAdmin ? '/admin' : '/customer')}
-          className="mb-6 text-blue-700"
-          data-testid="back-btn"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          {isAdmin ? 'Back to Dashboard' : 'Back to Search'}
-        </Button>
+        <div className="flex justify-between items-center mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(isAdmin ? '/admin' : '/customer')}
+            className="text-blue-700"
+            data-testid="back-btn"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {isAdmin ? 'Back to Dashboard' : 'Back to Search'}
+          </Button>
+          
+          {/* Logo on top right */}
+          <img 
+            src="https://customer-assets.emergentagent.com/job_order-status-10/artifacts/eprlbu95_Allbobbleheads.com%20logo_color%20512x512.png" 
+            alt="AllBobbleheads Logo" 
+            className="h-16 w-16 object-contain"
+          />
+        </div>
 
         <Card className="mb-6 border-2 border-blue-200">
           <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700">
