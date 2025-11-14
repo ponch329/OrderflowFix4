@@ -327,6 +327,21 @@ async def upload_proofs(
     
     await log_to_sheets(order['order_number'], f"Proofs Uploaded - {stage}", f"{len(uploaded_proofs)} images - Status: Feedback Needed")
     
+    # Send automated email notification to customer
+    if order.get('customer_email'):
+        try:
+            subject, html_content = get_customer_proofs_ready_email(
+                order['order_number'],
+                order.get('customer_name', 'Valued Customer'),
+                stage,
+                len(uploaded_proofs)
+            )
+            await send_email(order['customer_email'], subject, html_content)
+            logger.info(f"Automated customer notification sent for order {order['order_number']}")
+        except Exception as e:
+            logger.error(f"Failed to send customer notification email: {e}")
+            # Don't fail the upload if email fails
+    
     return {"message": f"Uploaded {len(uploaded_proofs)} proofs", "proofs": uploaded_proofs}
 
 # Customer Routes
