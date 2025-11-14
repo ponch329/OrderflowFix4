@@ -484,6 +484,43 @@ async def ping_customer(order_id: str, stage: str):
         logger.error(f"Failed to send reminder email: {e}")
         raise HTTPException(status_code=500, detail="Failed to send reminder email")
 
+@api_router.patch("/admin/orders/{order_id}/update-status")
+async def update_order_status(order_id: str, stage: str = None, clay_status: str = None, paint_status: str = None):
+    """Manually update order stage and/or status"""
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    update_data = {
+        "last_updated_by": "admin",
+        "last_updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if stage:
+        update_data["stage"] = stage
+    
+    if clay_status:
+        update_data["clay_status"] = clay_status
+    
+    if paint_status:
+        update_data["paint_status"] = paint_status
+    
+    await db.orders.update_one({"id": order_id}, {"$set": update_data})
+    
+    # Log to sheets
+    changes = []
+    if stage:
+        changes.append(f"Stage: {stage}")
+    if clay_status:
+        changes.append(f"Clay Status: {clay_status}")
+    if paint_status:
+        changes.append(f"Paint Status: {paint_status}")
+    
+    await log_to_sheets(order['order_number'], "Manual Status Update", ", ".join(changes))
+    
+    return {"message": "Status updated successfully", "updates": update_data}
+
 # Google Sheets OAuth
 @api_router.get("/oauth/sheets/login")
 async def sheets_login():
