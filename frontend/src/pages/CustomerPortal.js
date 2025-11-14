@@ -43,32 +43,22 @@ const CustomerPortal = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-          className="mb-6"
-          data-testid="back-btn"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Button>
-
         <div className="max-w-md mx-auto mt-16">
-          <Card className="shadow-xl border-0" data-testid="lookup-card">
-            <CardHeader className="text-center pb-4">
+          <Card className="shadow-xl border border-gray-200" data-testid="lookup-card">
+            <CardHeader className="text-center pb-4 bg-gradient-to-r from-blue-600 to-blue-700">
               <div className="flex justify-center mb-4">
-                <div className="bg-blue-100 p-4 rounded-full">
+                <div className="bg-white p-4 rounded-full">
                   <Search className="w-8 h-8 text-blue-600" />
                 </div>
               </div>
-              <CardTitle className="text-3xl font-bold">Find Your Order</CardTitle>
-              <CardDescription className="text-base">
+              <CardTitle className="text-3xl font-bold text-white">Find Your Order</CardTitle>
+              <CardDescription className="text-base text-blue-100">
                 Enter your email and order number to view your bobblehead's progress
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <form onSubmit={handleLookup} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
@@ -88,7 +78,7 @@ const CustomerPortal = () => {
                   <Input
                     id="orderNumber"
                     type="text"
-                    placeholder="#1234"
+                    placeholder="#203860"
                     value={orderNumber}
                     onChange={(e) => setOrderNumber(e.target.value)}
                     required
