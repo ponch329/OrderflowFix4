@@ -417,7 +417,8 @@ async def get_analytics(days: int = 7, compare_days: int = 7):
         },
         "compare_period": {
             "days": compare_days,
-            "metrics": compare_metrics
+            "orders_created": compare_period_count,
+            "description": f"Orders created in previous {compare_days} days"
         }
     }
 
