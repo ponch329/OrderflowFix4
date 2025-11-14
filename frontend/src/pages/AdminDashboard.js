@@ -25,10 +25,12 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [viewProofsDialogOpen, setViewProofsDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedOrderObj, setSelectedOrderObj] = useState(null);
   const [uploadStage, setUploadStage] = useState("clay");
   const [uploadFiles, setUploadFiles] = useState([]);
+  const [viewProofsStage, setViewProofsStage] = useState("clay");
 
   useEffect(() => {
     // Check if admin is authenticated
