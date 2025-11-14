@@ -125,7 +125,7 @@ export default function AnalyticsDashboard() {
       {/* Orders by Status */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Orders by Status</CardTitle>
+          <CardTitle className="text-lg">Orders by Status (Current State)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -133,22 +133,14 @@ export default function AnalyticsDashboard() {
               .sort(([, a], [, b]) => b - a)
               .slice(0, 6)
               .map(([status, currentCount]) => {
-                const compareCount = compareMetrics.by_status[status] || 0;
-                const change = calculateChange(currentCount, compareCount);
-                
                 return (
                   <div key={status} className="p-4 bg-gray-50 rounded-lg">
                     <div className="text-xs font-medium text-gray-600 capitalize mb-2 truncate" title={status}>
                       {status.replace('_', ' ')}
                     </div>
                     <div className="text-xl font-bold text-gray-900">{currentCount}</div>
-                    <div className="flex items-center gap-1 mt-1">
-                      {getTrendIcon(change)}
-                      <span className={`text-xs font-medium ${
-                        change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-500'
-                      }`}>
-                        {change > 0 ? '+' : ''}{change}%
-                      </span>
+                    <div className="text-xs text-gray-500 mt-1">
+                      orders
                     </div>
                   </div>
                 );
