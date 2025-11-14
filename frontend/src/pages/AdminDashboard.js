@@ -405,7 +405,7 @@ const AdminDashboard = () => {
                           value={order.clay_status} 
                           onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'clay_status', value)}
                         >
-                          <SelectTrigger className="h-8 text-sm" data-testid={`clay-status-control-${order.id}`}>
+                          <SelectTrigger className="h-8 text-xs md:text-sm w-full" data-testid={`clay-status-control-${order.id}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -416,15 +416,15 @@ const AdminDashboard = () => {
                           </SelectContent>
                         </Select>
 
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
                           {getApprovalIcon(order, "clay")}
-                          <span>{order.clay_proofs?.length || 0} proofs</span>
+                          <span className="truncate">{order.clay_proofs?.length || 0} proofs</span>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button 
                             size="sm"
-                            className="flex-1 h-8 text-xs"
+                            className="flex-1 min-w-[80px] h-8 text-xs"
                             onClick={() => openUploadDialog(order, "clay")}
                             data-testid={`upload-clay-btn-${order.id}`}
                           >
@@ -449,7 +449,7 @@ const AdminDashboard = () => {
                           <Button 
                             size="sm"
                             variant="outline"
-                            className="h-8 w-8 p-0 border-blue-500 text-blue-600 hover:bg-blue-50"
+                            className="h-8 w-8 p-0 border-blue-500 text-blue-600 hover:bg-blue-50 shrink-0"
                             onClick={() => handlePingCustomer(order.id, order.order_number, "clay")}
                             data-testid={`ping-clay-btn-${order.id}`}
                           >
