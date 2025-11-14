@@ -25,7 +25,7 @@ import base64
 from PIL import Image
 import warnings
 import asyncio
-from email_templates import get_approval_email, get_changes_requested_email
+from email_templates import get_approval_email, get_changes_requested_email, get_customer_proofs_ready_email
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
