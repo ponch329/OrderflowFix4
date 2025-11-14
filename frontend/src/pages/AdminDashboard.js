@@ -309,8 +309,8 @@ const AdminDashboard = () => {
           {filteredOrders.map((order) => (
             <Card key={order.id} className="hover:shadow-lg transition-shadow" data-testid={`order-card-${order.id}`}>
               <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
                     <CardTitle className="text-2xl">Order #{order.order_number}</CardTitle>
                     <CardDescription className="text-base mt-1">
                       {order.customer_name} • {order.customer_email}
@@ -319,9 +319,31 @@ const AdminDashboard = () => {
                       Last updated: {formatTimestamp(order.last_updated_at, order.last_updated_by)}
                     </p>
                   </div>
-                  <Badge className={`${getStageColor(order.stage)} text-white`} data-testid={`stage-badge-${order.id}`}>
-                    {order.stage.toUpperCase()}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge className={`${getStageColor(order.stage)} text-white`} data-testid={`stage-badge-${order.id}`}>
+                      {order.stage.toUpperCase()}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Manual Stage Control */}
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <Label className="text-xs font-semibold text-gray-600 mb-2 block">Admin Controls</Label>
+                  <div className="flex gap-2">
+                    <Select 
+                      value={order.stage} 
+                      onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'stage', value)}
+                    >
+                      <SelectTrigger className="h-9" data-testid={`stage-control-${order.id}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="clay">Stage: Clay</SelectItem>
+                        <SelectItem value="paint">Stage: Paint</SelectItem>
+                        <SelectItem value="shipped">Stage: Shipped</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
