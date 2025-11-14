@@ -28,6 +28,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [viewProofsDialogOpen, setViewProofsDialogOpen] = useState(false);
+  const [createOrderDialogOpen, setCreateOrderDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedOrderObj, setSelectedOrderObj] = useState(null);
   const [uploadStage, setUploadStage] = useState("clay");
