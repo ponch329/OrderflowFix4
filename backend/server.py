@@ -353,6 +353,10 @@ async def create_manual_order(order_data: ManualOrderCreate):
     await db.orders.insert_one(new_order)
     await log_to_sheets(order_data.order_number, "Manual Order Created", f"Created by admin - {order_data.customer_name}")
     
+    # Remove MongoDB _id field before returning
+    if "_id" in new_order:
+        del new_order["_id"]
+    
     return {"message": "Order created successfully", "order": new_order}
 
 @api_router.get("/admin/analytics")
