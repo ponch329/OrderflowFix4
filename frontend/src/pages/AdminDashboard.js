@@ -548,7 +548,12 @@ const AdminDashboard = () => {
                     {/* Paint Stage */}
                     <div className="relative p-4 bg-blue-50 rounded-lg border-2 border-blue-200 min-w-0">
                       <Badge className="absolute top-2 right-2 bg-blue-500 text-white text-xs">PAINT</Badge>
-                      <h4 className="font-bold text-base md:text-lg mb-3 pr-12">Paint Stage</h4>
+                      <h4 className="font-bold text-base md:text-lg mb-1 pr-12">Paint Stage</h4>
+                      {order.paint_entered_at && (
+                        <p className="text-xs text-gray-500 mb-3">
+                          Entered: {formatStageTimestamp(order.paint_entered_at)}
+                        </p>
+                      )}
                       
                       <div className="space-y-3">
                         <Select 
