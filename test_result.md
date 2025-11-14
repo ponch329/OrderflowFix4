@@ -200,9 +200,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Login Authentication"
-    - "Automated Customer Email Notifications" 
-    - "Proof Deletion"
+    - "Manual Order Creation"
+    - "Analytics Dashboard"
+    - "Shopify Fulfillment Status Sync"
+    - "New Stages Support"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -210,3 +211,5 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: "Completed comprehensive testing of all 3 requested backend features. All tests passed successfully. Created backend_test.py and detailed_backend_test.py for thorough API testing. Verified email notifications are being sent (confirmed in backend logs). All endpoints working as expected with proper error handling."
+    - agent: "main"
+      message: "Updated test_result.md with new testing requirements for 4 new features: Manual Order Creation, Analytics Dashboard, Shopify Fulfillment Status Sync, and New Stages Support. All features implemented and ready for testing."
