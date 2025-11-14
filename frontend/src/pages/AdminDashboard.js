@@ -224,6 +224,12 @@ const AdminDashboard = () => {
     return `${timeAgo} ${by}`;
   };
 
+  const formatStageTimestamp = (timestamp) => {
+    if (!timestamp) return null;
+    const date = new Date(timestamp);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   const getStageColor = (stage) => {
     switch(stage) {
       case "clay": return "bg-yellow-500";
