@@ -634,7 +634,13 @@ async def approve_stage(
     # Log to Google Sheets
     action = "Approved" if status == "approved" else "Changes Requested"
     details = f"{stage.capitalize()} - {message or 'No message'}" if status != "approved" else f"{stage.capitalize()}"
-    await log_to_sheets(order['order_number'], action, details)
+    await log_to_sheets(
+        order['order_number'], 
+        action, 
+        details,
+        stage=order.get('stage', ''),
+        status=order.get(f"{stage}_status", '')
+    )
     
     return {"message": "Response recorded", "approval": approval}
 
