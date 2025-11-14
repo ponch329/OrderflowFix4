@@ -130,6 +130,12 @@ class OrderCreate(BaseModel):
     customer_email: str
     customer_name: str
 
+class ManualOrderCreate(BaseModel):
+    order_number: str
+    customer_name: str
+    customer_email: str
+    stage: str = "clay"
+
 class ApprovalRequestCreate(BaseModel):
     status: str
     message: Optional[str] = None
