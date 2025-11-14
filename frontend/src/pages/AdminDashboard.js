@@ -160,6 +160,22 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleArchiveOrder = async (orderId, archive = true) => {
+    const action = archive ? "archive" : "unarchive";
+    if (!window.confirm(`Are you sure you want to ${action} this order?`)) {
+      return;
+    }
+
+    try {
+      await axios.patch(`${API}/admin/orders/${orderId}/archive?archive=${archive}`);
+      toast.success(`Order ${action}d successfully`);
+      fetchOrders();
+    } catch (error) {
+      toast.error(`Failed to ${action} order`);
+      console.error(error);
+    }
+  };
+
   const handlePingCustomer = async (orderId, orderNumber, stage) => {
     try {
       await axios.post(`${API}/admin/orders/${orderId}/ping-customer?stage=${stage}`);
