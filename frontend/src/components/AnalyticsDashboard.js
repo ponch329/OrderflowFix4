@@ -48,9 +48,10 @@ export default function AnalyticsDashboard() {
     );
   }
 
-  const currentMetrics = analytics.current_period.metrics;
-  const compareMetrics = analytics.compare_period.metrics;
-  const totalChange = calculateChange(currentMetrics.total, compareMetrics.total);
+  const currentMetrics = analytics.current_state.metrics;
+  const currentPeriodCount = analytics.current_period.orders_created;
+  const comparePeriodCount = analytics.compare_period.orders_created;
+  const newOrdersChange = calculateChange(currentPeriodCount, comparePeriodCount);
 
   return (
     <div className="mb-6 space-y-4">
