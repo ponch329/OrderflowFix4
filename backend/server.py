@@ -574,6 +574,52 @@ async def update_order_status(order_id: str, stage: str = None, clay_status: str
     
     return {"message": "Status updated successfully", "updates": update_data}
 
+@api_router.delete("/admin/orders/{order_id}/proofs/{proof_id}")
+async def delete_proof(order_id: str, proof_id: str, stage: str):
+    """Delete a specific proof image from an order"""
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Validate stage
+    if stage not in ["clay", "paint"]:
+        raise HTTPException(status_code=400, detail="Invalid stage. Must be 'clay' or 'paint'")
+    
+    # Get the proofs array for this stage
+    proofs_field = f"{stage}_proofs"
+    proofs = order.get(proofs_field, [])
+    
+    # Find and remove the proof with the matching id
+    updated_proofs = [proof for proof in proofs if proof.get('id') != proof_id]
+    
+    if len(updated_proofs) == len(proofs):
+        raise HTTPException(status_code=404, detail="Proof not found")
+    
+    # Update the order
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                proofs_field: updated_proofs,
+                "last_updated_by": "admin",
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Log to sheets
+    await log_to_sheets(
+        order['order_number'],
+        f"Proof Deleted - {stage.capitalize()}",
+        f"Removed 1 image. {len(updated_proofs)} remaining"
+    )
+    
+    return {
+        "message": "Proof deleted successfully",
+        "remaining_proofs": len(updated_proofs)
+    }
+
 # Google Sheets OAuth
 @api_router.get("/oauth/sheets/login")
 async def sheets_login():
