@@ -554,6 +554,56 @@ const AdminDashboard = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* View & Manage Proofs Dialog */}
+        <Dialog open={viewProofsDialogOpen} onOpenChange={setViewProofsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Manage Proofs - {viewProofsStage.charAt(0).toUpperCase() + viewProofsStage.slice(1)} Stage
+              </DialogTitle>
+              <DialogDescription>
+                Order #{selectedOrderObj?.order_number} - {selectedOrderObj?.customer_name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {selectedOrderObj && selectedOrderObj[`${viewProofsStage}_proofs`]?.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedOrderObj[`${viewProofsStage}_proofs`].map((proof, idx) => (
+                    <div key={proof.id || idx} className="relative group border rounded-lg overflow-hidden bg-gray-50">
+                      <img
+                        src={proof.url}
+                        alt={proof.filename || `Proof ${idx + 1}`}
+                        className="w-full h-64 object-contain"
+                      />
+                      <div className="p-2 bg-white border-t">
+                        <p className="text-sm text-gray-600 truncate">{proof.filename}</p>
+                        <div className="flex justify-between items-center mt-2">
+                          <p className="text-xs text-gray-500">
+                            {new Date(proof.uploaded_at).toLocaleDateString()}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="h-7 text-xs"
+                            onClick={() => handleDeleteProof(selectedOrderObj.id, proof.id, viewProofsStage)}
+                          >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No proofs uploaded for this stage yet.
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
