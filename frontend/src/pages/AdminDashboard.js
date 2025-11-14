@@ -31,8 +31,14 @@ const AdminDashboard = () => {
   const [uploadFiles, setUploadFiles] = useState([]);
 
   useEffect(() => {
+    // Check if admin is authenticated
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      navigate('/admin/login');
+      return;
+    }
     fetchOrders();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     // Filter orders based on search query, stage, and status
