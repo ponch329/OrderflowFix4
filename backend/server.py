@@ -734,7 +734,15 @@ async def update_order_status(order_id: str, stage: str = None, clay_status: str
     if paint_status:
         changes.append(f"Paint Status: {paint_status}")
     
-    await log_to_sheets(order['order_number'], "Manual Status Update", ", ".join(changes))
+    # Get updated order for logging
+    updated_order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    await log_to_sheets(
+        order['order_number'], 
+        "Manual Status Update", 
+        ", ".join(changes),
+        stage=updated_order.get('stage', ''),
+        status=updated_order.get('clay_status', '')
+    )
     
     return {"message": "Status updated successfully", "updates": update_data}
 
