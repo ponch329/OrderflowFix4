@@ -1,12 +1,12 @@
 // Helper functions for order status management
 
-export const getStatusInfo = (status) => {
+export const getStatusInfo = (status, stage = null) => {
   const statusMap = {
     sculpting: {
       label: "Sculpting",
       color: "bg-gray-500",
-      customerLabel: "Sculpting in Progress",
-      adminLabel: "Sculpting"
+      customerLabel: stage === "paint" ? "Painting in Progress" : "Sculpting in Progress",
+      adminLabel: stage === "paint" ? "Painting" : "Sculpting"
     },
     feedback_needed: {
       label: "Feedback Needed",
