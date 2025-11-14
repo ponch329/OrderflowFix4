@@ -47,18 +47,21 @@ const CustomerPortal = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto mt-16">
           <Card className="shadow-xl border border-gray-200" data-testid="lookup-card">
-            <CardHeader className="text-center pb-4 bg-gradient-to-r from-blue-600 to-blue-700">
+            <CardHeader className="text-center pb-4 bg-white">
               <div className="flex justify-center mb-4">
-                <div className="bg-white p-4 rounded-full">
-                  <Search className="w-8 h-8 text-blue-600" />
-                </div>
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_order-status-10/artifacts/x0gohm3x_checkoutpage%20banner.png" 
+                  alt="AllBobbleheads" 
+                  className="h-24 object-contain"
+                />
               </div>
-              <CardTitle className="text-3xl font-bold text-white">Find Your Order</CardTitle>
-              <CardDescription className="text-base text-blue-100">
+              <CardTitle className="text-4xl font-bold text-gray-900">AllBobbleheads</CardTitle>
+              <p className="text-lg text-gray-600 mt-2">Order Approval System</p>
+              <CardDescription className="text-base text-gray-700 mt-4">
                 Enter your email and order number to view your bobblehead's progress
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 border-t border-gray-200">
               <form onSubmit={handleLookup} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
