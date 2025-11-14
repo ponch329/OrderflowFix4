@@ -299,6 +299,22 @@ async def sync_orders():
                 }
                 await db.orders.insert_one(order_doc)
                 synced_count += 1
+            else:
+                # Update existing order's fulfillment status if changed
+                fulfillment_status = order.fulfillment_status if hasattr(order, 'fulfillment_status') else None
+                if fulfillment_status != existing.get('shopify_fulfillment_status'):
+                    update_data = {
+                        "shopify_fulfillment_status": fulfillment_status,
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    # If fulfilled in Shopify and not already in fulfilled/canceled stage, update stage
+                    if fulfillment_status == "fulfilled" and existing.get('stage') not in ['fulfilled', 'canceled']:
+                        update_data["stage"] = "fulfilled"
+                    
+                    await db.orders.update_one(
+                        {"shopify_order_id": str(order.id)},
+                        {"$set": update_data}
+                    )
         
         return {"message": f"Synced {synced_count} new orders", "total": len(orders)}
     except Exception as e:
