@@ -449,14 +449,23 @@ const AdminDashboard = () => {
                       </Select>
                     </div>
 
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => navigate(`/order/${order.id}`, { state: { order, isAdmin: true } })}
-                      data-testid={`view-details-btn-${order.id}`}
-                    >
-                      View Details
-                    </Button>
+                    <div className="space-y-2">
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => navigate(`/order/${order.id}`, { state: { order, isAdmin: true } })}
+                        data-testid={`view-details-btn-${order.id}`}
+                      >
+                        View Details
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
+                        onClick={() => handleArchiveOrder(order.id, !order.is_archived)}
+                      >
+                        {order.is_archived ? "Unarchive" : "Archive"}
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Right side - Stages (Horizontal) */}
