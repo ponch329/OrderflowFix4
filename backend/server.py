@@ -98,6 +98,10 @@ class ApprovalRequest(BaseModel):
     images: List[str] = []  # URLs of additional images
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class AdminLoginRequest(BaseModel):
+    username: str
+    password: str
+
 class Order(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
