@@ -320,6 +320,41 @@ async def sync_orders():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/admin/orders/create")
+async def create_manual_order(order_data: ManualOrderCreate):
+    """Create a manual order (not from Shopify)"""
+    # Check if order number already exists
+    existing = await db.orders.find_one({"order_number": order_data.order_number}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Order #{order_data.order_number} already exists")
+    
+    # Create new manual order
+    new_order = {
+        "id": str(uuid.uuid4()),
+        "shopify_order_id": None,
+        "order_number": order_data.order_number,
+        "customer_email": order_data.customer_email,
+        "customer_name": order_data.customer_name,
+        "stage": order_data.stage,
+        "clay_status": "sculpting" if order_data.stage == "clay" else "pending",
+        "paint_status": "pending",
+        "is_manual_order": True,
+        "shopify_fulfillment_status": None,
+        "clay_proofs": [],
+        "paint_proofs": [],
+        "clay_approval": None,
+        "paint_approval": None,
+        "last_updated_by": "admin",
+        "last_updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.orders.insert_one(new_order)
+    await log_to_sheets(order_data.order_number, "Manual Order Created", f"Created by admin - {order_data.customer_name}")
+    
+    return {"message": "Order created successfully", "order": new_order}
+
 @api_router.get("/admin/orders", response_model=List[Order])
 async def get_all_orders():
     """Get all orders for admin"""
