@@ -515,7 +515,13 @@ async def upload_proofs(
         }
     )
     
-    await log_to_sheets(order['order_number'], f"Proofs Uploaded - {stage}", f"{len(uploaded_proofs)} images - Status: Feedback Needed")
+    await log_to_sheets(
+        order['order_number'], 
+        f"Proofs Uploaded - {stage}", 
+        f"{len(uploaded_proofs)} images - Status: Feedback Needed",
+        stage=order.get('stage', ''),
+        status='feedback_needed'
+    )
     
     # Send automated email notification to customer
     if order.get('customer_email'):
