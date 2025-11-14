@@ -360,14 +360,16 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {(searchQuery || stageFilter !== "all" || statusFilter !== "all") && (
-            <p className="text-sm text-gray-600">
-              Found {filteredOrders.length} order(s)
-              {searchQuery && ` matching "${searchQuery}"`}
-              {stageFilter !== "all" && ` in ${stageFilter} stage`}
-              {statusFilter !== "all" && ` with status: ${statusFilter}`}
-            </p>
-          )}
+            {(searchQuery || stageFilter !== "all" || statusFilter !== "all" || showArchived) && (
+              <p className="text-sm text-gray-600">
+                Found {filteredOrders.length} order(s)
+                {searchQuery && ` matching "${searchQuery}"`}
+                {stageFilter !== "all" && ` in ${stageFilter} stage`}
+                {statusFilter !== "all" && ` with status: ${statusFilter}`}
+                {showArchived && ` (archived)`}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="grid gap-6">
