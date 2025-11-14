@@ -336,6 +336,9 @@ async def create_manual_order(order_data: ManualOrderCreate):
         raise HTTPException(status_code=400, detail=f"Order #{order_data.order_number} already exists")
     
     # Create new manual order
+    now = datetime.now(timezone.utc)
+    clay_status = "sculpting" if order_data.stage == "clay" else "pending"
+    
     new_order = {
         "id": str(uuid.uuid4()),
         "shopify_order_id": None,
@@ -343,22 +346,34 @@ async def create_manual_order(order_data: ManualOrderCreate):
         "customer_email": order_data.customer_email,
         "customer_name": order_data.customer_name,
         "stage": order_data.stage,
-        "clay_status": "sculpting" if order_data.stage == "clay" else "pending",
+        "clay_status": clay_status,
         "paint_status": "pending",
         "is_manual_order": True,
+        "is_archived": False,
         "shopify_fulfillment_status": None,
+        # Set stage timestamp
+        "clay_entered_at": now.isoformat() if order_data.stage == "clay" else None,
+        "paint_entered_at": now.isoformat() if order_data.stage == "paint" else None,
+        "fulfilled_at": None,
+        "canceled_at": None,
         "clay_proofs": [],
         "paint_proofs": [],
         "clay_approval": None,
         "paint_approval": None,
         "last_updated_by": "admin",
-        "last_updated_at": datetime.now(timezone.utc).isoformat(),
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "last_updated_at": now.isoformat(),
+        "created_at": now.isoformat(),
+        "updated_at": now.isoformat()
     }
     
     await db.orders.insert_one(new_order)
-    await log_to_sheets(order_data.order_number, "Manual Order Created", f"Created by admin - {order_data.customer_name}")
+    await log_to_sheets(
+        order_data.order_number, 
+        "Manual Order Created", 
+        f"Created by admin - {order_data.customer_name}",
+        stage=order_data.stage,
+        status=clay_status
+    )
     
     # Remove MongoDB _id field before returning
     if "_id" in new_order:
