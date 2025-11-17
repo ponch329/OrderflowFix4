@@ -24,22 +24,37 @@ def get_db():
     db = client[os.environ['DB_NAME']]
     return db
 
-@router.get("/", response_model=List[Order])
+@router.get("/")
 async def get_orders(
+    page: int = 1,
+    limit: int = 50,
     auth: AuthContext = Depends(require_permissions(Permission.VIEW_ORDERS)),
     db = Depends(get_db)
 ):
     """
-    Get all orders for the current tenant
+    Get paginated orders for the current tenant
     Requires: VIEW_ORDERS permission
+    
+    Query params:
+    - page: Page number (default: 1)
+    - limit: Orders per page (default: 50, max: 100)
     """
+    # Validate pagination params
+    page = max(1, page)
+    limit = min(max(1, limit), 100)  # Cap at 100 per page
+    skip = (page - 1) * limit
+    
     # Build query based on user role
     query = {"tenant_id": auth.tenant_id}
     
     # Manufacturers may have restricted view in the future
     # For now, all users with VIEW_ORDERS can see all orders
     
-    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    # Get total count
+    total_count = await db.orders.count_documents(query)
+    
+    # Get paginated orders
+    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
     for order in orders:
         # Convert datetime strings to datetime objects
@@ -47,7 +62,19 @@ async def get_orders(
             if field in order and isinstance(order[field], str):
                 order[field] = datetime.fromisoformat(order[field])
     
-    return orders
+    total_pages = (total_count + limit - 1) // limit  # Ceiling division
+    
+    return {
+        "orders": orders,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1
+        }
+    }
 
 @router.post("/", response_model=Order)
 async def create_order(
