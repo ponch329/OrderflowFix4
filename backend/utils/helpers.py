@@ -52,8 +52,8 @@ async def get_sheets_creds(db, tenant_id: str):
     
     return creds
 
-async def log_to_sheets(db, tenant_id: str, order_number: str, action: str, details: str, stage: str = "", status: str = ""):
-    """Log action to Google Sheets with Stage, Status, and Timestamp"""
+async def log_to_sheets(db, tenant_id: str, order_number: str, action: str, details: str, stage: str = "", status: str = "", emailed_customer: str = "No"):
+    """Log action to Google Sheets with Stage, Status, Timestamp, and Emailed Customer"""
     try:
         # Get tenant config
         tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
@@ -68,13 +68,14 @@ async def log_to_sheets(db, tenant_id: str, order_number: str, action: str, deta
         
         service = build('sheets', 'v4', credentials=creds)
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        values = [[timestamp, order_number, action, details, stage, status]]
+        # Format: Timestamp, Order Number, Action, Details, Stage, Status, Emailed Customer
+        values = [[timestamp, order_number, action, details, stage, status, emailed_customer]]
         body = {"values": values}
         
         await asyncio.to_thread(
             service.spreadsheets().values().append(
                 spreadsheetId=tenant["spreadsheet_id"],
-                range="Sheet1!A:F",
+                range="Sheet1!A:G",  # Extended to column G
                 valueInputOption="RAW",
                 body=body
             ).execute
