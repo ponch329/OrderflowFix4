@@ -49,6 +49,10 @@ const AdminDashboard = () => {
       navigate('/admin/login');
       return;
     }
+    
+    // Set default authorization header for all axios requests
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
     fetchOrders();
   }, [navigate]);
 
