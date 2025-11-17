@@ -233,8 +233,21 @@ async def upload_proofs(
         }
     )
     
-    # Log to sheets
-    from utils.helpers import log_to_sheets, send_customer_proof_notification
+    # Send automated email notification to customer
+    emailed_customer = "No"
+    if order.get('customer_email'):
+        from utils.helpers import send_customer_proof_notification
+        email_sent = await send_customer_proof_notification(
+            db,
+            auth.tenant_id,
+            order,
+            stage,
+            len(uploaded_proofs)
+        )
+        emailed_customer = "Yes" if email_sent else "No"
+    
+    # Log to sheets with email status
+    from utils.helpers import log_to_sheets
     await log_to_sheets(
         db,
         auth.tenant_id,
@@ -242,18 +255,9 @@ async def upload_proofs(
         f"Proofs Uploaded - {stage}",
         f"{len(uploaded_proofs)} images - Status: Feedback Needed",
         stage=order.get('stage', ''),
-        status='feedback_needed'
+        status='feedback_needed',
+        emailed_customer=emailed_customer
     )
-    
-    # Send automated email notification to customer
-    if order.get('customer_email'):
-        await send_customer_proof_notification(
-            db,
-            auth.tenant_id,
-            order,
-            stage,
-            len(uploaded_proofs)
-        )
     
     return {"message": f"Uploaded {len(uploaded_proofs)} proofs", "proofs": uploaded_proofs}
 
