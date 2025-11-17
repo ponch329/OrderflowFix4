@@ -84,16 +84,17 @@ const AdminDashboard = () => {
     setFilteredOrders(filtered);
   }, [orders, searchQuery, stageFilter, statusFilter, showArchived]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/admin/orders`);
-      // Sort by created_at descending (newest first)
-      const sortedOrders = response.data.sort((a, b) => 
-        new Date(b.created_at) - new Date(a.created_at)
-      );
-      setOrders(sortedOrders);
-      setFilteredOrders(sortedOrders);
+      const response = await axios.get(`${API}/orders?page=${page}&limit=${perPage}`);
+      const { orders: fetchedOrders, pagination } = response.data;
+      
+      setOrders(fetchedOrders);
+      setFilteredOrders(fetchedOrders);
+      setCurrentPage(pagination.page);
+      setTotalPages(pagination.total_pages);
+      setTotalCount(pagination.total_count);
     } catch (error) {
       toast.error("Failed to load orders");
       console.error(error);
