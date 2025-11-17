@@ -150,6 +150,8 @@ const EmailTemplates = () => {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [enabled, setEnabled] = useState(true);
+  const [ccEmail, setCcEmail] = useState("");
+  const [bccEmail, setBccEmail] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
