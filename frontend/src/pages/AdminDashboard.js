@@ -656,7 +656,7 @@ const AdminDashboard = () => {
             </div>
             <div className="flex gap-2">
               <Button
-                onClick={() => fetchOrders(currentPage - 1)}
+                onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1 || loading}
                 variant="outline"
                 size="sm"
@@ -669,7 +669,7 @@ const AdminDashboard = () => {
                 </span>
               </div>
               <Button
-                onClick={() => fetchOrders(currentPage + 1)}
+                onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages || loading}
                 variant="outline"
                 size="sm"
