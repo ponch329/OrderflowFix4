@@ -57,6 +57,8 @@ const Settings = () => {
       const response = await axios.get(`${API}/settings/tenant`);
       const settings = response.data.settings;
       
+      setTenantName(response.data.name || "");
+      
       setBrandingSettings({
         logo_url: settings.logo_url || "",
         primary_color: settings.primary_color || "#2196F3",
@@ -70,7 +72,8 @@ const Settings = () => {
         bcc_email: settings.bcc_email || "",
         manufacturer_can_change_status: settings.manufacturer_can_change_status ?? false,
         manufacturer_can_add_notes: settings.manufacturer_can_add_notes ?? true,
-        notes_visible_to_customer: settings.notes_visible_to_customer ?? false
+        notes_visible_to_customer: settings.notes_visible_to_customer ?? false,
+        manufacturer_can_email_customers: settings.manufacturer_can_email_customers ?? false
       });
     } catch (error) {
       toast.error("Failed to load settings");
