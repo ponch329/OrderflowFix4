@@ -56,7 +56,17 @@ const AdminDashboard = () => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     
     fetchOrders();
+    fetchVendors();
   }, [navigate]);
+
+  const fetchVendors = async () => {
+    try {
+      const response = await axios.get(`${API}/vendors/list`);
+      setVendors(response.data.vendors);
+    } catch (error) {
+      console.error("Failed to load vendors", error);
+    }
+  };
 
   useEffect(() => {
     // Filter orders based on search query, stage, status, and archive state
