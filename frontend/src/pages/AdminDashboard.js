@@ -69,7 +69,7 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    // Filter orders based on search query, stage, status, and archive state
+    // Filter orders based on search query, stage, status, vendor, and archive state
     let filtered = orders;
     
     // Apply archive filter
@@ -97,6 +97,11 @@ const AdminDashboard = () => {
       );
     }
     
+    // Apply vendor filter
+    if (vendorFilter !== "all") {
+      filtered = filtered.filter(order => order.item_vendor === vendorFilter);
+    }
+    
     // Apply pagination to filtered results
     const startIndex = (currentPage - 1) * perPage;
     const endIndex = startIndex + perPage;
@@ -105,7 +110,7 @@ const AdminDashboard = () => {
     setFilteredOrders(paginatedOrders);
     setTotalPages(Math.ceil(filtered.length / perPage));
     setTotalCount(filtered.length);
-  }, [orders, searchQuery, stageFilter, statusFilter, showArchived, currentPage, perPage]);
+  }, [orders, searchQuery, stageFilter, statusFilter, vendorFilter, showArchived, currentPage, perPage]);
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
