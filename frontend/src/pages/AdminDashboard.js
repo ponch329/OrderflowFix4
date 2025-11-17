@@ -423,14 +423,31 @@ const AdminDashboard = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="w-64">
+              <Select value={vendorFilter} onValueChange={setVendorFilter}>
+                <SelectTrigger data-testid="vendor-filter">
+                  <SelectValue placeholder="Filter by Vendor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Vendors</SelectItem>
+                  {vendors.map((vendor) => (
+                    <SelectItem key={vendor.name} value={vendor.name}>
+                      {vendor.name} ({vendor.order_count})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-            {(searchQuery || stageFilter !== "all" || statusFilter !== "all" || showArchived) && (
+            {(searchQuery || stageFilter !== "all" || statusFilter !== "all" || vendorFilter !== "all" || showArchived) && (
               <p className="text-sm text-gray-600">
-                Found {filteredOrders.length} order(s)
+                Found {totalCount} order(s)
                 {searchQuery && ` matching "${searchQuery}"`}
                 {stageFilter !== "all" && ` in ${stageFilter} stage`}
                 {statusFilter !== "all" && ` with status: ${statusFilter}`}
+                {vendorFilter !== "all" && ` from vendor: ${vendorFilter}`}
                 {showArchived && ` (archived)`}
               </p>
             )}
