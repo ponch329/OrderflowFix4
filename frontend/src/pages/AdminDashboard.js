@@ -309,7 +309,15 @@ const AdminDashboard = () => {
               className="border-purple-200 text-purple-600 hover:bg-purple-50"
             >
               <UserIcon className="w-4 h-4 mr-2" />
-              Manage Users
+              Users
+            </Button>
+            <Button 
+              onClick={() => navigate('/admin/settings')}
+              variant="outline"
+              className="border-blue-200 text-blue-600 hover:bg-blue-50"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
             </Button>
             <Button 
               onClick={syncOrders} 
@@ -318,7 +326,7 @@ const AdminDashboard = () => {
               data-testid="sync-orders-btn"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Sync from Shopify
+              Sync
             </Button>
             <Button
               onClick={() => {
