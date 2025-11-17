@@ -168,12 +168,23 @@ const Settings = () => {
           <TabsContent value="branding" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Branding & Appearance</CardTitle>
+                <CardTitle>Company Branding</CardTitle>
                 <CardDescription>
-                  Customize your brand colors, logo, and typography
+                  Customize your company name, logo, colors, and typography
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="company-name">Company Name *</Label>
+                  <Input
+                    id="company-name"
+                    placeholder="AllBobbleheads"
+                    value={tenantName}
+                    onChange={(e) => setTenantName(e.target.value)}
+                  />
+                  <p className="text-sm text-gray-500">Your company name used in emails and customer portal</p>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="logo-url">Logo URL</Label>
                   <Input
@@ -182,7 +193,13 @@ const Settings = () => {
                     value={brandingSettings.logo_url}
                     onChange={(e) => setBrandingSettings({ ...brandingSettings, logo_url: e.target.value })}
                   />
-                  <p className="text-sm text-gray-500">Enter the URL of your logo image</p>
+                  <p className="text-sm text-gray-500">Logo will be displayed in emails and customer portal (recommended size: 200x60px)</p>
+                  {brandingSettings.logo_url && (
+                    <div className="mt-2 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                      <img src={brandingSettings.logo_url} alt="Logo preview" className="max-h-16" onError={(e) => e.target.style.display = 'none'} />
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
