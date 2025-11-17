@@ -27,12 +27,14 @@ from routes.auth import router as auth_router
 from routes.users import router as users_router
 from routes.orders import router as orders_router
 from routes.settings import router as settings_router
+from routes.vendors import router as vendors_router
 
 # Include routers
 api_router.include_router(auth_router)
 api_router.include_router(users_router)
 api_router.include_router(orders_router)
 api_router.include_router(settings_router)
+api_router.include_router(vendors_router)
 
 # Legacy admin routes (for backwards compatibility during transition)
 import hashlib
