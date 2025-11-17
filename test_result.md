@@ -234,7 +234,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Settings Page Functionality"
+    - "Email Template Edit with CC and BCC Fields"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
