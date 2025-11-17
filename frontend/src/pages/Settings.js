@@ -280,11 +280,29 @@ const Settings = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800 mb-2">
+                    <strong>Email Templates</strong>
+                  </p>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Customize the content and appearance of automated emails sent to customers
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/admin/email-templates')}
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Manage Email Templates (7)
+                  </Button>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Enable Email Templates</Label>
+                    <Label>Enable Email Notifications</Label>
                     <p className="text-sm text-gray-500">
-                      Turn on/off automatic email notifications to customers
+                      Turn on/off all automatic email notifications to customers
                     </p>
                   </div>
                   <Switch
@@ -302,7 +320,7 @@ const Settings = () => {
                     value={emailSettings.bcc_email}
                     onChange={(e) => setEmailSettings({ ...emailSettings, bcc_email: e.target.value })}
                   />
-                  <p className="text-sm text-gray-500">Receive a copy of all customer emails sent</p>
+                  <p className="text-sm text-gray-500">Receive a blind copy of all outgoing customer emails</p>
                 </div>
 
                 <div className="pt-4">
