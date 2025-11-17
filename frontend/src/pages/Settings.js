@@ -87,9 +87,10 @@ const Settings = () => {
     setSaving(true);
     try {
       const response = await axios.patch(`${API}/settings/tenant`, {
+        name: tenantName,
         settings: brandingSettings
       });
-      toast.success("Branding settings saved successfully!");
+      toast.success("Company branding saved successfully!");
       console.log("Saved settings:", response.data);
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to save branding settings");
