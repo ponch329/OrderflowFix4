@@ -85,8 +85,15 @@ const AdminDashboard = () => {
       );
     }
     
-    setFilteredOrders(filtered);
-  }, [orders, searchQuery, stageFilter, statusFilter, showArchived]);
+    // Apply pagination to filtered results
+    const startIndex = (currentPage - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    const paginatedOrders = filtered.slice(startIndex, endIndex);
+    
+    setFilteredOrders(paginatedOrders);
+    setTotalPages(Math.ceil(filtered.length / perPage));
+    setTotalCount(filtered.length);
+  }, [orders, searchQuery, stageFilter, statusFilter, showArchived, currentPage, perPage]);
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
