@@ -304,6 +304,14 @@ const AdminDashboard = () => {
           </div>
           <div className="flex gap-2">
             <Button 
+              onClick={() => navigate('/admin/users')}
+              variant="outline"
+              className="border-purple-200 text-purple-600 hover:bg-purple-50"
+            >
+              <UserIcon className="w-4 h-4 mr-2" />
+              Manage Users
+            </Button>
+            <Button 
               onClick={syncOrders} 
               disabled={loading}
               className="bg-purple-600 hover:bg-purple-700"
