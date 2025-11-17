@@ -37,6 +37,7 @@ import hashlib
 import jwt
 from datetime import datetime, timezone, timedelta
 from models.user import User
+from typing import List
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
@@ -52,6 +53,29 @@ async def admin_login_legacy(login_data: dict):
     from models.user import UserLogin
     user_login = UserLogin(username=login_data["username"], password=login_data["password"])
     return await login(user_login, db)
+
+@api_router.get("/admin/orders")
+async def get_admin_orders_legacy():
+    """
+    Legacy admin orders endpoint - returns all orders without pagination
+    For backwards compatibility during transition
+    """
+    # Get first tenant
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    tenant_id = tenant["id"]
+    
+    orders = await db.orders.find({"tenant_id": tenant_id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    for order in orders:
+        # Convert datetime strings to datetime objects
+        for field in ['created_at', 'updated_at', 'clay_entered_at', 'paint_entered_at', 'fulfilled_at', 'canceled_at']:
+            if field in order and isinstance(order[field], str):
+                order[field] = datetime.fromisoformat(order[field])
+    
+    return orders
 
 # Analytics endpoint
 @api_router.get("/admin/analytics")
