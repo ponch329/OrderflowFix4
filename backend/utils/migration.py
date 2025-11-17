@@ -8,6 +8,10 @@ import hashlib
 import os
 from typing import Dict, Any
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from models.tenant import Tenant, TenantSettings
 from models.user import User, UserRole
 
