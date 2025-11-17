@@ -222,10 +222,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Manual Order Creation"
-    - "Analytics Dashboard"
-    - "Shopify Fulfillment Status Sync"
-    - "New Stages Support"
+    - "Settings Page Functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
