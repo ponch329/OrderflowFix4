@@ -322,6 +322,36 @@ const EmailTemplates = () => {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cc-email">CC (Carbon Copy)</Label>
+                  <Input
+                    id="cc-email"
+                    type="email"
+                    placeholder="cc@example.com"
+                    value={ccEmail}
+                    onChange={(e) => setCcEmail(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Send a copy to this email (optional)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bcc-email">BCC (Blind Carbon Copy)</Label>
+                  <Input
+                    id="bcc-email"
+                    type="email"
+                    placeholder="bcc@example.com"
+                    value={bccEmail}
+                    onChange={(e) => setBccEmail(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Hidden copy to this email (optional)
+                  </p>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="subject">Email Subject</Label>
                 <Textarea
@@ -342,7 +372,7 @@ const EmailTemplates = () => {
                   id="body"
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
-                  rows={15}
+                  rows={12}
                   className="font-mono text-sm"
                 />
                 <p className="text-xs text-gray-500">
