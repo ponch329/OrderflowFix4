@@ -18,6 +18,9 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   
+  // Tenant info
+  const [tenantName, setTenantName] = useState("");
+  
   // Branding settings
   const [brandingSettings, setBrandingSettings] = useState({
     logo_url: "",
@@ -33,7 +36,8 @@ const Settings = () => {
     bcc_email: "",
     manufacturer_can_change_status: false,
     manufacturer_can_add_notes: true,
-    notes_visible_to_customer: false
+    notes_visible_to_customer: false,
+    manufacturer_can_email_customers: false
   });
 
   useEffect(() => {
