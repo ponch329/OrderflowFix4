@@ -183,6 +183,8 @@ const EmailTemplates = () => {
     setSubject(templateDef.default_subject);
     setBody(templateDef.default_body);
     setEnabled(template.enabled);
+    setCcEmail(template.cc_email || "");
+    setBccEmail(template.bcc_email || "");
     setEditDialogOpen(true);
   };
 
