@@ -1,195 +1,175 @@
 <analysis>**original_problem_statement:**
-The user runs a Shopify store (www.allbobbleheads.com) selling custom bobbleheads. They need a system for customers to approve proofs at two stages: clay and paint.
+The user initially required a proof approval system for their custom bobblehead Shopify store (). This involved a customer portal for viewing and approving clay and paint proofs and an admin dashboard for managing orders, uploading proofs, and syncing with Shopify.
 
-**PRODUCT REQUIREMENTS:**
-1.  **Customer Portal:** Customers should be able to log in (using email and order number) to a dashboard to see their orders.
-2.  **Order Details View:**
-    *   View the order's current stage (e.g., Clay, Paint, Shipped).
-    *   View proof images for the current stage, with the ability to enlarge them.
-    *   Buttons to Approve or Request Changes.
-3.  **Approval/Changes Workflow:**
-    *   **Approve:** Clicking Approve moves the order to the next stage and sends an email notification to the admin.
-    *   **Request Changes:** Clicking Request Changes opens a text box for comments and allows image attachments. This action also sends an email notification to the admin.
-4.  **Admin Dashboard:**
-    *   An internal dashboard for the store owner to manage orders.
-    *   Ability to manually upload proof images (or a zip file) for each order.
-    *   View order statuses and customer feedback.
-    *   Initially, a way to sync orders from Shopify.
-5.  **Logging:** All status changes and customer inputs must be tracked in a Google Sheet.
-6.  **Security:** Customers should only be able to see their own orders.
-7.  **UI/UX:** The user requested specific UI layouts, including a drag-and-drop uploader for admins and branding elements from their main website.
+The project has now pivoted into a multi-tenant SaaS application. The user wants to sell this software to other businesses. The new high-level requirements include:
+1.  **Multi-User Accounts:** The ability for a Main Admin to create different user accounts (e.g., Manufacturer, Customer Service, Order Manager) with specific, configurable permissions.
+2.  **Admin Settings Portal:** A dedicated section for the Main Admin to manage application-wide settings.
+3.  **Email Template Management:** A WYSIWYG editor for email templates, with the ability to preview, send test emails, enable/disable templates, and set up automatic reminders.
+4.  **Branding Customization:** Allow tenants to add their own logo and customize brand colors, fonts, and text sizes.
+5.  **Advanced Order & Vendor Management:**
+    *   Pull Item Vendor information from Shopify.
+    *   Handle orders with multiple items/manufacturers by splitting them into sub-orders (e.g., with suffixes like , ).
+    *   Allow the Main Admin to control which order details are visible to vendors.
+6.  **Manufacturer Role Enhancements:**
+    *   Allow manufacturers to add notes to orders, with customer visibility controlled by the admin.
+    *   Give the Main Admin a toggle to control whether manufacturers can change an order's status.
+
+**User's preferred language**: English
 
 **what currently exists?**
-A full-stack application with a React frontend and FastAPI backend has been built.
--   **Frontend:** Features a customer portal for order lookup (email + order #) and an admin dashboard. The customer portal allows viewing proofs, approving, or requesting changes. The admin dashboard allows syncing Shopify orders, viewing all orders, searching/filtering, uploading proofs via drag-and-drop, manually changing order stage/status, and pinging customers. The UI has been customized with the user's logo and branding.
--   **Backend:** Handles API requests for all frontend functionality.
--   **Integrations:**
-    -   **Shopify:** Syncs orders and customer data.
-    -   **Google Sheets:** Logs all major events (proof uploads, approvals, status changes).
-    -   **SMTP:** Sends email notifications to the admin for customer actions and allows the admin to send ping reminders to customers.
--   **Database:** MongoDB stores order data, including stages, statuses, proof images (as base64), and an interaction timeline.
+A fully-featured, single-tenant proof approval application.
+-   **Frontend:** A React application with a customer login portal and a comprehensive admin dashboard.
+    -   **Admin Dashboard ():**
+        -   Secure login with username/password.
+        -   Analytics panel showing a breakdown of orders by stage and status.
+        -   Shopify order sync, including fulfillment status (fulfilled orders are greyed out).
+        -   Manual order creation for non-Shopify orders (marked with a Manual badge).
+        -   Search and filtering (by stage, status, and archived status).
+        -   A sticky header/control bar that remains visible on scroll.
+        -   Order cards display timestamps for when an order entered a stage.
+        -   Admins can upload proofs, view/delete proofs in a dialog, manually change order status, and archive orders.
+-   **Backend:** A FastAPI server with endpoints for all frontend functionality.
+    -   JWT-based authentication for the admin portal.
+    -   Integrations with Shopify (order sync), Google Sheets (enhanced event logging with stage/status/timestamps), and SMTP (admin and automated customer notifications).
+-   **Database:** MongoDB stores all order data, including new fields for , , , and stage timestamps.
 
 **Last working item**:
-*   **Last item agent was working:** The agent was in the middle of redesigning the Admin Dashboard to match a new layout provided by the user in an image. The new design features a more compact, horizontal, side-by-side view for the Clay and Paint stages. The agent updated the  file to implement this new structure.
-*   **Status:** IN PROGRESS
-*   **Agent Testing Done:** N
-*   **Which testing method agent to use?**: screenshot tool (To visually verify that the new admin dashboard layout matches the user's mockup).
-*   **User Testing Done:** N
+The user made a strategic decision to deploy the current, stable single-tenant application and create a new fork to begin the major transformation into a multi-tenant SaaS product. The last action was to discuss and agree upon the implementation plan for this pivot.
+
+-   **Last item agent was working:** Discussing the SaaS pivot strategy with the user and getting confirmation to proceed with Approach C on a new fork.
+-   **Status:** NONE (The prior development work is complete and verified by the user. The new SaaS work has not yet begun and is planned for the next fork).
+-   **Agent Testing Done:** Y (All features of the single-tenant app were tested via screenshots and the backend testing agent).
+-   **Which testing method agent to use?**: N/A (The next task is a large architectural refactor).
+-   **User Testing Done:** Y (User visually confirmed the final state of the single-tenant application).
 
 **All Pending/In progress Issue list**:
-*   **Issue 1: (P0) Verify and complete the new Admin Dashboard layout.**
-    *   **Attempted fixes:** The agent modified  to change the component structure to a horizontal layout.
-    *   **Next debug checklist:**
-        1.  Take a screenshot of  to visually inspect the new layout.
-        2.  Compare the screenshot to the user's mockup ().
-        3.  Address any visual discrepancies (spacing, alignment, component placement).
-        4.  Test all interactive elements on the new dashboard: search, filters, upload buttons, ping buttons, and manual status dropdowns to ensure functionality was not broken during the refactor.
-    *   **Why fix this issue and what will be achieved with the fix?**: To fulfill the user's direct request for a revised admin UI, making it more compact and streamlined for their workflow.
-    *   **Status:** IN PROGRESS
-    *   **Is recurring issue?** N
-    *   **Should Test frontend/backend/both after fix?**: Frontend.
-    *   **Blocked on other issue:** None.
+-   None. All reported issues for the single-tenant application have been resolved.
 
 **In progress Task List**:
-*   **Task 1: (P0) Finalize the Admin Dashboard Redesign.**
-    *   **Where to resume:** The agent has just finished editing . The next step is to take a screenshot to verify the new layout.
-    *   **What will be achieved with this?**: The admin dashboard will match the user's requested layout, improving usability for the admin.
-    *   **Status:** IN PROGRESS
-    *   **Should Test frontend/backend/both after fix?**: Frontend.
-    *   **Blocked on something:** None.
+-   None. All requested tasks for the single-tenant application have been completed.
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks:**
-    *   **(P1) Resolve Custom Domain Setup:** The user is unable to access the application via , receiving  and  errors. They are using GoDaddy for DNS. This needs to be diagnosed and resolved, guiding the user through the correct steps in both GoDaddy and the Emergent platform.
-    *   **(P2) Implement Automatic Customer Email Notifications:** The original request implied customers would be automatically notified when proofs are ready. Currently, the system only has a manual Ping Customer button for the admin. An endpoint and logic should be added to automatically email the customer when an admin uploads proofs and the status changes to Customer Feedback Needed.
+The next agent's primary goal is to begin the transformation of the application into a multi-tenant SaaS platform, as per the user's request. The agreed-upon strategy is **Approach C: A Hybrid Multi-Tenancy Model**, which involves a shared database with tenant isolation at the application layer.
+
+The work has been broken down into the following phases:
+
+*   **Phase 1: Multi-User Authentication & Permissions (P0)**
+    *   Refactor the database schema to include  and  collections.
+    *   Associate all existing data (orders, etc.) with a tenant ID.
+    *   Implement a robust role-based access control (RBAC) system.
+    *   Create user roles: Main Admin, Manufacturer, Customer Service, Order Manager.
+    *   Build a user management interface for the Main Admin to create/edit users and assign roles/permissions.
+    *   Modify the Shopify sync to pull Item Vendor information.
+
+*   **Phase 2: Admin Settings & Customization (P1)**
+    *   Create a Settings section in the admin portal.
+    *   Build a WYSIWYG editor for email templates.
+    *   Add functionality to enable/disable emails, send test emails, and set up automatic reminder schedules.
+    *   Implement branding controls (logo upload, color pickers, font selection).
+    *   Add a setting for BCC'ing emails.
+
+*   **Phase 3: Advanced Order & Vendor Logic (P2)**
+    *   Develop the logic to split a single Shopify order with multiple items/vendors into distinct sub-orders in the system (e.g., , ).
+    *   Create a permissions system allowing the Main Admin to configure which order fields are visible to the Manufacturer role.
+
+*   **Phase 4: Manufacturer Workflow Enhancements (P3)**
+    *   Add a notes feature to orders, allowing both Admins and Manufacturers to add comments.
+    *   Implement a toggle for Admins to control the visibility of notes to the end customer.
+    *   Add a global toggle for the Main Admin to grant/revoke the Manufacturer role's ability to change an order's status.
 
 **Completed work in this session**
-- **Core Application Setup**: Built the initial FastAPI backend and React frontend.
-- **Shopify Integration**: Connected to the Shopify Admin API to sync orders. Handled authentication issues, prepended 20 to order numbers, and ensured sorting by newest first.
-- **Google Sheets Integration**: Set up OAuth and configured the app to log all major order activities to a user-provided Google Sheet.
-- **SMTP Email Integration**: Configured SMTP to send email notifications to the admin and implemented the Ping Customer feature.
-- **Admin Dashboard**:
-  - Created a dashboard at .
-  - Implemented features: Shopify order sync, search (by order #, email, name), filtering (by stage, status), and manual admin controls to override order stage/status.
-  - Implemented a drag-and-drop component () for uploading proofs.
-- **Customer Portal**:
-  - Created a login page at  using email and order number.
-  - Developed an order details page showing proof images, an interaction timeline, and buttons for Approve and Request Changes.
-  - Implemented collapsible sections for completed stages.
-- **Advanced Workflow Logic**: Implemented the multi-stage (Clay, Paint) and multi-status (Sculpting, Customer Feedback Needed, Approved, etc.) logic on both the backend and frontend.
-- **UI/Branding Customization**:
-  - Styled the customer portal to match , incorporating the user's logo and brand colors.
-  - Placed the logo on the order details page.
-- **Bug Fixes**:
-  - Resolved a critical Failed to approve bug caused by a data format mismatch between the frontend (FormData) and backend (Pydantic model).
-  - Fixed display logic to show Painting in Progress instead of Sculpting in Progress for the paint stage.
-- **Code Refactoring**: Moved email HTML into a dedicated  file for easier editing.
-- **Documentation**: Created  and .
+- **Admin Dashboard Redesign:** Implemented a new horizontal layout for stages.
+- **Admin Authentication:** Added a secure username/password login for the  portal using JWT.
+- **Automated Customer Emails:** Implemented automatic email notifications to customers when proofs are uploaded.
+- **Proof Image Deletion:** Added functionality for admins to delete uploaded proof images.
+- **Responsive UI Fixes:** Corrected the admin dashboard layout to stack vertically on smaller screens.
+- **Analytics Dashboard:** Created a dashboard showing a real-time count of total orders in each stage and status.
+- **Shopify Fulfillment Sync:** The app now syncs Shopify's  and visually distinguishes fulfilled orders.
+- **Manual Order Creation:** Admins can now create orders that did not originate from Shopify.
+- **Order Archiving:** Implemented a feature to archive orders, hiding them from the default view.
+- **Sticky Admin Header:** The search and filter bar now sticks to the top of the screen when scrolling.
+- **Stage Timestamps:** The admin dashboard now displays the date and time an order entered its current stage.
+- **Enhanced Google Sheets Logging:** Added Stage, Status, and Timestamp columns to all logged events.
 
 **Earlier issues found/mentioned but not fixed**
-*   **Issue 1: Custom Domain  is not working.**
-    *   **Debug checklist:**
-        1.  Verify the user has added  as a Hostname within the Emergent platform settings.
-        2.  Confirm the exact  record IP address or  record value that the Emergent platform provides.
-        3.  Guide the user to check their DNS settings in GoDaddy to ensure the  record for proofs points to the correct IP address provided by Emergent.
-        4.  Explain that DNS propagation can take time and provide tools (like ) for the user to check the status.
-    *   **Why to solve this issue and what will be achieved with this?**: The user wants the application to be accessible via a professional, branded subdomain. Fixing this is crucial for deployment.
-    *   **Should Test frontend/backend/both after fix:** N/A (Networking/DNS issue).
-    *   **Is recurring issue?** Y
+-   None. The custom domain issue mentioned in the initial handoff was confirmed as resolved by the user.
 
 **Known issue recurrence from previous fork**
-- None. This is the first session.
+-   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Pydantic, Motor (async MongoDB driver)
-- **Frontend:** React, Axios, TailwindCSS, Shadcn UI components
+- **Backend:** FastAPI, Pydantic, Motor, JWT (for admin auth)
+- **Frontend:** React, Axios, TailwindCSS, Shadcn UI
 - **Database:** MongoDB
-- **Integrations:** Shopify Admin API, Google Sheets API (via ), SMTP
+- **Integrations:** Shopify Admin API, Google Sheets API, SMTP
 
 **key DB schema**
 -   **orders** collection:
-    -   : (ObjectId)
+    -   uid=0(root) gid=0(root) groups=0(root): (str, UUID)
     -   : (str)
     -   : (str)
-    -   : (str, optional)
-    -   : (str) - e.g., clay, paint, shipped
-    -   : (str) - e.g., sculpting, feedback_needed, approved
-    -   : (str) - e.g., pending, painting, feedback_needed
-    -   : (List[dict]) - 
+    -   : (str) - e.g., clay, paint, fulfilled, canceled
+    -   , : (str)
+    -   , : (List[dict])
     -   : (List[dict])
-    -   : (List[dict]) - 
-    -   : (datetime)
-    -   : (str) - Admin or Customer
-    -   : (datetime)
+    -   ****: (bool) - True if created by admin, not synced from Shopify.
+    -   ****: (str) - Synced from Shopify (e.g., fulfilled).
+    -   ****: (bool) - Flag for archived orders.
+    -   ****, ****, etc.: (datetime) - Timestamp for when the order entered that stage.
 
 **changes in tech stack**
-- None.
+-   The backend now uses  and  for JWT authentication.
 
 **All files**
--   : The core backend application file containing all API endpoints, business logic, and integration calls.
--   : Stores all secrets and configurations (Shopify, Google, SMTP credentials).
--   : Contains functions that return formatted HTML strings for different email notifications. Created to separate email content from business logic.
--   : A large component that renders the admin UI for managing all orders. It includes search, filtering, and proof upload functionality.
--   : The customer-facing page that displays order status, proof images, an interaction timeline, and action buttons.
--   : The initial customer-facing page for looking up an order with an email and order number.
--   : A reusable component for handling file uploads with a drag-and-drop interface.
--   : Utility file to centralize logic for status labels and colors, keeping components cleaner.
--   : A markdown file explaining how to set up the required API credentials.
--   : A guide for the user on how to edit the email templates in .
+-   : Heavily modified to include new endpoints for admin auth, analytics, manual order creation, archiving, image deletion, and logic for new order fields.
+-   : Significantly expanded to include the analytics dashboard, create/archive order buttons, a sticky header, stage timestamps, and modals for viewing proofs and creating orders.
+-   : New file for the admin login form.
+-   : New component to display order statistics.
+-   : New component for the manual order creation form.
+-   : Updated with protected routes for the admin dashboard.
 
-**Areas that need refactoring**
--    and  are becoming very large and complex. They could be broken down into smaller, more manageable sub-components (e.g., OrderCard, ProofSection, TimelineEvent).
--   Backend logic in  could be better organized by splitting routes, database operations, and integration-specific code into separate modules/files.
+**Areas that need refactoring**:
+-   **** and **** have become monolithic and contain a vast amount of logic. The upcoming SaaS pivot is the ideal time to break these down into a more modular structure (e.g., separate files for routes, services, components) as part of the architectural overhaul.
 
 **key api endpoints**
--   : Fetches and syncs orders from Shopify.
--   : Retrieves all orders for the admin dashboard.
--   : Uploads proofs for an order.
--   : Sends a reminder email to the customer.
--   : Allows admin to manually change order stage/status.
--   : Finds an order using email and order number.
--   : Handles customer actions (Approve/Request Changes).
+-   : Authenticates an admin and returns a JWT.
+-   : Creates a new manual order.
+-   : Retrieves statistics for the admin dashboard.
+-   : Toggles the  flag for an order.
+-   : Deletes a specific proof image from an order.
 
 **Critical Info for New Agent**
-- The project was built from scratch in this session. All context is within the history.
-- The customer authentication method is simple:  + . It is not a full Shopify customer account login.
-- Images are stored as  strings directly in MongoDB. This was acknowledged as an MVP approach that might need to be changed to a file storage service (like S3) if the application scales.
-- The user is engaged and provides clear, specific feedback, often with visual mockups. Pay close attention to their design requests.
-- All necessary credentials for Shopify, Google, and SMTP are present in .
+-   **CRITICAL:** The user has decided to **fork the project**. You are on a new fork to begin the SaaS transformation. Do not continue adding features to the old single-tenant structure. You must begin implementing the multi-tenancy architecture (Approach C) as outlined in the Upcoming and Future Tasks.
+-   The current codebase is considered the stable, deployed version. It should serve as the functional baseline for the new SaaS product.
+-   The plan for the SaaS pivot has been discussed and approved by the user. Follow the phases outlined in Upcoming and Future Tasks.
 
 **documents created in this job**
--   
--   
+-   None new in this session. Existing guides (, ) are still relevant for the core integrations.
 
 **Last 5 User Messages and any pending user messages**
-1.  **User:** Modify the admin-side layout to look like the attached image ().
-    *   **Status:** IN PROGRESS. The agent has edited the code but has not verified the result yet.
-2.  **User:** Please double-check that the Approve and Request Changes buttons work for the Paint stage to avoid the previous bug.
-    *   **Status:** COMPLETED. The agent confirmed the code logic is consistent for both functions.
-3.  **User:** Please include a smaller version of the logo on the top right of the order details page.
-    *   **Status:** COMPLETED.
-4.  **User:** Please use the new logo and apply a gradient style to the AllBobbleheads text on the customer login page.
-    *   **Status:** COMPLETED.
-5.  **User:** I don't want the header additions inside the login box; they should be above it.
-    *   **Status:** COMPLETED.
+1.  **User:** Detailed the major pivot to a SaaS model with requirements for multi-user accounts, permissions, email editing, and branding.
+2.  **Agent:** Acknowledged the pivot and broke the request into phases for clarification.
+3.  **User:** Provided answers for Phase 1 requirements (user roles, manufacturer access).
+4.  **User:** Provided answers for Phases 2-4 (email management, order splitting, vendor permissions, notes). Asked the agent to propose implementation approaches.
+5.  **User:** After reviewing the agent's proposed architectures, chose **Approach C** and instructed the agent to deploy the existing app and **create a new fork** to begin the SaaS development.
 
 **Project Health Check:**
-*   **Broken:**
-    *   Custom domain DNS/linking () is not configured correctly and results in errors.
+*   **Broken:** None. The single-tenant application is stable and feature-complete as per the latest requests.
 *   **Mocked:** None.
 
 **Testing status**
--   Testing agent used after significant changes: NO
+-   Testing agent used after significant changes: YES (Backend testing agent was used to verify new endpoints for analytics, manual creation, and to fix a serialization bug).
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: []
+-   Test files created: Test scripts were generated and run by the backend testing agent.
 -   Known regressions: None.
 
 **Credentials to test flow:**
-All credentials for Shopify, Google OAuth, and SMTP are stored in . These can be viewed to understand the configuration.
+-   **Admin Portal:** 
+-   **Username:** 
+-   **Password:** 
 
 **What agent forgot to execute**
--   The agent did not implement automated customer-facing emails for when proofs are ready. The current implementation only sends emails to the admin or requires the admin to manually click a Ping Customer button. The original problem statement implied a more automated notification flow for the customer.
--   The agent did not fully resolve the custom domain setup issue. The user was left with an unresolved problem after several attempts.</analysis>
+-   Nothing. The agent correctly stopped work upon the user's explicit instruction to prepare for a fork before starting the new, large-scale SaaS refactoring.</analysis>
