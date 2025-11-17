@@ -116,20 +116,23 @@ async def send_email(tenant_config: dict, to_email: str, subject: str, html_cont
         logger.error(f"Failed to send email: {e}")
         raise
 
-async def send_customer_proof_notification(db, tenant_id: str, order: dict, stage: str, proof_count: int):
-    """Send automated email notification to customer when proofs are ready"""
+async def send_customer_proof_notification(db, tenant_id: str, order: dict, stage: str, proof_count: int) -> bool:
+    """
+    Send automated email notification to customer when proofs are ready
+    Returns True if email was sent successfully, False otherwise
+    """
     try:
         tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
         if not tenant:
-            return
+            return False
         
         if not tenant.get("settings", {}).get("email_templates_enabled", True):
             logger.info("Email templates disabled for this tenant")
-            return
+            return False
         
         customer_email = order.get('customer_email')
         if not customer_email:
-            return
+            return False
         
         subject, html_content = get_customer_proofs_ready_email(
             order['order_number'],
@@ -140,5 +143,7 @@ async def send_customer_proof_notification(db, tenant_id: str, order: dict, stag
         
         await send_email(tenant, customer_email, subject, html_content)
         logger.info(f"Automated customer notification sent for order {order['order_number']}")
+        return True
     except Exception as e:
         logger.error(f"Failed to send customer notification email: {e}")
+        return False
