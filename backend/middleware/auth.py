@@ -34,19 +34,21 @@ class AuthContext:
                 detail=f"Permission denied: {permission.value} required"
             )
 
+def get_db_dependency():
+    """Get database dependency"""
+    from motor.motor_asyncio import AsyncIOMotorClient
+    mongo_url = os.environ['MONGO_URL']
+    client = AsyncIOMotorClient(mongo_url)
+    return client[os.environ['DB_NAME']]
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db = None  # Will be injected
+    db = Depends(get_db_dependency)
 ) -> AuthContext:
     """
     Dependency to get current authenticated user from JWT token
     Usage: current_user: AuthContext = Depends(get_current_user)
     """
-    if db is None:
-        from motor.motor_asyncio import AsyncIOMotorClient
-        mongo_url = os.environ['MONGO_URL']
-        client = AsyncIOMotorClient(mongo_url)
-        db = client[os.environ['DB_NAME']]
     
     try:
         token = credentials.credentials
