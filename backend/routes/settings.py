@@ -53,7 +53,7 @@ async def update_tenant_settings(
     db = Depends(get_db)
 ):
     """
-    Update tenant settings
+    Update tenant settings and basic info (name)
     Requires: MANAGE_SETTINGS permission
     """
     tenant = await db.tenants.find_one(
@@ -64,25 +64,30 @@ async def update_tenant_settings(
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
     
+    # Prepare update document
+    update_doc = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    # Update tenant name if provided
+    if "name" in update_data:
+        update_doc["name"] = update_data["name"]
+    
     # Merge new settings with existing settings
-    current_settings = tenant.get("settings", {})
-    new_settings = update_data.get("settings", {})
-    merged_settings = {**current_settings, **new_settings}
+    if "settings" in update_data:
+        current_settings = tenant.get("settings", {})
+        new_settings = update_data["settings"]
+        merged_settings = {**current_settings, **new_settings}
+        update_doc["settings"] = merged_settings
     
     # Update tenant
     await db.tenants.update_one(
         {"id": auth.tenant_id},
-        {
-            "$set": {
-                "settings": merged_settings,
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }
-        }
+        {"$set": update_doc}
     )
     
     return {
         "message": "Settings updated successfully",
-        "settings": merged_settings
+        "name": update_doc.get("name", tenant.get("name")),
+        "settings": update_doc.get("settings", tenant.get("settings", {}))
     }
 
 @router.post("/test-email")
