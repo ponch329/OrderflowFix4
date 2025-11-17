@@ -79,13 +79,14 @@ const Settings = () => {
   const handleSaveBranding = async () => {
     setSaving(true);
     try {
-      await axios.patch(`${API}/settings/tenant`, {
+      const response = await axios.patch(`${API}/settings/tenant`, {
         settings: brandingSettings
       });
       toast.success("Branding settings saved successfully!");
+      console.log("Saved settings:", response.data);
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to save branding settings");
-      console.error(error);
+      console.error("Save error:", error);
     } finally {
       setSaving(false);
     }
@@ -94,13 +95,14 @@ const Settings = () => {
   const handleSaveEmail = async () => {
     setSaving(true);
     try {
-      await axios.patch(`${API}/settings/tenant`, {
+      const response = await axios.patch(`${API}/settings/tenant`, {
         settings: emailSettings
       });
-      toast.success("Email settings saved successfully!");
+      toast.success("Email & Permission settings saved successfully!");
+      console.log("Saved settings:", response.data);
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to save email settings");
-      console.error(error);
+      console.error("Save error:", error);
     } finally {
       setSaving(false);
     }
