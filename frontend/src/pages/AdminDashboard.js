@@ -629,6 +629,38 @@ const AdminDashboard = () => {
           })}
         </div>
 
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-between bg-white p-4 rounded-lg border shadow-sm">
+            <div className="text-sm text-gray-600">
+              Showing {((currentPage - 1) * perPage) + 1} to {Math.min(currentPage * perPage, totalCount)} of {totalCount} orders
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => fetchOrders(currentPage - 1)}
+                disabled={currentPage === 1 || loading}
+                variant="outline"
+                size="sm"
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-2 px-4">
+                <span className="text-sm font-medium">
+                  Page {currentPage} of {totalPages}
+                </span>
+              </div>
+              <Button
+                onClick={() => fetchOrders(currentPage + 1)}
+                disabled={currentPage === totalPages || loading}
+                variant="outline"
+                size="sm"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Create Order Dialog */}
         <CreateOrderDialog 
           open={createOrderDialogOpen}
