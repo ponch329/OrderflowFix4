@@ -158,8 +158,9 @@ async def get_analytics(days: int = 7, compare_days: int = 7):
 # Shopify sync endpoint
 @api_router.post("/admin/sync-orders")
 async def sync_orders():
-    """Sync orders from Shopify with Item Vendor information"""
+    """Sync orders from Shopify with Item Vendor information and auto-split multi-vendor orders"""
     import shopify
+    from utils.order_splitting import split_order_by_vendor, should_split_order
     
     # Get first tenant for now (will be enhanced with proper auth)
     tenant = await db.tenants.find_one({}, {"_id": 0})
@@ -183,6 +184,7 @@ async def sync_orders():
     try:
         orders = shopify.Order.find(status='any', limit=250)
         synced_count = 0
+        split_count = 0
         
         for order in orders:
             existing = await db.orders.find_one({
@@ -200,10 +202,21 @@ async def sync_orders():
                 # Get fulfillment status
                 fulfillment_status = order.fulfillment_status if hasattr(order, 'fulfillment_status') else None
                 
-                # Extract item vendor from line items
+                # Extract line items with vendor information
+                line_items = []
                 item_vendor = None
                 if hasattr(order, 'line_items') and order.line_items:
-                    # Get vendor from first line item
+                    for item in order.line_items:
+                        line_item = {
+                            "id": str(item.id) if hasattr(item, 'id') else None,
+                            "title": item.title if hasattr(item, 'title') else "",
+                            "quantity": item.quantity if hasattr(item, 'quantity') else 1,
+                            "vendor": item.vendor if hasattr(item, 'vendor') else "Unknown",
+                            "sku": item.sku if hasattr(item, 'sku') else ""
+                        }
+                        line_items.append(line_item)
+                    
+                    # Get vendor from first line item for main order
                     first_item = order.line_items[0]
                     if hasattr(first_item, 'vendor'):
                         item_vendor = first_item.vendor
@@ -217,6 +230,7 @@ async def sync_orders():
                     "customer_name": f"{order.customer.first_name} {order.customer.last_name}" if order.customer else "",
                     "item_vendor": item_vendor,
                     "parent_order_id": None,
+                    "line_items": line_items,
                     "stage": "fulfilled" if fulfillment_status == "fulfilled" else "clay",
                     "clay_status": "sculpting",
                     "paint_status": "pending",
@@ -239,6 +253,11 @@ async def sync_orders():
                 }
                 await db.orders.insert_one(order_doc)
                 synced_count += 1
+                
+                # Check if order should be split by vendor
+                if await should_split_order(line_items):
+                    sub_order_ids = await split_order_by_vendor(db, order_doc, line_items)
+                    split_count += len(sub_order_ids)
             else:
                 # Update existing order's fulfillment status if changed
                 fulfillment_status = order.fulfillment_status if hasattr(order, 'fulfillment_status') else None
@@ -256,7 +275,12 @@ async def sync_orders():
                         {"$set": update_data}
                     )
         
-        return {"message": f"Synced {synced_count} new orders", "total": len(orders)}
+        return {
+            "message": f"Synced {synced_count} new orders, split {split_count} sub-orders",
+            "total": len(orders),
+            "synced": synced_count,
+            "split": split_count
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
