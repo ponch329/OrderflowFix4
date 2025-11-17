@@ -35,6 +35,12 @@ const AdminDashboard = () => {
   const [uploadStage, setUploadStage] = useState("clay");
   const [uploadFiles, setUploadFiles] = useState([]);
   const [viewProofsStage, setViewProofsStage] = useState("clay");
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [perPage] = useState(50);
 
   useEffect(() => {
     // Check if admin is authenticated
