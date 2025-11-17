@@ -351,11 +351,24 @@ const Settings = () => {
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg">Manufacturer Permissions</h3>
                   
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label>Can Email Customers Directly</Label>
+                      <p className="text-sm text-gray-500">
+                        Allow manufacturers to send emails directly to customers about their orders
+                      </p>
+                    </div>
+                    <Switch
+                      checked={emailSettings.manufacturer_can_email_customers}
+                      onCheckedChange={(checked) => setEmailSettings({ ...emailSettings, manufacturer_can_email_customers: checked })}
+                    />
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label>Can Change Order Status</Label>
                       <p className="text-sm text-gray-500">
-                        Allow manufacturers to update order statuses
+                        Allow manufacturers to update order statuses (e.g., from sculpting to feedback_needed)
                       </p>
                     </div>
                     <Switch
@@ -368,7 +381,7 @@ const Settings = () => {
                     <div className="space-y-0.5">
                       <Label>Can Add Notes</Label>
                       <p className="text-sm text-gray-500">
-                        Allow manufacturers to add notes to orders
+                        Allow manufacturers to add internal notes to orders
                       </p>
                     </div>
                     <Switch
@@ -381,7 +394,7 @@ const Settings = () => {
                     <div className="space-y-0.5">
                       <Label>Notes Visible to Customers</Label>
                       <p className="text-sm text-gray-500">
-                        Show manufacturer notes to customers in their portal
+                        Show manufacturer and admin notes to customers in their portal
                       </p>
                     </div>
                     <Switch
