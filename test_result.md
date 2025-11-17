@@ -214,6 +214,18 @@ frontend:
           agent: "testing"
           comment: "✅ Settings page fully functional. Comprehensive testing completed: 1) Login flow working correctly (admin/admin123), 2) Navigation to Settings page successful, 3) Branding tab - Primary Color input functional, Save Branding Settings button working with success toast 'Branding settings saved successfully!', 4) Email tab - Email Templates toggle present and functional, BCC Email input working, Save Email Settings button working with success toast 'Email & Permission settings saved successfully!', 5) Settings persistence verified after page refresh - BCC email value 'test@example.com' persisted correctly, 6) No console errors found. All requested functionality working correctly."
 
+  - task: "Email Template Edit with CC and BCC Fields"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/EmailTemplates.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Email Template Edit feature with CC and BCC fields fully functional. Comprehensive testing completed: 1) Login flow working correctly (admin/admin123), 2) Navigation to Email Templates page successful, 3) Edit dialog opens when clicking Edit button on first template (Clay Proofs Ready), 4) All required fields present: Template Enabled toggle, CC (Carbon Copy) field, BCC (Blind Carbon Copy) field, Email Subject textarea, Email Body textarea, Save Template button, Send Test button, 5) CC and BCC fields are in side-by-side grid layout as expected, 6) Fields show appropriate placeholder text (cc@example.com, bcc@example.com), 7) Fields have helper text below them ('Send a copy to this email (optional)', 'Hidden copy to this email (optional)'), 8) Fields accept input correctly (test@cc.com, test@bcc.com), 9) Dialog can be closed properly, 10) No console errors found. All requested functionality working correctly."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
