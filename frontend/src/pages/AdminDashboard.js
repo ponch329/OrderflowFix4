@@ -91,14 +91,22 @@ const AdminDashboard = () => {
   const fetchOrders = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/orders?page=${page}&limit=${perPage}`);
-      const { orders: fetchedOrders, pagination } = response.data;
+      const response = await axios.get(`${API}/admin/orders`);
+      // Sort by created_at descending (newest first)
+      const sortedOrders = response.data.sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+      );
       
-      setOrders(fetchedOrders);
-      setFilteredOrders(fetchedOrders);
-      setCurrentPage(pagination.page);
-      setTotalPages(pagination.total_pages);
-      setTotalCount(pagination.total_count);
+      // Implement client-side pagination
+      const startIndex = (page - 1) * perPage;
+      const endIndex = startIndex + perPage;
+      const paginatedOrders = sortedOrders.slice(startIndex, endIndex);
+      
+      setOrders(sortedOrders); // Keep all orders for filtering
+      setFilteredOrders(paginatedOrders); // Show only current page
+      setCurrentPage(page);
+      setTotalPages(Math.ceil(sortedOrders.length / perPage));
+      setTotalCount(sortedOrders.length);
     } catch (error) {
       toast.error("Failed to load orders");
       console.error(error);
