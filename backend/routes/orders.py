@@ -1,0 +1,438 @@
+"""
+Order management routes with tenant isolation
+"""
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
+from motor.motor_asyncio import AsyncIOMotorClient
+from typing import List, Optional
+import os
+import uuid
+import base64
+import zipfile
+import io
+from datetime import datetime, timezone
+
+from models.order import Order, ManualOrderCreate, OrderNoteCreate
+from models.user import Permission
+from middleware.auth import AuthContext, get_current_user, require_permissions
+
+router = APIRouter(prefix="/orders", tags=["Orders"])
+
+def get_db():
+    """Dependency to get database connection"""
+    mongo_url = os.environ['MONGO_URL']
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[os.environ['DB_NAME']]
+    return db
+
+@router.get("/", response_model=List[Order])
+async def get_orders(
+    auth: AuthContext = Depends(require_permissions(Permission.VIEW_ORDERS)),
+    db = Depends(get_db)
+):
+    """
+    Get all orders for the current tenant
+    Requires: VIEW_ORDERS permission
+    """
+    # Build query based on user role
+    query = {"tenant_id": auth.tenant_id}
+    
+    # Manufacturers may have restricted view in the future
+    # For now, all users with VIEW_ORDERS can see all orders
+    
+    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    for order in orders:
+        # Convert datetime strings to datetime objects
+        for field in ['created_at', 'updated_at', 'clay_entered_at', 'paint_entered_at', 'fulfilled_at', 'canceled_at']:
+            if field in order and isinstance(order[field], str):
+                order[field] = datetime.fromisoformat(order[field])
+    
+    return orders
+
+@router.post("/", response_model=Order)
+async def create_order(
+    order_data: ManualOrderCreate,
+    auth: AuthContext = Depends(require_permissions(Permission.CREATE_ORDERS)),
+    db = Depends(get_db)
+):
+    """
+    Create a manual order
+    Requires: CREATE_ORDERS permission
+    """
+    # Check if order number already exists in this tenant
+    existing = await db.orders.find_one({
+        "tenant_id": auth.tenant_id,
+        "order_number": order_data.order_number
+    }, {"_id": 0})
+    
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Order #{order_data.order_number} already exists")
+    
+    now = datetime.now(timezone.utc)
+    clay_status = "sculpting" if order_data.stage == "clay" else "pending"
+    
+    new_order = {
+        "id": str(uuid.uuid4()),
+        "tenant_id": auth.tenant_id,
+        "shopify_order_id": None,
+        "order_number": order_data.order_number,
+        "customer_email": order_data.customer_email,
+        "customer_name": order_data.customer_name,
+        "item_vendor": order_data.item_vendor,
+        "parent_order_id": None,
+        "stage": order_data.stage,
+        "clay_status": clay_status,
+        "paint_status": "pending",
+        "is_manual_order": True,
+        "is_archived": False,
+        "shopify_fulfillment_status": None,
+        "clay_entered_at": now.isoformat() if order_data.stage == "clay" else None,
+        "paint_entered_at": now.isoformat() if order_data.stage == "paint" else None,
+        "fulfilled_at": None,
+        "canceled_at": None,
+        "clay_proofs": [],
+        "paint_proofs": [],
+        "clay_approval": None,
+        "paint_approval": None,
+        "notes": [],
+        "last_updated_by": auth.user_id,
+        "last_updated_at": now.isoformat(),
+        "created_at": now.isoformat(),
+        "updated_at": now.isoformat()
+    }
+    
+    await db.orders.insert_one(new_order)
+    
+    # Log to Google Sheets if configured
+    from utils.helpers import log_to_sheets
+    await log_to_sheets(
+        db,
+        auth.tenant_id,
+        order_data.order_number,
+        "Manual Order Created",
+        f"Created by {auth.user.full_name} ({auth.user.role.value})",
+        stage=order_data.stage,
+        status=clay_status
+    )
+    
+    return Order(**new_order)
+
+@router.post("/{order_id}/notes", response_model=Order)
+async def add_note_to_order(
+    order_id: str,
+    note_data: OrderNoteCreate,
+    auth: AuthContext = Depends(require_permissions(Permission.ADD_NOTES)),
+    db = Depends(get_db)
+):
+    """
+    Add a note to an order
+    Requires: ADD_NOTES permission
+    """
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": auth.tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    note = {
+        "id": str(uuid.uuid4()),
+        "user_id": auth.user_id,
+        "user_name": auth.user.full_name,
+        "user_role": auth.role.value,
+        "content": note_data.content,
+        "visible_to_customer": note_data.visible_to_customer,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": auth.tenant_id},
+        {
+            "$push": {"notes": note},
+            "$set": {
+                "last_updated_by": auth.user_id,
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Fetch updated order
+    updated_order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": auth.tenant_id
+    }, {"_id": 0})
+    
+    return Order(**updated_order)
+
+@router.post("/{order_id}/proofs")
+async def upload_proofs(
+    order_id: str,
+    stage: str = Form(...),
+    files: List[UploadFile] = File(...),
+    auth: AuthContext = Depends(require_permissions(Permission.UPLOAD_PROOFS)),
+    db = Depends(get_db)
+):
+    """
+    Upload proof images for an order (supports zip files)
+    Requires: UPLOAD_PROOFS permission
+    """
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": auth.tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    uploaded_proofs = []
+    
+    for file in files:
+        if file.filename.endswith('.zip'):
+            # Handle zip file
+            content = await file.read()
+            with zipfile.ZipFile(io.BytesIO(content)) as zf:
+                for name in zf.namelist():
+                    if name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                        image_data = zf.read(name)
+                        image_base64 = base64.b64encode(image_data).decode('utf-8')
+                        proof = {
+                            "id": str(uuid.uuid4()),
+                            "url": f"data:image/jpeg;base64,{image_base64}",
+                            "filename": name,
+                            "uploaded_at": datetime.now(timezone.utc).isoformat()
+                        }
+                        uploaded_proofs.append(proof)
+        else:
+            # Handle individual image file
+            content = await file.read()
+            image_base64 = base64.b64encode(content).decode('utf-8')
+            proof = {
+                "id": str(uuid.uuid4()),
+                "url": f"data:image/jpeg;base64,{image_base64}",
+                "filename": file.filename,
+                "uploaded_at": datetime.now(timezone.utc).isoformat()
+            }
+            uploaded_proofs.append(proof)
+    
+    # Update order with proofs and change status to feedback_needed
+    field = f"{stage}_proofs"
+    status_field = f"{stage}_status"
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": auth.tenant_id},
+        {
+            "$push": {field: {"$each": uploaded_proofs}},
+            "$set": {
+                status_field: "feedback_needed",
+                "last_updated_by": auth.user_id,
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Log to sheets
+    from utils.helpers import log_to_sheets, send_customer_proof_notification
+    await log_to_sheets(
+        db,
+        auth.tenant_id,
+        order['order_number'],
+        f"Proofs Uploaded - {stage}",
+        f"{len(uploaded_proofs)} images - Status: Feedback Needed",
+        stage=order.get('stage', ''),
+        status='feedback_needed'
+    )
+    
+    # Send automated email notification to customer
+    if order.get('customer_email'):
+        await send_customer_proof_notification(
+            db,
+            auth.tenant_id,
+            order,
+            stage,
+            len(uploaded_proofs)
+        )
+    
+    return {"message": f"Uploaded {len(uploaded_proofs)} proofs", "proofs": uploaded_proofs}
+
+@router.delete("/{order_id}/proofs/{proof_id}")
+async def delete_proof(
+    order_id: str,
+    proof_id: str,
+    stage: str,
+    auth: AuthContext = Depends(require_permissions(Permission.DELETE_PROOFS)),
+    db = Depends(get_db)
+):
+    """
+    Delete a specific proof image from an order
+    Requires: DELETE_PROOFS permission
+    """
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": auth.tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    if stage not in ["clay", "paint"]:
+        raise HTTPException(status_code=400, detail="Invalid stage. Must be 'clay' or 'paint'")
+    
+    proofs_field = f"{stage}_proofs"
+    proofs = order.get(proofs_field, [])
+    
+    updated_proofs = [proof for proof in proofs if proof.get('id') != proof_id]
+    
+    if len(updated_proofs) == len(proofs):
+        raise HTTPException(status_code=404, detail="Proof not found")
+    
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": auth.tenant_id},
+        {
+            "$set": {
+                proofs_field: updated_proofs,
+                "last_updated_by": auth.user_id,
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Log to sheets
+    from utils.helpers import log_to_sheets
+    await log_to_sheets(
+        db,
+        auth.tenant_id,
+        order['order_number'],
+        f"Proof Deleted - {stage.capitalize()}",
+        f"Removed 1 image. {len(updated_proofs)} remaining",
+        stage=order.get('stage', ''),
+        status=order.get(f"{stage}_status", '')
+    )
+    
+    return {
+        "message": "Proof deleted successfully",
+        "remaining_proofs": len(updated_proofs)
+    }
+
+@router.patch("/{order_id}/archive")
+async def toggle_archive_order(
+    order_id: str,
+    archive: bool = True,
+    auth: AuthContext = Depends(require_permissions(Permission.ARCHIVE_ORDERS)),
+    db = Depends(get_db)
+):
+    """
+    Archive or unarchive an order
+    Requires: ARCHIVE_ORDERS permission
+    """
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": auth.tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": auth.tenant_id},
+        {
+            "$set": {
+                "is_archived": archive,
+                "last_updated_by": auth.user_id,
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    action = "Archived" if archive else "Unarchived"
+    from utils.helpers import log_to_sheets
+    await log_to_sheets(
+        db,
+        auth.tenant_id,
+        order['order_number'],
+        f"Order {action}",
+        f"Order {action.lower()} by {auth.user.full_name}",
+        stage=order.get('stage', ''),
+        status=order.get('clay_status', '')
+    )
+    
+    return {"message": f"Order {action.lower()} successfully", "archived": archive}
+
+@router.patch("/{order_id}/status")
+async def update_order_status(
+    order_id: str,
+    stage: Optional[str] = None,
+    clay_status: Optional[str] = None,
+    paint_status: Optional[str] = None,
+    auth: AuthContext = Depends(require_permissions(Permission.EDIT_ORDERS)),
+    db = Depends(get_db)
+):
+    """
+    Manually update order stage and/or status
+    Requires: EDIT_ORDERS permission
+    """
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": auth.tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    now = datetime.now(timezone.utc)
+    update_data = {
+        "last_updated_by": auth.user_id,
+        "last_updated_at": now.isoformat(),
+        "updated_at": now.isoformat()
+    }
+    
+    # Track stage changes with timestamps
+    if stage and stage != order.get('stage'):
+        update_data["stage"] = stage
+        if stage == "clay":
+            update_data["clay_entered_at"] = now.isoformat()
+        elif stage == "paint":
+            update_data["paint_entered_at"] = now.isoformat()
+        elif stage == "fulfilled":
+            update_data["fulfilled_at"] = now.isoformat()
+        elif stage == "canceled":
+            update_data["canceled_at"] = now.isoformat()
+    
+    if clay_status:
+        update_data["clay_status"] = clay_status
+    
+    if paint_status:
+        update_data["paint_status"] = paint_status
+    
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": auth.tenant_id},
+        {"$set": update_data}
+    )
+    
+    # Log to sheets
+    changes = []
+    if stage:
+        changes.append(f"Stage: {stage}")
+    if clay_status:
+        changes.append(f"Clay Status: {clay_status}")
+    if paint_status:
+        changes.append(f"Paint Status: {paint_status}")
+    
+    updated_order = await db.orders.find_one({"id": order_id, "tenant_id": auth.tenant_id}, {"_id": 0})
+    
+    from utils.helpers import log_to_sheets
+    await log_to_sheets(
+        db,
+        auth.tenant_id,
+        order['order_number'],
+        "Manual Status Update",
+        ", ".join(changes),
+        stage=updated_order.get('stage', ''),
+        status=updated_order.get('clay_status', '')
+    )
+    
+    return {"message": "Status updated successfully", "updates": update_data}
