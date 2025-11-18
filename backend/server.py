@@ -280,6 +280,124 @@ async def admin_request_changes_legacy(
     
     return {"message": "Changes requested successfully", "approval": approval}
 
+@api_router.post("/admin/orders/{order_id}/proofs")
+async def admin_upload_proofs_legacy(
+    order_id: str,
+    stage: str = Form(...),
+    revision_note: str = Form(None),
+    files: List[UploadFile] = File(...)
+):
+    """
+    Upload proofs from admin order details page
+    Legacy endpoint without auth
+    """
+    import base64
+    import zipfile
+    import io
+    
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    tenant_id = tenant["id"]
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Determine the current round number
+    existing_proofs = order.get(f"{stage}_proofs", [])
+    current_round = 1
+    if existing_proofs:
+        current_round = max([p.get('round', 1) for p in existing_proofs]) + 1
+    
+    uploaded_proofs = []
+    
+    for file in files:
+        if file.filename.endswith('.zip'):
+            # Handle zip file
+            content = await file.read()
+            with zipfile.ZipFile(io.BytesIO(content)) as zf:
+                for name in zf.namelist():
+                    if name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                        image_data = zf.read(name)
+                        image_base64 = base64.b64encode(image_data).decode('utf-8')
+                        proof = {
+                            "id": str(__import__('uuid').uuid4()),
+                            "url": f"data:image/jpeg;base64,{image_base64}",
+                            "filename": name,
+                            "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                            "round": current_round,
+                            "revision_note": revision_note
+                        }
+                        uploaded_proofs.append(proof)
+        else:
+            # Handle individual image file
+            content = await file.read()
+            image_base64 = base64.b64encode(content).decode('utf-8')
+            proof = {
+                "id": str(__import__('uuid').uuid4()),
+                "url": f"data:image/jpeg;base64,{image_base64}",
+                "filename": file.filename,
+                "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                "round": current_round,
+                "revision_note": revision_note
+            }
+            uploaded_proofs.append(proof)
+    
+    # Update order with proofs and change status to feedback_needed
+    field = f"{stage}_proofs"
+    status_field = f"{stage}_status"
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": tenant_id},
+        {
+            "$push": {field: {"$each": uploaded_proofs}},
+            "$set": {
+                status_field: "feedback_needed",
+                "last_updated_by": "admin",
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Send automated email notification to customer
+    emailed_customer = "No"
+    if order.get('customer_email'):
+        from utils.helpers import send_customer_proof_notification
+        email_sent = await send_customer_proof_notification(
+            db,
+            tenant_id,
+            order,
+            stage,
+            len(uploaded_proofs)
+        )
+        emailed_customer = "Yes" if email_sent else "No"
+    
+    # Log to sheets with email status
+    from utils.helpers import log_to_sheets
+    note_text = f" - {revision_note}" if revision_note else ""
+    await log_to_sheets(
+        db,
+        tenant_id,
+        order['order_number'],
+        f"Proofs Uploaded - {stage.capitalize()} (Round {current_round})",
+        f"{len(uploaded_proofs)} images{note_text}",
+        stage=order.get('stage', ''),
+        status='feedback_needed',
+        emailed_customer=emailed_customer
+    )
+    
+    return {
+        "message": f"Uploaded {len(uploaded_proofs)} proofs (Round {current_round})",
+        "proofs": uploaded_proofs,
+        "round": current_round
+    }
+
 # Analytics endpoint
 @api_router.get("/admin/analytics")
 async def get_analytics(days: int = 7, compare_days: int = 7):
