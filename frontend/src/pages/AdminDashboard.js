@@ -70,11 +70,13 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    // Filter orders based on search query, stage, status, vendor, and archive state
+    // Filter and sort orders based on all criteria
     let filtered = orders;
     
-    // Apply archive filter
-    filtered = filtered.filter(order => showArchived ? order.is_archived : !order.is_archived);
+    // Apply archive filter (now checks stage as well)
+    filtered = filtered.filter(order => 
+      showArchived ? (order.is_archived || order.stage === "archived") : (!order.is_archived && order.stage !== "archived")
+    );
     
     // Apply search filter
     if (searchQuery.trim()) {
@@ -103,6 +105,20 @@ const AdminDashboard = () => {
       filtered = filtered.filter(order => order.item_vendor === vendorFilter);
     }
     
+    // Apply sorting
+    filtered.sort((a, b) => {
+      if (sortBy === "created_at") {
+        return new Date(b.created_at) - new Date(a.created_at);
+      } else if (sortBy === "updated_at") {
+        return new Date(b.updated_at) - new Date(a.updated_at);
+      } else if (sortBy === "last_edited_by_customer") {
+        const aTime = a.clay_approval?.created_at || a.paint_approval?.created_at || a.created_at;
+        const bTime = b.clay_approval?.created_at || b.paint_approval?.created_at || b.created_at;
+        return new Date(bTime) - new Date(aTime);
+      }
+      return 0;
+    });
+    
     // Apply pagination to filtered results
     const startIndex = (currentPage - 1) * perPage;
     const endIndex = startIndex + perPage;
@@ -111,7 +127,7 @@ const AdminDashboard = () => {
     setFilteredOrders(paginatedOrders);
     setTotalPages(Math.ceil(filtered.length / perPage));
     setTotalCount(filtered.length);
-  }, [orders, searchQuery, stageFilter, statusFilter, vendorFilter, showArchived, currentPage, perPage]);
+  }, [orders, searchQuery, stageFilter, statusFilter, vendorFilter, showArchived, currentPage, perPage, sortBy]);
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
