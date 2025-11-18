@@ -387,24 +387,35 @@ const OrderDetailsAdmin = () => {
               <p className="text-gray-500">No paint proofs uploaded yet</p>
             ) : (
               <div className="space-y-6">
-                {Object.keys(paintRounds).sort((a, b) => b - a).map(round => (
-                  <div key={round} className="border-l-4 border-purple-500 pl-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <h3 className="font-bold">Round {round}</h3>
-                      {round == Math.max(...Object.keys(paintRounds)) && (
-                        <Badge className="bg-green-500">Latest</Badge>
-                      )}
-                      {paintRounds[round][0]?.revision_note && (
-                        <p className="text-sm text-gray-600">- {paintRounds[round][0].revision_note}</p>
-                      )}
+                {Object.keys(paintRounds).sort((a, b) => b - a).map(round => {
+                  const roundProofs = paintRounds[round];
+                  const roundDate = roundProofs[0]?.uploaded_at ? new Date(roundProofs[0].uploaded_at).toLocaleDateString() : 'N/A';
+                  
+                  return (
+                    <div key={round} className="border-l-4 border-purple-500 pl-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <h3 className="font-bold">Round {round}</h3>
+                        {round == Math.max(...Object.keys(paintRounds)) && (
+                          <Badge className="bg-green-500">Latest</Badge>
+                        )}
+                        <span className="text-sm text-gray-500">• Sent {roundDate}</span>
+                        {roundProofs[0]?.revision_note && (
+                          <p className="text-sm text-gray-600">• {roundProofs[0].revision_note}</p>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-4 gap-4">
+                        {roundProofs.map(proof => (
+                          <div key={proof.id} className="relative">
+                            <img src={proof.url} alt={proof.filename} className="w-full rounded border" />
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(proof.uploaded_at).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-4">
-                      {paintRounds[round].map(proof => (
-                        <img key={proof.id} src={proof.url} alt={proof.filename} className="w-full rounded border" />
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
