@@ -198,12 +198,13 @@ async def add_note_to_order(
 async def upload_proofs(
     order_id: str,
     stage: str = Form(...),
+    revision_note: str = Form(None),
     files: List[UploadFile] = File(...),
     auth: AuthContext = Depends(require_permissions(Permission.UPLOAD_PROOFS)),
     db = Depends(get_db)
 ):
     """
-    Upload proof images for an order (supports zip files)
+    Upload proof images for an order (supports zip files and revision tracking)
     Requires: UPLOAD_PROOFS permission
     """
     order = await db.orders.find_one({
@@ -213,6 +214,13 @@ async def upload_proofs(
     
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Determine the current round number
+    existing_proofs = order.get(f"{stage}_proofs", [])
+    current_round = 1
+    if existing_proofs:
+        # Get the highest round number and add 1
+        current_round = max([p.get('round', 1) for p in existing_proofs]) + 1
     
     uploaded_proofs = []
     
@@ -229,7 +237,9 @@ async def upload_proofs(
                             "id": str(uuid.uuid4()),
                             "url": f"data:image/jpeg;base64,{image_base64}",
                             "filename": name,
-                            "uploaded_at": datetime.now(timezone.utc).isoformat()
+                            "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                            "round": current_round,
+                            "revision_note": revision_note
                         }
                         uploaded_proofs.append(proof)
         else:
@@ -240,7 +250,9 @@ async def upload_proofs(
                 "id": str(uuid.uuid4()),
                 "url": f"data:image/jpeg;base64,{image_base64}",
                 "filename": file.filename,
-                "uploaded_at": datetime.now(timezone.utc).isoformat()
+                "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                "round": current_round,
+                "revision_note": revision_note
             }
             uploaded_proofs.append(proof)
     
@@ -275,18 +287,23 @@ async def upload_proofs(
     
     # Log to sheets with email status
     from utils.helpers import log_to_sheets
+    note_text = f" - {revision_note}" if revision_note else ""
     await log_to_sheets(
         db,
         auth.tenant_id,
         order['order_number'],
-        f"Proofs Uploaded - {stage}",
-        f"{len(uploaded_proofs)} images - Status: Feedback Needed",
+        f"Proofs Uploaded - {stage} (Round {current_round})",
+        f"{len(uploaded_proofs)} images{note_text}",
         stage=order.get('stage', ''),
         status='feedback_needed',
         emailed_customer=emailed_customer
     )
     
-    return {"message": f"Uploaded {len(uploaded_proofs)} proofs", "proofs": uploaded_proofs}
+    return {
+        "message": f"Uploaded {len(uploaded_proofs)} proofs (Round {current_round})",
+        "proofs": uploaded_proofs,
+        "round": current_round
+    }
 
 @router.delete("/{order_id}/proofs/{proof_id}")
 async def delete_proof(
