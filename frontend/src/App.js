@@ -5,6 +5,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import UserManagement from "@/pages/UserManagement";
 import Settings from "@/pages/Settings";
 import EmailTemplates from "@/pages/EmailTemplates";
+import OrderDetailsAdmin from "@/pages/OrderDetailsAdmin";
 import CustomerPortal from "@/pages/CustomerPortal";
 import OrderDetails from "@/pages/OrderDetails";
 import HomePage from "@/pages/HomePage";
@@ -22,6 +23,7 @@ function App() {
           <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/admin/settings" element={<Settings />} />
           <Route path="/admin/email-templates" element={<EmailTemplates />} />
+          <Route path="/admin/orders/:orderId" element={<OrderDetailsAdmin />} />
           <Route path="/customer" element={<CustomerPortal />} />
           <Route path="/order/:orderId" element={<OrderDetails />} />
         </Routes>
