@@ -81,6 +81,132 @@ async def get_admin_orders_legacy():
     
     return orders
 
+@api_router.get("/admin/orders/{order_id}")
+async def get_admin_order_details():
+    """
+    Get single order details for admin
+    Legacy endpoint without auth for backwards compatibility
+    """
+    from fastapi import Path
+    
+    order_id = Path(...)
+    
+    # Get first tenant
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    tenant_id = tenant["id"]
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Convert datetime strings to datetime objects
+    for field in ['created_at', 'updated_at', 'clay_entered_at', 'paint_entered_at', 'fulfilled_at', 'canceled_at']:
+        if field in order and isinstance(order[field], str):
+            order[field] = datetime.fromisoformat(order[field])
+    
+    return order
+
+@api_router.patch("/admin/orders/{order_id}/info")
+async def update_admin_order_info(order_id: str, update_data: dict):
+    """
+    Update order info for admin
+    Legacy endpoint without auth
+    """
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    tenant_id = tenant["id"]
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    update_fields = {
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if "order_number" in update_data:
+        update_fields["order_number"] = update_data["order_number"]
+    if "customer_name" in update_data:
+        update_fields["customer_name"] = update_data["customer_name"]
+    if "customer_email" in update_data:
+        update_fields["customer_email"] = update_data["customer_email"]
+    
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": tenant_id},
+        {"$set": update_fields}
+    )
+    
+    return {"message": "Order updated successfully"}
+
+@api_router.patch("/admin/orders/{order_id}/status")
+async def update_admin_order_status(order_id: str, update_data: dict):
+    """
+    Update order stage/status for admin
+    Legacy endpoint without auth
+    """
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    tenant_id = tenant["id"]
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    now = datetime.now(timezone.utc)
+    update_fields = {
+        "updated_at": now.isoformat()
+    }
+    
+    if "stage" in update_data:
+        stage = update_data["stage"]
+        update_fields["stage"] = stage
+        
+        if stage == "archived":
+            update_fields["is_archived"] = True
+        else:
+            update_fields["is_archived"] = False
+            
+        if stage == "clay":
+            update_fields["clay_entered_at"] = now.isoformat()
+        elif stage == "paint":
+            update_fields["paint_entered_at"] = now.isoformat()
+        elif stage == "fulfilled":
+            update_fields["fulfilled_at"] = now.isoformat()
+        elif stage == "canceled":
+            update_fields["canceled_at"] = now.isoformat()
+    
+    if "clay_status" in update_data:
+        update_fields["clay_status"] = update_data["clay_status"]
+    
+    if "paint_status" in update_data:
+        update_fields["paint_status"] = update_data["paint_status"]
+    
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": tenant_id},
+        {"$set": update_fields}
+    )
+    
+    return {"message": "Status updated successfully"}
+
 # Analytics endpoint
 @api_router.get("/admin/analytics")
 async def get_analytics(days: int = 7, compare_days: int = 7):
