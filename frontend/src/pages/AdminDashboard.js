@@ -401,16 +401,21 @@ const AdminDashboard = () => {
                 <Plus className="w-4 h-4 mr-2" />
                 Create Order
               </Button>
-              <Button
-                onClick={() => setShowArchived(!showArchived)}
-                variant={showArchived ? "default" : "outline"}
-                className="h-12"
-              >
-                {showArchived ? "Show Active" : "Show Archived"}
-              </Button>
             </div>
 
             <div className="flex gap-4">
+            <div className="w-56">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created_at">Order Date (Newest)</SelectItem>
+                  <SelectItem value="updated_at">Last Updated</SelectItem>
+                  <SelectItem value="last_edited_by_customer">Customer Activity</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="w-48">
               <Select value={stageFilter} onValueChange={setStageFilter}>
                 <SelectTrigger data-testid="stage-filter">
