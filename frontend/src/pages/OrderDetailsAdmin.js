@@ -106,14 +106,27 @@ const OrderDetailsAdmin = () => {
       return;
     }
 
+    // Store pending change and show notification dialog
+    setPendingStatusChange({
+      stage: selectedStage,
+      clay_status: selectedClayStatus,
+      paint_status: selectedPaintStatus
+    });
+    setEditStageDialogOpen(false);
+    setNotifyDialogOpen(true);
+  };
+
+  const confirmStageStatusChange = async () => {
+    if (!pendingStatusChange) return;
+
     try {
       await axios.patch(`${API}/admin/orders/${orderId}/status`, {
-        stage: selectedStage,
-        clay_status: selectedClayStatus,
-        paint_status: selectedPaintStatus
+        ...pendingStatusChange,
+        notify_customer: notifyCustomer
       });
-      toast.success("Stage and status updated!");
-      setEditStageDialogOpen(false);
+      toast.success(notifyCustomer ? "Status updated & customer notified!" : "Stage and status updated!");
+      setNotifyDialogOpen(false);
+      setPendingStatusChange(null);
       fetchOrder();
     } catch (error) {
       toast.error("Failed to update stage/status");
