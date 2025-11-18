@@ -204,19 +204,18 @@ async def update_admin_order_status(order_id: str, update_data: dict):
     return {"message": "Status updated successfully"}
 
 @api_router.post("/admin/orders/{order_id}/request-changes")
-async def admin_request_changes_legacy(order_id: str):
+async def admin_request_changes_legacy(
+    order_id: str,
+    message: str = Form(...),
+    stage: str = Form(...),
+    files: List[UploadFile] = File(None)
+):
     """
     Admin requests changes on an order
     Legacy endpoint without auth
     """
-    from fastapi import Form, File, UploadFile
     from typing import List
     import base64
-    
-    # Get form data
-    message: str = Form(...)
-    stage: str = Form(...)
-    files: List[UploadFile] = File(None)
     
     tenant = await db.tenants.find_one({}, {"_id": 0})
     if not tenant:
