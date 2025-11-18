@@ -28,6 +28,7 @@ const AdminDashboard = () => {
   const [vendorFilter, setVendorFilter] = useState("all");
   const [showArchived, setShowArchived] = useState(false);
   const [vendors, setVendors] = useState([]);
+  const [sortBy, setSortBy] = useState("created_at"); // created_at, updated_at, last_edited_by_customer
   const [loading, setLoading] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [viewProofsDialogOpen, setViewProofsDialogOpen] = useState(false);
