@@ -479,6 +479,47 @@ const OrderDetailsAdmin = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Notification Confirmation Dialog */}
+        <Dialog open={notifyDialogOpen} onOpenChange={setNotifyDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Send Customer Notification?</DialogTitle>
+              <DialogDescription>
+                Do you want to notify the customer about this status change?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 p-4 bg-blue-50 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="notify-customer"
+                  checked={notifyCustomer}
+                  onChange={(e) => setNotifyCustomer(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="notify-customer" className="cursor-pointer">
+                  Send email notification to customer
+                </Label>
+              </div>
+              {pendingStatusChange && (
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p><strong>Stage:</strong> {pendingStatusChange.stage}</p>
+                  <p><strong>Clay Status:</strong> {pendingStatusChange.clay_status}</p>
+                  <p><strong>Paint Status:</strong> {pendingStatusChange.paint_status}</p>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setNotifyDialogOpen(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={confirmStageStatusChange} className="flex-1">
+                  Confirm Update
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Upload Proofs Dialog */}
         <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
           <DialogContent className="max-w-2xl">
