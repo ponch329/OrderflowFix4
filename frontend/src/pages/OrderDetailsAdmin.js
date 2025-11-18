@@ -322,6 +322,42 @@ const OrderDetailsAdmin = () => {
           </CardContent>
         </Card>
 
+        {/* Customer Change Requests - Clay */}
+        {order.clay_approval && order.clay_approval.status === 'changes_requested' && (
+          <Card className="mb-6 border-orange-300 bg-orange-50">
+            <CardHeader>
+              <CardTitle className="text-orange-800 flex items-center gap-2">
+                <XCircle className="w-5 h-5" />
+                Customer Requested Clay Changes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Customer Message:</p>
+                  <p className="font-medium bg-white p-3 rounded border border-orange-200">
+                    {order.clay_approval.message || "No message provided"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Requested on:</p>
+                  <p className="text-sm">{new Date(order.clay_approval.created_at).toLocaleString()}</p>
+                </div>
+                {order.clay_approval.images && order.clay_approval.images.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">Reference Images:</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {order.clay_approval.images.map((img, idx) => (
+                        <img key={idx} src={img} alt={`Reference ${idx + 1}`} className="w-full rounded border" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Clay Proofs by Round */}
         <Card className="mb-6">
           <CardHeader>
