@@ -10,6 +10,8 @@ class ProofImage(BaseModel):
     url: str
     filename: str
     uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    round: int = 1  # Revision round number
+    revision_note: Optional[str] = None  # Note about this revision
 
 class ApprovalRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
