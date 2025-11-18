@@ -36,6 +36,11 @@ const OrderDetailsAdmin = () => {
   const [selectedClayStatus, setSelectedClayStatus] = useState("");
   const [selectedPaintStatus, setSelectedPaintStatus] = useState("");
   
+  // Notification confirmation
+  const [notifyDialogOpen, setNotifyDialogOpen] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
+  const [notifyCustomer, setNotifyCustomer] = useState(true);
+  
   // Upload proofs
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadStage, setUploadStage] = useState("clay");
