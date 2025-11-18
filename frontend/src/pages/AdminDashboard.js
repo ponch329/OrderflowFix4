@@ -422,6 +422,7 @@ const AdminDashboard = () => {
                   <SelectItem value="paint">Paint</SelectItem>
                   <SelectItem value="fulfilled">Fulfilled</SelectItem>
                   <SelectItem value="canceled">Canceled</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
             </div>
