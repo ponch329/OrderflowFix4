@@ -507,8 +507,9 @@ const AdminDashboard = () => {
             return (
             <Card 
               key={order.id} 
-              className={`hover:shadow-lg transition-shadow ${isFulfilled ? 'bg-gray-50 opacity-70' : ''}`}
+              className={`hover:shadow-lg transition-shadow cursor-pointer ${isFulfilled ? 'bg-gray-50 opacity-70' : ''}`}
               data-testid={`order-card-${order.id}`}
+              onClick={() => navigate(`/admin/orders/${order.id}`)}
             >
               <CardContent className="p-6">
                 <div className="grid grid-cols-[300px_1fr] gap-6">
