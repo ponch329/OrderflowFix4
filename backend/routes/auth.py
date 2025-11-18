@@ -102,3 +102,22 @@ async def verify_token(db = Depends(get_db)):
             "permissions": [p.value for p in auth.user.get_permissions()]
         }
     }
+
+@router.get("/me")
+async def get_current_user_info(db = Depends(get_db)):
+    """
+    Get current authenticated user information
+    """
+    from middleware.auth import get_current_user
+    
+    auth = await get_current_user(db=db)
+    
+    return {
+        "id": auth.user_id,
+        "username": auth.user.username,
+        "full_name": auth.user.full_name,
+        "email": auth.user.email,
+        "role": auth.role.value,
+        "permissions": [p.value for p in auth.user.get_permissions()],
+        "tenant_id": auth.tenant_id
+    }
