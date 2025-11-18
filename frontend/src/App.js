@@ -25,6 +25,7 @@ function App() {
           <Route path="/admin/settings" element={<Settings />} />
           <Route path="/admin/email-templates" element={<EmailTemplates />} />
           <Route path="/admin/orders/:orderId" element={<OrderDetailsAdmin />} />
+          <Route path="/manufacturer/dashboard" element={<ManufacturerDashboard />} />
           <Route path="/customer" element={<CustomerPortal />} />
           <Route path="/order/:orderId" element={<OrderDetails />} />
         </Routes>
