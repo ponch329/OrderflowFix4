@@ -25,7 +25,7 @@ export default function AdminLogin() {
 
     setLoading(true);
     try {
-      const response = await axios.post(`${API_URL}/api/admin/login`, {
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
         username,
         password
       });
@@ -34,7 +34,14 @@ export default function AdminLogin() {
         // Store auth token in localStorage
         localStorage.setItem('admin_token', response.data.token);
         toast.success('Login successful!');
-        navigate('/admin/dashboard');
+        
+        // Redirect based on user role
+        const userRole = response.data.user.role;
+        if (userRole === 'manufacturer') {
+          navigate('/manufacturer/dashboard');
+        } else {
+          navigate('/admin/dashboard');
+        }
       }
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Invalid username or password');
