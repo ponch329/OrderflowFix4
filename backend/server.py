@@ -82,15 +82,11 @@ async def get_admin_orders_legacy():
     return orders
 
 @api_router.get("/admin/orders/{order_id}")
-async def get_admin_order_details():
+async def get_admin_order_details(order_id: str):
     """
     Get single order details for admin
     Legacy endpoint without auth for backwards compatibility
     """
-    from fastapi import Path
-    
-    order_id = Path(...)
-    
     # Get first tenant
     tenant = await db.tenants.find_one({}, {"_id": 0})
     if not tenant:
