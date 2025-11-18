@@ -2,6 +2,7 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
+import ManufacturerDashboard from "@/pages/ManufacturerDashboard";
 import UserManagement from "@/pages/UserManagement";
 import Settings from "@/pages/Settings";
 import EmailTemplates from "@/pages/EmailTemplates";
