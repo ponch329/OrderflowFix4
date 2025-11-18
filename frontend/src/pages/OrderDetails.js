@@ -368,19 +368,26 @@ const OrderDetails = () => {
                                 >
                                   <XCircle className="w-5 h-5 mr-2" />
                                   Request Changes
-                  </Button>
-                </div>
-              )}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
 
-              {approval && approval.status === "changes_requested" && (
-                <div className="mt-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
-                  <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
-                  <p className="text-gray-700">{approval.message || "No message provided"}</p>
-                  {approval.images && approval.images.length > 0 && (
-                    <p className="text-sm text-gray-600 mt-2">{approval.images.length} reference image(s) attached</p>
-                  )}
-                </div>
-              )}
+                          {approval && approval.status === "changes_requested" && (
+                            <div className="mt-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
+                              <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
+                              <p className="text-gray-700">{approval.message || "No message provided"}</p>
+                              {approval.images && approval.images.length > 0 && (
+                                <p className="text-sm text-gray-600 mt-2">{approval.images.length} reference image(s) attached</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </>
           ) : (
             <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
