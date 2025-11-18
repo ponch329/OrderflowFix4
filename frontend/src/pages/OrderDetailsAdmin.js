@@ -408,6 +408,42 @@ const OrderDetailsAdmin = () => {
           </CardContent>
         </Card>
 
+        {/* Customer Change Requests - Paint */}
+        {order.paint_approval && order.paint_approval.status === 'changes_requested' && (
+          <Card className="mb-6 border-orange-300 bg-orange-50">
+            <CardHeader>
+              <CardTitle className="text-orange-800 flex items-center gap-2">
+                <XCircle className="w-5 h-5" />
+                Customer Requested Paint Changes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Customer Message:</p>
+                  <p className="font-medium bg-white p-3 rounded border border-orange-200">
+                    {order.paint_approval.message || "No message provided"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Requested on:</p>
+                  <p className="text-sm">{new Date(order.paint_approval.created_at).toLocaleString()}</p>
+                </div>
+                {order.paint_approval.images && order.paint_approval.images.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">Reference Images:</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {order.paint_approval.images.map((img, idx) => (
+                        <img key={idx} src={img} alt={`Reference ${idx + 1}`} className="w-full rounded border" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Paint Proofs by Round */}
         <Card>
           <CardHeader>
