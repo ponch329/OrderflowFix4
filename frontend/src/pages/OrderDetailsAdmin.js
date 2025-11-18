@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Upload, CheckCircle, XCircle, Edit, Save } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Upload, CheckCircle, XCircle, Edit, Save, Bell } from "lucide-react";
 import { toast } from "sonner";
 import DragDropUpload from "@/components/DragDropUpload";
 
