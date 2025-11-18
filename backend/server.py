@@ -203,6 +203,83 @@ async def update_admin_order_status(order_id: str, update_data: dict):
     
     return {"message": "Status updated successfully"}
 
+@api_router.post("/admin/orders/{order_id}/request-changes")
+async def admin_request_changes_legacy(order_id: str):
+    """
+    Admin requests changes on an order
+    Legacy endpoint without auth
+    """
+    from fastapi import Form, File, UploadFile
+    from typing import List
+    import base64
+    
+    # Get form data
+    message: str = Form(...)
+    stage: str = Form(...)
+    files: List[UploadFile] = File(None)
+    
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    tenant_id = tenant["id"]
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Handle reference images
+    additional_images = []
+    if files:
+        for file in files:
+            content = await file.read()
+            image_base64 = base64.b64encode(content).decode('utf-8')
+            additional_images.append(f"data:image/jpeg;base64,{image_base64}")
+    
+    # Create approval request
+    approval = {
+        "id": str(__import__('uuid').uuid4()),
+        "status": "changes_requested",
+        "message": message,
+        "images": additional_images,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Update order status
+    field = f"{stage}_approval"
+    status_field = f"{stage}_status"
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": tenant_id},
+        {
+            "$set": {
+                field: approval,
+                status_field: "changes_requested",
+                "last_updated_by": "admin",
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Log to sheets
+    from utils.helpers import log_to_sheets
+    await log_to_sheets(
+        db,
+        tenant_id,
+        order['order_number'],
+        f"Changes Requested - {stage.capitalize()}",
+        message,
+        stage=order.get('stage', ''),
+        status="changes_requested",
+        emailed_customer="No"
+    )
+    
+    return {"message": "Changes requested successfully", "approval": approval}
+
 # Analytics endpoint
 @api_router.get("/admin/analytics")
 async def get_analytics(days: int = 7, compare_days: int = 7):
