@@ -516,7 +516,7 @@ const AdminDashboard = () => {
                   {/* Left side - Order Info */}
                   <div className="space-y-4">
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <h3 className="text-2xl font-bold">Order #{order.order_number}</h3>
                         {order.is_manual_order && (
                           <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
@@ -528,9 +528,19 @@ const AdminDashboard = () => {
                             Fulfilled
                           </Badge>
                         )}
+                        {order.parent_order_id && (
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">
+                            Sub-Order
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-gray-700">{order.customer_name}</p>
                       <p className="text-gray-600 text-sm">{order.customer_email}</p>
+                      {order.item_vendor && (
+                        <p className="text-xs text-purple-600 font-semibold mt-1">
+                          Vendor: {order.item_vendor}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-500 mt-2">
                         Last updated: {formatTimestamp(order.last_updated_at, order.last_updated_by)}
                       </p>
