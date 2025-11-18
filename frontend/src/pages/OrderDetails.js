@@ -259,45 +259,115 @@ const OrderDetails = () => {
 
           {proofs && proofs.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                {proofs.map((proof, idx) => (
-                  <div 
-                    key={proof.id} 
-                    className="relative group cursor-pointer border-2 border-gray-200 rounded-lg overflow-hidden hover:border-blue-600 transition-all"
-                    onClick={() => setSelectedImage(proof.url)}
-                    data-testid={`proof-image-${stage}-${idx}`}
-                  >
-                    <img 
-                      src={proof.url} 
-                      alt={proof.filename}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                      <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={32} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {canInteract && (
-                <div className="flex gap-4">
-                  <Button 
-                    className="flex-1 bg-green-600 hover:bg-green-700 h-12"
-                    onClick={() => handleApprove(stage)}
-                    disabled={loading}
-                    data-testid={`approve-${stage}-btn`}
-                  >
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Approve
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="flex-1 border-2 border-orange-500 text-orange-700 hover:bg-orange-50 h-12"
-                    onClick={() => setCurrentStage(stage)}
-                    data-testid={`request-changes-${stage}-btn`}
-                  >
-                    <XCircle className="w-5 h-5 mr-2" />
-                    Request Changes
+              {/* Group proofs by round */}
+              {(() => {
+                // Organize proofs into rounds
+                const rounds = {};
+                proofs.forEach(proof => {
+                  const round = proof.round || 1;
+                  if (!rounds[round]) {
+                    rounds[round] = [];
+                  }
+                  rounds[round].push(proof);
+                });
+                
+                const sortedRounds = Object.keys(rounds).sort((a, b) => b - a); // Newest first
+                const latestRound = Math.max(...Object.keys(rounds));
+                
+                return (
+                  <div className="space-y-8 mb-6">
+                    {sortedRounds.map(round => {
+                      const roundProofs = rounds[round];
+                      const isLatest = round == latestRound;
+                      const roundDate = roundProofs[0]?.uploaded_at 
+                        ? new Date(roundProofs[0].uploaded_at).toLocaleDateString('en-US', { 
+                            month: 'long', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                          })
+                        : null;
+                      
+                      return (
+                        <div 
+                          key={round} 
+                          className={`${isLatest ? 'border-4 border-green-500 bg-green-50' : 'border-2 border-gray-300 bg-gray-50'} p-6 rounded-lg`}
+                        >
+                          {/* Round Header */}
+                          <div className="flex items-center gap-3 mb-4">
+                            <h3 className="text-2xl font-bold text-gray-900">
+                              Round {round} {sortedRounds.length > 1 && `of ${sortedRounds.length}`}
+                            </h3>
+                            {isLatest && (
+                              <Badge className="bg-green-600 text-white text-lg px-3 py-1">
+                                ⭐ LATEST REVISION
+                              </Badge>
+                            )}
+                            {!isLatest && (
+                              <Badge variant="outline" className="text-gray-600">
+                                Previous Version
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          {/* Round Info */}
+                          <div className="mb-4 space-y-1">
+                            {roundDate && (
+                              <p className="text-sm text-gray-600">
+                                <strong>Sent to you:</strong> {roundDate}
+                              </p>
+                            )}
+                            {roundProofs[0]?.revision_note && (
+                              <p className="text-sm text-blue-700 bg-blue-100 p-2 rounded">
+                                <strong>What changed:</strong> {roundProofs[0].revision_note}
+                              </p>
+                            )}
+                          </div>
+                          
+                          {/* Proof Images */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            {roundProofs.map((proof, idx) => (
+                              <div 
+                                key={proof.id} 
+                                className="relative group cursor-pointer border-2 border-gray-200 rounded-lg overflow-hidden hover:border-blue-600 transition-all"
+                                onClick={() => setSelectedImage(proof.url)}
+                                data-testid={`proof-image-${stage}-${round}-${idx}`}
+                              >
+                                <img 
+                                  src={proof.url} 
+                                  alt={proof.filename}
+                                  className="w-full h-48 object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
+                                  <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={32} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {/* Action Buttons - Only show on latest round */}
+                          {canInteract && isLatest && (
+                            <div className="mt-6 p-4 bg-white rounded-lg border-2 border-gray-200">
+                              <p className="text-sm text-gray-700 mb-4 font-semibold">
+                                📋 Review Round {round} and let us know:
+                              </p>
+                              <div className="flex gap-4">
+                                <Button 
+                                  className="flex-1 bg-green-600 hover:bg-green-700 h-14 text-lg"
+                                  onClick={() => handleApprove(stage)}
+                                  disabled={loading}
+                                  data-testid={`approve-${stage}-btn`}
+                                >
+                                  <CheckCircle className="w-5 h-5 mr-2" />
+                                  ✓ Approve Round {round}
+                                </Button>
+                                <Button 
+                                  variant="outline"
+                                  className="flex-1 border-2 border-orange-500 text-orange-700 hover:bg-orange-50 h-14 text-lg"
+                                  onClick={() => setCurrentStage(stage)}
+                                  data-testid={`request-changes-${stage}-btn`}
+                                >
+                                  <XCircle className="w-5 h-5 mr-2" />
+                                  Request Changes
                   </Button>
                 </div>
               )}
