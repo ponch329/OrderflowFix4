@@ -187,14 +187,6 @@ const OrderDetails = () => {
                 </Badge>
               </div>
             </div>
-            {approval && (
-              <Badge 
-                className={approval.status === "approved" ? "bg-green-600 text-white" : "bg-orange-600 text-white"}
-                data-testid={`${stage}-approval-badge`}
-              >
-                {approval.status === "approved" ? "✓ Approved" : "⚠ Changes Requested"}
-              </Badge>
-            )}
           </div>
           {isAdmin && shouldShowPingButton(order, stage) && isExpanded && (
             <Button 
