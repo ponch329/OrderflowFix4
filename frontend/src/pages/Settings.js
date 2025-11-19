@@ -156,6 +156,24 @@ const Settings = () => {
       setSaving(false);
     }
   };
+  
+  const handleSaveWorkflow = async () => {
+    setSaving(true);
+    try {
+      const response = await axios.patch(`${API}/settings/tenant`, {
+        settings: {
+          workflow: workflowSettings
+        }
+      });
+      toast.success("Workflow settings saved successfully!");
+      console.log("Saved workflow settings:", response.data);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to save workflow settings");
+      console.error("Save error:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSendTestEmail = async () => {
     const testEmail = prompt("Enter email address to send test email:");
