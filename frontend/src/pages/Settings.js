@@ -583,44 +583,52 @@ const Settings = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-lg">Custom Labels</h3>
+                  <h3 className="font-semibold text-lg">Stage Labels</h3>
+                  <p className="text-sm text-gray-600">Define up to 8 stages for your workflow. Stages 3-8 are optional.</p>
                   
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label>Clay Stage Label</Label>
-                      <Input
-                        value={workflowSettings.stage_labels.clay}
-                        onChange={(e) => setWorkflowSettings({
-                          ...workflowSettings,
-                          stage_labels: { ...workflowSettings.stage_labels, clay: e.target.value }
-                        })}
-                        placeholder="Clay Stage"
-                      />
-                    </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
+                      <div key={index} className="space-y-2">
+                        <Label>Stage {index + 1} Label {index >= 3 ? "(Optional)" : ""}</Label>
+                        <Input
+                          value={workflowSettings.stage_labels[index]}
+                          onChange={(e) => {
+                            const newLabels = [...workflowSettings.stage_labels];
+                            newLabels[index] = e.target.value;
+                            setWorkflowSettings({
+                              ...workflowSettings,
+                              stage_labels: newLabels
+                            });
+                          }}
+                          placeholder={index === 0 ? "Clay Stage" : index === 1 ? "Paint Stage" : index === 2 ? "Shipped" : `Stage ${index + 1}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-                    <div className="space-y-2">
-                      <Label>Paint Stage Label</Label>
-                      <Input
-                        value={workflowSettings.stage_labels.paint}
-                        onChange={(e) => setWorkflowSettings({
-                          ...workflowSettings,
-                          stage_labels: { ...workflowSettings.stage_labels, paint: e.target.value }
-                        })}
-                        placeholder="Paint Stage"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Shipped Stage Label</Label>
-                      <Input
-                        value={workflowSettings.stage_labels.shipped}
-                        onChange={(e) => setWorkflowSettings({
-                          ...workflowSettings,
-                          stage_labels: { ...workflowSettings.stage_labels, shipped: e.target.value }
-                        })}
-                        placeholder="Shipped"
-                      />
-                    </div>
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Status Labels</h3>
+                  <p className="text-sm text-gray-600">Define up to 8 statuses that can be applied to any stage.</p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
+                      <div key={index} className="space-y-2">
+                        <Label>Status {index + 1} Label {index >= 5 ? "(Optional)" : ""}</Label>
+                        <Input
+                          value={workflowSettings.status_labels[index]}
+                          onChange={(e) => {
+                            const newLabels = [...workflowSettings.status_labels];
+                            newLabels[index] = e.target.value;
+                            setWorkflowSettings({
+                              ...workflowSettings,
+                              status_labels: newLabels
+                            });
+                          }}
+                          placeholder={index === 0 ? "Pending" : index === 1 ? "In Progress" : index === 2 ? "Customer Feedback Needed" : index === 3 ? "Changes Requested" : index === 4 ? "Approved" : `Status ${index + 1}`}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
 
