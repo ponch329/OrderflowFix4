@@ -687,6 +687,8 @@ async def approve_stage(
     tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
     
     if tenant:
+        logo_url = tenant.get("settings", {}).get("logo_url")
+        
         # Send email
         if status == "approved":
             from email_templates import get_approval_email
@@ -694,7 +696,8 @@ async def approve_stage(
                 order['order_number'],
                 order['customer_name'],
                 order['customer_email'],
-                stage
+                stage,
+                logo_url=logo_url
             )
         else:
             from email_templates import get_changes_requested_email
@@ -704,7 +707,8 @@ async def approve_stage(
                 order['customer_email'],
                 stage,
                 message,
-                len(additional_images)
+                len(additional_images),
+                logo_url=logo_url
             )
         
         try:
