@@ -20,8 +20,8 @@ const EMAIL_TEMPLATES = [
   {
     id: "proof_ready_clay",
     name: "Clay Proofs Ready",
-    description: "Sent when clay proofs are uploaded",
-    trigger: "Automatically sent when admin uploads clay proofs",
+    description: "Sent when clay proofs are ready for customer review",
+    trigger: "Automatically sent when Order Stage = Clay and Order Status changes to 'Customer Feedback Needed'",
     default_subject: "Your Clay Proofs Are Ready - Order #{order_number}",
     default_body: `Hi {customer_name},
 
