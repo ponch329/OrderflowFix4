@@ -243,14 +243,19 @@ const OrderDetails = () => {
                           className={`${isLatest ? 'border-4 border-green-500 bg-green-50' : 'border-2 border-gray-300 bg-gray-50'} p-6 rounded-lg`}
                         >
                           {/* Round Header */}
-                          <div className="flex items-center gap-3 mb-4">
+                          <div className="flex items-center gap-3 mb-4 flex-wrap">
                             <h3 className="text-2xl font-bold text-gray-900">
                               Round {round} {sortedRounds.length > 1 && `of ${sortedRounds.length}`}
                             </h3>
                             {isLatest && (
-                              <Badge className="bg-green-600 text-white text-lg px-3 py-1">
-                                ⭐ LATEST REVISION
-                              </Badge>
+                              <>
+                                <Badge className="bg-green-600 text-white text-lg px-3 py-1">
+                                  ⭐ LATEST REVISION
+                                </Badge>
+                                <Badge className={`${statusInfo.color} text-white text-lg px-3 py-1`}>
+                                  {isAdmin ? statusInfo.adminLabel : statusInfo.customerLabel}
+                                </Badge>
+                              </>
                             )}
                             {!isLatest && (
                               <Badge variant="outline" className="text-gray-600">
@@ -296,7 +301,7 @@ const OrderDetails = () => {
                           
                           {/* Customer change request - show on the round they're responding to (not the latest revision) */}
                           {approval && approval.status === "changes_requested" && !isLatest && (
-                            <div className="mt-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
+                            <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
                               <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
                               <p className="text-gray-700">{approval.message || "No message provided"}</p>
                               {approval.images && approval.images.length > 0 && (
