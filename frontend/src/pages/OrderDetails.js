@@ -140,7 +140,8 @@ const OrderDetails = () => {
     const statusField = `${stage}_status`;
     const status = order[statusField];
     const statusInfo = getStatusInfo(status, stage);
-    const canInteract = !isAdmin && status === "feedback_needed" && !approval;
+    // Customer can interact with the latest round if status is feedback_needed
+    const canInteract = !isAdmin && status === "feedback_needed";
     const isExpanded = stage === 'clay' ? clayExpanded : paintExpanded;
     const setExpanded = stage === 'clay' ? setClayExpanded : setPaintExpanded;
     
