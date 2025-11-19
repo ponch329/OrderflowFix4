@@ -626,12 +626,11 @@ async def lookup_order(email: str, order_number: str):
 async def approve_stage(
     order_id: str,
     stage: str,
-    status: str,
-    message: str = None,
-    files: list = None
+    status: str = Form(...),
+    message: str = Form(None),
+    files: List[UploadFile] = File(None)
 ):
     """Customer approves or requests changes for a stage"""
-    from fastapi import Form, UploadFile, File
     import base64
     
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
