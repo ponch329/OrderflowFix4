@@ -205,49 +205,6 @@ const OrderDetails = () => {
         
         {isExpanded && (
           <CardContent className="pt-6">
-          {/* Timeline */}
-          {proofs && proofs.length > 0 && (
-            <div className="mb-6 bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
-              <h4 className="font-semibold text-blue-900 mb-3">Order Timeline</h4>
-              <div className="space-y-3">
-                {proofsUploadedDate && (
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3"></div>
-                    <div>
-                      <p className="font-medium text-gray-900">Proofs Sent</p>
-                      <p className="text-sm text-gray-600">{proofsUploadedDate}</p>
-                    </div>
-                  </div>
-                )}
-                
-                {approval && customerResponseDate && (
-                  <div className="flex items-start">
-                    <div className={`w-2 h-2 rounded-full mt-2 mr-3 ${approval.status === 'approved' ? 'bg-green-600' : 'bg-orange-600'}`}></div>
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {approval.status === 'approved' ? 'Customer Approved' : 'Changes Requested'}
-                      </p>
-                      <p className="text-sm text-gray-600">{customerResponseDate}</p>
-                      {approval.message && (
-                        <p className="text-sm text-gray-700 mt-1 italic">"{approval.message}"</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                {!approval && status === 'feedback_needed' && (
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 animate-pulse"></div>
-                    <div>
-                      <p className="font-medium text-gray-900">Awaiting Your Response</p>
-                      <p className="text-sm text-gray-600">Please review and approve or request changes</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           {proofs && proofs.length > 0 ? (
             <>
               {/* Group proofs by round */}
