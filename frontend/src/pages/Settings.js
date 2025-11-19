@@ -96,6 +96,26 @@ const Settings = () => {
         notes_visible_to_customer: settings.notes_visible_to_customer ?? false,
         manufacturer_can_email_customers: settings.manufacturer_can_email_customers ?? false
       });
+      
+      setWorkflowSettings({
+        auto_advance_on_approval: settings.workflow?.auto_advance_on_approval ?? true,
+        require_admin_confirmation_for_stage_change: settings.workflow?.require_admin_confirmation_for_stage_change ?? false,
+        status_after_upload: settings.workflow?.status_after_upload || "feedback_needed",
+        notify_customer_on_upload: settings.workflow?.notify_customer_on_upload ?? true,
+        notify_admin_on_customer_response: settings.workflow?.notify_admin_on_customer_response ?? true,
+        stage_labels: settings.workflow?.stage_labels || {
+          clay: "Clay Stage",
+          paint: "Paint Stage",
+          shipped: "Shipped"
+        },
+        status_labels: settings.workflow?.status_labels || {
+          sculpting: "In Progress",
+          feedback_needed: "Customer Feedback Needed",
+          changes_requested: "Changes Requested",
+          approved: "Approved",
+          pending: "Not Started"
+        }
+      });
     } catch (error) {
       toast.error("Failed to load settings");
       console.error(error);
