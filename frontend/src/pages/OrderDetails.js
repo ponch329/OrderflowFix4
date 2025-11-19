@@ -389,9 +389,21 @@ const OrderDetails = () => {
                   {order.customer_name} • {order.customer_email}
                 </CardDescription>
               </div>
-              <Badge className={`${getStageColor(order.stage)} text-white text-lg px-4 py-2`} data-testid="current-stage-badge">
-                {order.stage.toUpperCase()}
-              </Badge>
+              <div className="flex gap-3 items-center flex-wrap">
+                <Badge className={`${getStageColor(order.stage)} text-white text-lg px-4 py-2`} data-testid="current-stage-badge">
+                  {order.stage.toUpperCase()}
+                </Badge>
+                {order.stage === 'clay' && order.clay_status && (
+                  <Badge className={`${getStatusInfo(order.clay_status).color} text-white text-lg px-4 py-2`}>
+                    {getStatusInfo(order.clay_status).customerLabel}
+                  </Badge>
+                )}
+                {order.stage === 'paint' && order.paint_status && (
+                  <Badge className={`${getStatusInfo(order.paint_status).color} text-white text-lg px-4 py-2`}>
+                    {getStatusInfo(order.paint_status).customerLabel}
+                  </Badge>
+                )}
+              </div>
             </div>
           </CardHeader>
         </Card>
