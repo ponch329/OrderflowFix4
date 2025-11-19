@@ -47,18 +47,26 @@ const Settings = () => {
     status_after_upload: "feedback_needed",
     notify_customer_on_upload: true,
     notify_admin_on_customer_response: true,
-    stage_labels: {
-      clay: "Clay Stage",
-      paint: "Paint Stage",
-      shipped: "Shipped"
-    },
-    status_labels: {
-      sculpting: "In Progress",
-      feedback_needed: "Customer Feedback Needed",
-      changes_requested: "Changes Requested",
-      approved: "Approved",
-      pending: "Not Started"
-    }
+    stage_labels: [
+      "Clay Stage",
+      "Paint Stage", 
+      "Shipped",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    status_labels: [
+      "Pending",
+      "In Progress",
+      "Customer Feedback Needed",
+      "Changes Requested",
+      "Approved",
+      "",
+      "",
+      ""
+    ]
   });
 
   useEffect(() => {
