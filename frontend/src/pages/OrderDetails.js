@@ -175,18 +175,16 @@ const OrderDetails = () => {
         >
           <div className="flex justify-between items-center">
             <div className="flex-1">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <CardTitle className="text-2xl capitalize text-blue-900">{stage} Stage</CardTitle>
+                <Badge className={`${statusInfo.color} text-white`}>
+                  {isAdmin ? statusInfo.adminLabel : statusInfo.customerLabel}
+                </Badge>
                 {isExpanded ? <ChevronUp className="w-5 h-5 text-blue-700" /> : <ChevronDown className="w-5 h-5 text-blue-700" />}
               </div>
               <CardDescription className="text-blue-700">
                 {proofs?.length || 0} proof image(s)
               </CardDescription>
-              <div className="mt-2">
-                <Badge className={`${statusInfo.color} text-white`}>
-                  {isAdmin ? statusInfo.adminLabel : statusInfo.customerLabel}
-                </Badge>
-              </div>
             </div>
           </div>
           {isAdmin && shouldShowPingButton(order, stage) && isExpanded && (
