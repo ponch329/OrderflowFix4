@@ -4,7 +4,7 @@ Email Templates for Bobblehead Order Approval System
 Customize these templates to match your brand and communication style.
 """
 
-def get_approval_email(order_number, customer_name, customer_email, stage):
+def get_approval_email(order_number, customer_name, customer_email, stage, logo_url=None):
     """
     Template for when customer approves a stage
     
@@ -13,8 +13,12 @@ def get_approval_email(order_number, customer_name, customer_email, stage):
         customer_name: Customer's full name
         customer_email: Customer's email address
         stage: Stage name ("clay" or "paint")
+        logo_url: Company logo URL (optional)
     """
     subject = f"Order #{order_number} - {stage.capitalize()} Stage Approved"
+    
+    # Logo section HTML
+    logo_html = f'<img src="{logo_url}" alt="Logo" style="max-width: 200px; max-height: 80px; margin-bottom: 15px;" />' if logo_url else '<div class="checkmark">✓</div>'
     
     html_content = f"""
     <html>
@@ -74,7 +78,7 @@ def get_approval_email(order_number, customer_name, customer_email, stage):
     <body>
         <div class="container">
             <div class="header">
-                <div class="checkmark">✓</div>
+                {logo_html}
                 <h1>{stage.capitalize()} Stage Approved</h1>
             </div>
             
