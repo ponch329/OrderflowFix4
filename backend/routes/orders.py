@@ -256,7 +256,15 @@ async def upload_proofs(
             }
             uploaded_proofs.append(proof)
     
-    # Update order with proofs and change status to feedback_needed
+    # Get tenant settings for workflow configuration
+    from utils.workflow import get_workflow_engine
+    tenant = await db.tenants.find_one({"id": auth.tenant_id}, {"_id": 0})
+    workflow_engine = get_workflow_engine(tenant.get("settings", {}) if tenant else {})
+    
+    # Use workflow engine to determine status after upload
+    new_status = workflow_engine.get_status_after_upload(stage)
+    
+    # Update order with proofs and change status based on workflow config
     field = f"{stage}_proofs"
     status_field = f"{stage}_status"
     await db.orders.update_one(
@@ -264,7 +272,7 @@ async def upload_proofs(
         {
             "$push": {field: {"$each": uploaded_proofs}},
             "$set": {
-                status_field: "feedback_needed",
+                status_field: new_status,
                 "last_updated_by": auth.user_id,
                 "last_updated_at": datetime.now(timezone.utc).isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
