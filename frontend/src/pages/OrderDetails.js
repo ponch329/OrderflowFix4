@@ -231,7 +231,9 @@ const OrderDetails = () => {
                         ? new Date(roundProofs[0].uploaded_at).toLocaleDateString('en-US', { 
                             month: 'long', 
                             day: 'numeric', 
-                            year: 'numeric' 
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit'
                           })
                         : null;
                       
