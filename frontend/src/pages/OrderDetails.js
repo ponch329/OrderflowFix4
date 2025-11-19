@@ -338,27 +338,27 @@ const OrderDetails = () => {
                           
                           {/* Action Buttons - Only show on latest round */}
                           {canInteract && isLatest && (
-                            <div className="mt-6 p-4 bg-white rounded-lg border-2 border-gray-200">
-                              <p className="text-sm text-gray-700 mb-4 font-semibold">
+                            <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200">
+                              <p className="text-xs text-gray-700 mb-3 font-semibold">
                                 📋 Review Round {round} and let us know:
                               </p>
-                              <div className="flex gap-4">
+                              <div className="flex gap-3">
                                 <Button 
-                                  className="flex-1 bg-green-600 hover:bg-green-700 h-14 text-lg"
+                                  className="flex-1 bg-green-600 hover:bg-green-700 h-10 text-sm"
                                   onClick={() => handleApprove(stage)}
                                   disabled={loading}
                                   data-testid={`approve-${stage}-btn`}
                                 >
-                                  <CheckCircle className="w-5 h-5 mr-2" />
+                                  <CheckCircle className="w-4 h-4 mr-2" />
                                   ✓ Approve Round {round}
                                 </Button>
                                 <Button 
                                   variant="outline"
-                                  className="flex-1 border-2 border-orange-500 text-orange-700 hover:bg-orange-50 h-14 text-lg"
+                                  className="flex-1 border-2 border-orange-500 text-orange-700 hover:bg-orange-50 h-10 text-sm"
                                   onClick={() => setCurrentStage(stage)}
                                   data-testid={`request-changes-${stage}-btn`}
                                 >
-                                  <XCircle className="w-5 h-5 mr-2" />
+                                  <XCircle className="w-4 h-4 mr-2" />
                                   Request Changes
                                 </Button>
                               </div>
