@@ -111,18 +111,26 @@ const Settings = () => {
         status_after_upload: settings.workflow?.status_after_upload || "feedback_needed",
         notify_customer_on_upload: settings.workflow?.notify_customer_on_upload ?? true,
         notify_admin_on_customer_response: settings.workflow?.notify_admin_on_customer_response ?? true,
-        stage_labels: settings.workflow?.stage_labels || {
-          clay: "Clay Stage",
-          paint: "Paint Stage",
-          shipped: "Shipped"
-        },
-        status_labels: settings.workflow?.status_labels || {
-          sculpting: "In Progress",
-          feedback_needed: "Customer Feedback Needed",
-          changes_requested: "Changes Requested",
-          approved: "Approved",
-          pending: "Not Started"
-        }
+        stage_labels: settings.workflow?.stage_labels || [
+          "Clay Stage",
+          "Paint Stage", 
+          "Shipped",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        status_labels: settings.workflow?.status_labels || [
+          "Pending",
+          "In Progress",
+          "Customer Feedback Needed",
+          "Changes Requested",
+          "Approved",
+          "",
+          "",
+          ""
+        ]
       });
     } catch (error) {
       toast.error("Failed to load settings");
