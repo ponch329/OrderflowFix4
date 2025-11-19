@@ -299,8 +299,11 @@ const OrderDetails = () => {
                             ))}
                           </div>
                           
-                          {/* Customer change request - show on the round they're responding to (not the latest revision) */}
-                          {approval && approval.status === "changes_requested" && !isLatest && (
+                          {/* Customer change request - show when customer has requested changes
+                              - If there's only 1 round: show it on that round
+                              - If there are multiple rounds: show it on the round before the latest (where customer made the comment)
+                          */}
+                          {approval && approval.status === "changes_requested" && (sortedRounds.length === 1 || !isLatest) && (
                             <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
                               <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
                               <p className="text-gray-700">{approval.message || "No message provided"}</p>
