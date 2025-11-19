@@ -134,11 +134,16 @@ async def send_customer_proof_notification(db, tenant_id: str, order: dict, stag
         if not customer_email:
             return False
         
+        logo_url = tenant.get("settings", {}).get("logo_url")
+        company_name = tenant.get("name", "")
+        
         subject, html_content = get_customer_proofs_ready_email(
             order['order_number'],
             order.get('customer_name', 'Valued Customer'),
             stage,
-            proof_count
+            proof_count,
+            logo_url=logo_url,
+            company_name=company_name
         )
         
         await send_email(tenant, customer_email, subject, html_content)
