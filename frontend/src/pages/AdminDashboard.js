@@ -657,21 +657,21 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Paint Stage */}
-                    <div className="relative p-4 bg-blue-50 rounded-lg border-2 border-blue-200 min-w-0">
-                      <Badge className="absolute top-2 right-2 bg-blue-500 text-white text-xs">PAINT</Badge>
-                      <h4 className="font-bold text-base md:text-lg mb-1 pr-12">Paint Stage</h4>
+                    <div className="relative p-3 bg-blue-50 rounded-lg border border-blue-200 min-w-0">
+                      <Badge className="absolute top-2 right-2 bg-blue-500 text-white text-xs py-0">PAINT</Badge>
+                      <h4 className="font-bold text-sm mb-1 pr-12">Paint Stage</h4>
                       {order.paint_entered_at && (
-                        <p className="text-xs text-gray-500 mb-3">
-                          Entered: {formatStageTimestamp(order.paint_entered_at)}
+                        <p className="text-xs text-gray-500 mb-2">
+                          {formatStageTimestamp(order.paint_entered_at)}
                         </p>
                       )}
                       
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <Select 
                           value={order.paint_status} 
                           onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'paint_status', value)}
                         >
-                          <SelectTrigger className="h-8 text-xs md:text-sm w-full" data-testid={`paint-status-control-${order.id}`}>
+                          <SelectTrigger className="h-7 text-xs w-full" data-testid={`paint-status-control-${order.id}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -683,15 +683,15 @@ const AdminDashboard = () => {
                           </SelectContent>
                         </Select>
 
-                        <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
+                        <div className="flex items-center gap-1.5 text-xs text-gray-600">
                           {getApprovalIcon(order, "paint")}
                           <span className="truncate">{order.paint_proofs?.length || 0} proofs</span>
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                           <Button 
                             size="sm"
-                            className="flex-1 min-w-[80px] h-8 text-xs"
+                            className="flex-1 min-w-[70px] h-7 text-xs"
                             onClick={() => openUploadDialog(order, "paint")}
                             data-testid={`upload-paint-btn-${order.id}`}
                           >
@@ -702,7 +702,7 @@ const AdminDashboard = () => {
                             <Button 
                               size="sm"
                               variant="outline"
-                              className="h-8 px-2 text-xs border-purple-500 text-purple-600 hover:bg-purple-50"
+                              className="h-7 px-2 text-xs border-purple-500 text-purple-600 hover:bg-purple-50"
                               onClick={() => {
                                 setSelectedOrderObj(order);
                                 setViewProofsStage("paint");
@@ -716,7 +716,7 @@ const AdminDashboard = () => {
                           <Button 
                             size="sm"
                             variant="outline"
-                            className="h-8 w-8 p-0 border-blue-500 text-blue-600 hover:bg-blue-50 shrink-0"
+                            className="h-7 w-7 p-0 border-blue-500 text-blue-600 hover:bg-blue-50 shrink-0"
                             onClick={() => handlePingCustomer(order.id, order.order_number, "paint")}
                             data-testid={`ping-paint-btn-${order.id}`}
                           >
