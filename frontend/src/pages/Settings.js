@@ -475,6 +475,156 @@ const Settings = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Workflow Tab */}
+          <TabsContent value="workflow" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Workflow Configuration</CardTitle>
+                <CardDescription>
+                  Configure how orders progress through stages and statuses
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Stage Transition Behavior</h3>
+                  
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label>Auto-Advance on Customer Approval</Label>
+                      <p className="text-sm text-gray-500">
+                        Automatically move order to next stage when customer approves (Clay → Paint → Shipped)
+                      </p>
+                    </div>
+                    <Switch
+                      checked={workflowSettings.auto_advance_on_approval}
+                      onCheckedChange={(checked) => setWorkflowSettings({ ...workflowSettings, auto_advance_on_approval: checked })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label>Require Admin Confirmation for Stage Changes</Label>
+                      <p className="text-sm text-gray-500">
+                        Admin must manually move order to next stage even after customer approval
+                      </p>
+                    </div>
+                    <Switch
+                      checked={workflowSettings.require_admin_confirmation_for_stage_change}
+                      onCheckedChange={(checked) => setWorkflowSettings({ ...workflowSettings, require_admin_confirmation_for_stage_change: checked })}
+                      disabled={!workflowSettings.auto_advance_on_approval}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Status Settings</h3>
+                  
+                  <div className="space-y-2">
+                    <Label>Status After Admin Uploads Proofs</Label>
+                    <p className="text-sm text-gray-500 mb-2">
+                      What status should be set when admin uploads new proofs
+                    </p>
+                    <select
+                      className="w-full p-2 border rounded-md"
+                      value={workflowSettings.status_after_upload}
+                      onChange={(e) => setWorkflowSettings({ ...workflowSettings, status_after_upload: e.target.value })}
+                    >
+                      <option value="feedback_needed">Customer Feedback Needed</option>
+                      <option value="sculpting">In Progress</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Notification Settings</h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Notify Customer on Proof Upload</Label>
+                      <p className="text-sm text-gray-500">
+                        Send email to customer when new proofs are uploaded
+                      </p>
+                    </div>
+                    <Switch
+                      checked={workflowSettings.notify_customer_on_upload}
+                      onCheckedChange={(checked) => setWorkflowSettings({ ...workflowSettings, notify_customer_on_upload: checked })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Notify Admin on Customer Response</Label>
+                      <p className="text-sm text-gray-500">
+                        Send email to admin when customer approves or requests changes
+                      </p>
+                    </div>
+                    <Switch
+                      checked={workflowSettings.notify_admin_on_customer_response}
+                      onCheckedChange={(checked) => setWorkflowSettings({ ...workflowSettings, notify_admin_on_customer_response: checked })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Custom Labels</h3>
+                  
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label>Clay Stage Label</Label>
+                      <Input
+                        value={workflowSettings.stage_labels.clay}
+                        onChange={(e) => setWorkflowSettings({
+                          ...workflowSettings,
+                          stage_labels: { ...workflowSettings.stage_labels, clay: e.target.value }
+                        })}
+                        placeholder="Clay Stage"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Paint Stage Label</Label>
+                      <Input
+                        value={workflowSettings.stage_labels.paint}
+                        onChange={(e) => setWorkflowSettings({
+                          ...workflowSettings,
+                          stage_labels: { ...workflowSettings.stage_labels, paint: e.target.value }
+                        })}
+                        placeholder="Paint Stage"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Shipped Stage Label</Label>
+                      <Input
+                        value={workflowSettings.stage_labels.shipped}
+                        onChange={(e) => setWorkflowSettings({
+                          ...workflowSettings,
+                          stage_labels: { ...workflowSettings.stage_labels, shipped: e.target.value }
+                        })}
+                        placeholder="Shipped"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                  <h4 className="font-semibold text-blue-900 mb-2">Current Workflow</h4>
+                  <div className="text-sm text-blue-800 space-y-1">
+                    <p>📋 <strong>Stage Flow:</strong> {workflowSettings.stage_labels.clay} → {workflowSettings.stage_labels.paint} → {workflowSettings.stage_labels.shipped}</p>
+                    <p>✅ <strong>Auto-Advance:</strong> {workflowSettings.auto_advance_on_approval ? "Enabled" : "Disabled"}</p>
+                    <p>📧 <strong>Customer Notifications:</strong> {workflowSettings.notify_customer_on_upload ? "Enabled" : "Disabled"}</p>
+                    <p>📧 <strong>Admin Notifications:</strong> {workflowSettings.notify_admin_on_customer_response ? "Enabled" : "Disabled"}</p>
+                  </div>
+                </div>
+
+                <Button onClick={handleSaveWorkflow} disabled={saving} className="w-full">
+                  <Save className="w-4 h-4 mr-2" />
+                  {saving ? "Saving..." : "Save Workflow Settings"}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
     </div>
