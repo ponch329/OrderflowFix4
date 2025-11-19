@@ -519,41 +519,40 @@ const AdminDashboard = () => {
                       <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                         <h3 className="text-lg font-bold">Order #{order.order_number}</h3>
                         {order.is_manual_order && (
-                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs py-0">
                             Manual
                           </Badge>
                         )}
                         {isFulfilled && (
-                          <Badge className="bg-green-500 text-white">
+                          <Badge className="bg-green-500 text-white text-xs py-0">
                             Fulfilled
                           </Badge>
                         )}
                         {order.parent_order_id && (
-                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs py-0">
                             Sub-Order
                           </Badge>
                         )}
                       </div>
-                      <p className="text-gray-700">{order.customer_name}</p>
-                      <p className="text-gray-600 text-sm">{order.customer_email}</p>
+                      <p className="text-sm font-medium text-gray-700 truncate">{order.customer_name}</p>
+                      <p className="text-xs text-gray-600 truncate">{order.customer_email}</p>
                       {order.item_vendor && (
-                        <p className="text-xs text-purple-600 font-semibold mt-1">
+                        <p className="text-xs text-purple-600 font-semibold">
                           Vendor: {order.item_vendor}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-gray-500 mt-1">
                         Last updated: {formatTimestamp(order.last_updated_at, order.last_updated_by)}
                       </p>
                     </div>
                     
                     {/* Admin Controls */}
-                    <div className="space-y-2">
-                      <Label className="text-xs text-gray-600">Admin Controls</Label>
+                    <div className="space-y-1.5">
                       <Select 
                         value={order.stage} 
                         onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'stage', value)}
                       >
-                        <SelectTrigger className="h-9" data-testid={`stage-control-${order.id}`}>
+                        <SelectTrigger className="h-8 text-xs" data-testid={`stage-control-${order.id}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -565,10 +564,11 @@ const AdminDashboard = () => {
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <Button 
                         variant="outline" 
-                        className="w-full"
+                        size="sm"
+                        className="w-full h-7 text-xs"
                         onClick={() => navigate(`/order/${order.id}`, { state: { order, isAdmin: true } })}
                         data-testid={`view-details-btn-${order.id}`}
                       >
@@ -576,7 +576,8 @@ const AdminDashboard = () => {
                       </Button>
                       <Button 
                         variant="outline"
-                        className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
+                        size="sm"
+                        className="w-full h-7 text-xs border-orange-300 text-orange-700 hover:bg-orange-50"
                         onClick={() => handleArchiveOrder(order.id, !order.is_archived)}
                       >
                         {order.is_archived ? "Unarchive" : "Archive"}
