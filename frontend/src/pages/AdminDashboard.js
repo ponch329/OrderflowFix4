@@ -511,13 +511,13 @@ const AdminDashboard = () => {
               data-testid={`order-card-${order.id}`}
               onClick={() => navigate(`/admin/orders/${order.id}`)}
             >
-              <CardContent className="p-6">
-                <div className="grid grid-cols-[300px_1fr] gap-6">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-[240px_1fr] gap-4">
                   {/* Left side - Order Info */}
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     <div>
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <h3 className="text-2xl font-bold">Order #{order.order_number}</h3>
+                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                        <h3 className="text-lg font-bold">Order #{order.order_number}</h3>
                         {order.is_manual_order && (
                           <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
                             Manual
