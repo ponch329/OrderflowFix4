@@ -119,7 +119,7 @@ def get_approval_email(order_number, customer_name, customer_email, stage, logo_
     return subject, html_content
 
 
-def get_changes_requested_email(order_number, customer_name, customer_email, stage, message, num_images=0):
+def get_changes_requested_email(order_number, customer_name, customer_email, stage, message, num_images=0, logo_url=None):
     """
     Template for when customer requests changes
     
@@ -130,8 +130,12 @@ def get_changes_requested_email(order_number, customer_name, customer_email, sta
         stage: Stage name ("clay" or "paint")
         message: Customer's change request message
         num_images: Number of reference images attached
+        logo_url: Company logo URL (optional)
     """
     subject = f"Order #{order_number} - {stage.capitalize()} Stage Changes Requested"
+    
+    # Logo section HTML
+    logo_html = f'<img src="{logo_url}" alt="Logo" style="max-width: 200px; max-height: 80px; margin-bottom: 15px;" />' if logo_url else '<div class="warning-icon">⚠</div>'
     
     html_content = f"""
     <html>
@@ -198,7 +202,7 @@ def get_changes_requested_email(order_number, customer_name, customer_email, sta
     <body>
         <div class="container">
             <div class="header">
-                <div class="warning-icon">⚠</div>
+                {logo_html}
                 <h1>Changes Requested</h1>
             </div>
             
