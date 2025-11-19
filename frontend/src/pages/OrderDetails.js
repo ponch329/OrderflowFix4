@@ -237,6 +237,17 @@ const OrderDetails = () => {
                           })
                         : null;
                       
+                      // Format approval timestamp if it exists
+                      const approvalDate = approval && approval.created_at
+                        ? new Date(approval.created_at).toLocaleDateString('en-US', { 
+                            month: 'long', 
+                            day: 'numeric', 
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit'
+                          })
+                        : null;
+                      
                       return (
                         <div 
                           key={round} 
@@ -255,12 +266,24 @@ const OrderDetails = () => {
                                 <Badge className={`${statusInfo.color} text-white text-lg px-3 py-1`}>
                                   {isAdmin ? statusInfo.adminLabel : statusInfo.customerLabel}
                                 </Badge>
+                                {approval && approvalDate && (
+                                  <span className="text-sm text-gray-600 italic">
+                                    {approval.status === 'approved' ? 'Approved' : 'Changes Requested'}: {approvalDate}
+                                  </span>
+                                )}
                               </>
                             )}
                             {!isLatest && (
-                              <Badge variant="outline" className="text-gray-600">
-                                Previous Version
-                              </Badge>
+                              <>
+                                <Badge variant="outline" className="text-gray-600">
+                                  Previous Version
+                                </Badge>
+                                {approval && approvalDate && (
+                                  <span className="text-sm text-gray-600 italic">
+                                    {approval.status === 'approved' ? 'Approved' : 'Changes Requested'}: {approvalDate}
+                                  </span>
+                                )}
+                              </>
                             )}
                           </div>
                           
