@@ -635,7 +635,8 @@ const Settings = () => {
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
                   <h4 className="font-semibold text-blue-900 mb-2">Current Workflow</h4>
                   <div className="text-sm text-blue-800 space-y-1">
-                    <p>📋 <strong>Stage Flow:</strong> {workflowSettings.stage_labels.clay} → {workflowSettings.stage_labels.paint} → {workflowSettings.stage_labels.shipped}</p>
+                    <p>📋 <strong>Active Stages:</strong> {workflowSettings.stage_labels.filter(label => label.trim()).join(" → ")}</p>
+                    <p>🏷️ <strong>Active Statuses:</strong> {workflowSettings.status_labels.filter(label => label.trim()).join(", ")}</p>
                     <p>✅ <strong>Auto-Advance:</strong> {workflowSettings.auto_advance_on_approval ? "Enabled" : "Disabled"}</p>
                     <p>📧 <strong>Customer Notifications:</strong> {workflowSettings.notify_customer_on_upload ? "Enabled" : "Disabled"}</p>
                     <p>📧 <strong>Admin Notifications:</strong> {workflowSettings.notify_admin_on_customer_response ? "Enabled" : "Disabled"}</p>
