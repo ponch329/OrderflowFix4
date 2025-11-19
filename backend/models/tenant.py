@@ -1,7 +1,49 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
 import uuid
+
+class WorkflowConfig(BaseModel):
+    """Configurable workflow settings for order stages and statuses"""
+    model_config = ConfigDict(extra="ignore")
+    
+    # Stage Configuration
+    stages: List[str] = Field(default_factory=lambda: ["clay", "paint", "shipped"])
+    stage_labels: Dict[str, str] = Field(default_factory=lambda: {
+        "clay": "Clay Stage",
+        "paint": "Paint Stage",
+        "shipped": "Shipped"
+    })
+    
+    # Status Labels (for display)
+    status_labels: Dict[str, str] = Field(default_factory=lambda: {
+        "sculpting": "In Progress",
+        "feedback_needed": "Customer Feedback Needed",
+        "changes_requested": "Changes Requested",
+        "approved": "Approved",
+        "pending": "Not Started"
+    })
+    
+    # Workflow Behavior
+    auto_advance_on_approval: bool = True
+    require_admin_confirmation_for_stage_change: bool = False
+    status_after_upload: str = "feedback_needed"
+    
+    # Stage Transition Rules
+    stage_transitions: Dict[str, str] = Field(default_factory=lambda: {
+        "clay": "paint",
+        "paint": "shipped"
+    })
+    
+    # Which stages require customer approval
+    stage_requires_customer_approval: Dict[str, bool] = Field(default_factory=lambda: {
+        "clay": True,
+        "paint": True
+    })
+    
+    # Email Notifications
+    notify_customer_on_upload: bool = True
+    notify_admin_on_customer_response: bool = True
 
 class TenantSettings(BaseModel):
     """Tenant-specific settings for branding and customization"""
@@ -35,6 +77,9 @@ class TenantSettings(BaseModel):
     manufacturer_can_change_status: bool = False
     manufacturer_can_add_notes: bool = True
     notes_visible_to_customer: bool = False
+    
+    # Workflow configuration
+    workflow: WorkflowConfig = Field(default_factory=WorkflowConfig)
 
 class Tenant(BaseModel):
     """Tenant model for multi-tenancy"""
