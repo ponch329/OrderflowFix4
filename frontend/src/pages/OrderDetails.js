@@ -406,26 +406,26 @@ const OrderDetails = () => {
           />
         </div>
 
-        <Card className="mb-6 border-2 border-blue-200">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700">
+        <Card className="mb-4 border-2 border-blue-200">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 py-4">
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-3xl text-white">Order #{order.order_number}</CardTitle>
-                <CardDescription className="text-lg mt-2 text-blue-100">
+                <CardTitle className="text-2xl text-white">Order #{order.order_number}</CardTitle>
+                <CardDescription className="text-base mt-1 text-blue-100">
                   {order.customer_name} • {order.customer_email}
                 </CardDescription>
               </div>
-              <div className="flex gap-3 items-center flex-wrap">
-                <Badge className={`${getStageColor(order.stage)} text-white text-lg px-4 py-2`} data-testid="current-stage-badge">
+              <div className="flex gap-2 items-center flex-wrap">
+                <Badge className={`${getStageColor(order.stage)} text-white text-sm px-3 py-1`} data-testid="current-stage-badge">
                   {order.stage.toUpperCase()}
                 </Badge>
                 {order.stage === 'clay' && order.clay_status && (
-                  <Badge className={`${getStatusInfo(order.clay_status).color} text-white text-lg px-4 py-2`}>
+                  <Badge className={`${getStatusInfo(order.clay_status).color} text-white text-sm px-3 py-1`}>
                     {getStatusInfo(order.clay_status).customerLabel}
                   </Badge>
                 )}
                 {order.stage === 'paint' && order.paint_status && (
-                  <Badge className={`${getStatusInfo(order.paint_status).color} text-white text-lg px-4 py-2`}>
+                  <Badge className={`${getStatusInfo(order.paint_status).color} text-white text-sm px-3 py-1`}>
                     {getStatusInfo(order.paint_status).customerLabel}
                   </Badge>
                 )}
