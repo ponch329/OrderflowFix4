@@ -251,23 +251,23 @@ const OrderDetails = () => {
                       return (
                         <div 
                           key={round} 
-                          className={`${isLatest ? 'border-4 border-green-500 bg-green-50' : 'border-2 border-gray-300 bg-gray-50'} p-6 rounded-lg`}
+                          className={`${isLatest ? 'border-3 border-green-500 bg-green-50' : 'border-2 border-gray-300 bg-gray-50'} p-4 rounded-lg`}
                         >
                           {/* Round Header */}
-                          <div className="flex items-center gap-3 mb-4 flex-wrap">
-                            <h3 className="text-2xl font-bold text-gray-900">
+                          <div className="flex items-center gap-2 mb-3 flex-wrap">
+                            <h3 className="text-lg font-bold text-gray-900">
                               Round {round} {sortedRounds.length > 1 && `of ${sortedRounds.length}`}
                             </h3>
                             {isLatest && (
                               <>
-                                <Badge className="bg-green-600 text-white text-lg px-3 py-1">
+                                <Badge className="bg-green-600 text-white text-sm px-2 py-0.5">
                                   ⭐ LATEST REVISION
                                 </Badge>
-                                <Badge className={`${statusInfo.color} text-white text-lg px-3 py-1`}>
+                                <Badge className={`${statusInfo.color} text-white text-sm px-2 py-0.5`}>
                                   {isAdmin ? statusInfo.adminLabel : statusInfo.customerLabel}
                                 </Badge>
                                 {approval && approvalDate && (
-                                  <span className="text-sm text-gray-600 italic">
+                                  <span className="text-xs text-gray-600 italic">
                                     {approval.status === 'approved' ? 'Approved' : 'Changes Requested'}: {approvalDate}
                                   </span>
                                 )}
@@ -275,11 +275,11 @@ const OrderDetails = () => {
                             )}
                             {!isLatest && (
                               <>
-                                <Badge variant="outline" className="text-gray-600">
+                                <Badge variant="outline" className="text-gray-600 text-sm px-2 py-0.5">
                                   Previous Version
                                 </Badge>
                                 {approval && approvalDate && (
-                                  <span className="text-sm text-gray-600 italic">
+                                  <span className="text-xs text-gray-600 italic">
                                     {approval.status === 'approved' ? 'Approved' : 'Changes Requested'}: {approvalDate}
                                   </span>
                                 )}
@@ -288,14 +288,14 @@ const OrderDetails = () => {
                           </div>
                           
                           {/* Round Info */}
-                          <div className="mb-4 space-y-1">
+                          <div className="mb-3 space-y-1">
                             {roundDate && (
-                              <p className="text-sm text-gray-600">
+                              <p className="text-xs text-gray-600">
                                 <strong>Sent to you:</strong> {roundDate}
                               </p>
                             )}
                             {roundProofs[0]?.revision_note && (
-                              <p className="text-sm text-blue-700 bg-blue-100 p-2 rounded">
+                              <p className="text-xs text-blue-700 bg-blue-100 p-2 rounded">
                                 <strong>What changed:</strong> {roundProofs[0].revision_note}
                               </p>
                             )}
