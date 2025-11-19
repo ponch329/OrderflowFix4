@@ -586,23 +586,23 @@ const AdminDashboard = () => {
                   </div>
 
                   {/* Right side - Stages (Horizontal) */}
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                     {/* Clay Stage */}
-                    <div className="relative p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200 min-w-0">
-                      <Badge className="absolute top-2 right-2 bg-yellow-500 text-white text-xs">CLAY</Badge>
-                      <h4 className="font-bold text-base md:text-lg mb-1 pr-12">Clay Stage</h4>
+                    <div className="relative p-3 bg-yellow-50 rounded-lg border border-yellow-200 min-w-0">
+                      <Badge className="absolute top-2 right-2 bg-yellow-500 text-white text-xs py-0">CLAY</Badge>
+                      <h4 className="font-bold text-sm mb-1 pr-12">Clay Stage</h4>
                       {order.clay_entered_at && (
-                        <p className="text-xs text-gray-500 mb-3">
-                          Entered: {formatStageTimestamp(order.clay_entered_at)}
+                        <p className="text-xs text-gray-500 mb-2">
+                          {formatStageTimestamp(order.clay_entered_at)}
                         </p>
                       )}
                       
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <Select 
                           value={order.clay_status} 
                           onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'clay_status', value)}
                         >
-                          <SelectTrigger className="h-8 text-xs md:text-sm w-full" data-testid={`clay-status-control-${order.id}`}>
+                          <SelectTrigger className="h-7 text-xs w-full" data-testid={`clay-status-control-${order.id}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -613,15 +613,15 @@ const AdminDashboard = () => {
                           </SelectContent>
                         </Select>
 
-                        <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
+                        <div className="flex items-center gap-1.5 text-xs text-gray-600">
                           {getApprovalIcon(order, "clay")}
                           <span className="truncate">{order.clay_proofs?.length || 0} proofs</span>
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                           <Button 
                             size="sm"
-                            className="flex-1 min-w-[80px] h-8 text-xs"
+                            className="flex-1 min-w-[70px] h-7 text-xs"
                             onClick={() => openUploadDialog(order, "clay")}
                             data-testid={`upload-clay-btn-${order.id}`}
                           >
@@ -632,7 +632,7 @@ const AdminDashboard = () => {
                             <Button 
                               size="sm"
                               variant="outline"
-                              className="h-8 px-2 text-xs border-purple-500 text-purple-600 hover:bg-purple-50"
+                              className="h-7 px-2 text-xs border-purple-500 text-purple-600 hover:bg-purple-50"
                               onClick={() => {
                                 setSelectedOrderObj(order);
                                 setViewProofsStage("clay");
@@ -646,7 +646,7 @@ const AdminDashboard = () => {
                           <Button 
                             size="sm"
                             variant="outline"
-                            className="h-8 w-8 p-0 border-blue-500 text-blue-600 hover:bg-blue-50 shrink-0"
+                            className="h-7 w-7 p-0 border-blue-500 text-blue-600 hover:bg-blue-50 shrink-0"
                             onClick={() => handlePingCustomer(order.id, order.order_number, "clay")}
                             data-testid={`ping-clay-btn-${order.id}`}
                           >
