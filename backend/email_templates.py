@@ -268,7 +268,7 @@ def get_proofs_uploaded_notification(order_number, stage, num_images):
     return subject, html_content
 
 
-def get_customer_proofs_ready_email(order_number, customer_name, stage, num_images, portal_url="https://proofs.allbobbleheads.com/customer"):
+def get_customer_proofs_ready_email(order_number, customer_name, stage, num_images, portal_url="https://proofs.allbobbleheads.com/customer", logo_url=None, company_name=""):
     """
     Template for customer notification when proofs are ready for review
     
@@ -278,8 +278,13 @@ def get_customer_proofs_ready_email(order_number, customer_name, stage, num_imag
         stage: Stage name ("clay" or "paint")
         num_images: Number of proof images uploaded
         portal_url: URL to the customer portal
+        logo_url: Company logo URL (optional)
+        company_name: Company name for branding
     """
     subject = f"Your Bobblehead Proofs Are Ready! - Order #{order_number}"
+    
+    # Logo section HTML
+    logo_html = f'<img src="{logo_url}" alt="Logo" style="max-width: 200px; max-height: 80px; margin-bottom: 15px;" />' if logo_url else '<div class="emoji">🎨</div>'
     
     html_content = f"""
     <html>
@@ -361,7 +366,7 @@ def get_customer_proofs_ready_email(order_number, customer_name, stage, num_imag
     <body>
         <div class="container">
             <div class="header">
-                <div class="emoji">🎨</div>
+                {logo_html}
                 <h1>Your Proofs Are Ready!</h1>
             </div>
             
