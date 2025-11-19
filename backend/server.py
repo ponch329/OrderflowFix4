@@ -632,10 +632,18 @@ async def approve_stage(
 ):
     """Customer approves or requests changes for a stage"""
     import base64
+    from utils.workflow import get_workflow_engine
     
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Get tenant settings for workflow configuration
+    tenant_id = order.get("tenant_id")
+    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0}) if tenant_id else None
+    
+    # Initialize workflow engine
+    workflow_engine = get_workflow_engine(tenant.get("settings", {}) if tenant else {})
     
     # Handle additional images if provided
     additional_images = []
@@ -653,24 +661,21 @@ async def approve_stage(
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    # Update order
+    # Use workflow engine to calculate stage transitions
+    workflow_updates = workflow_engine.calculate_stage_transition(
+        current_stage=stage,
+        approval_status=status
+    )
+    
+    # Build update data
     field = f"{stage}_approval"
-    status_field = f"{stage}_status"
     update_data = {
         field: approval,
-        status_field: status if status == "changes_requested" else "approved",
+        **workflow_updates,  # Apply workflow-calculated updates
         "last_updated_by": "customer",
         "last_updated_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
-    
-    # Move to next stage if approved
-    if status == "approved":
-        if stage == "clay":
-            update_data["stage"] = "paint"
-            update_data["paint_status"] = "sculpting"
-        elif stage == "paint":
-            update_data["stage"] = "shipped"
     
     await db.orders.update_one({"id": order_id}, {"$set": update_data})
     
