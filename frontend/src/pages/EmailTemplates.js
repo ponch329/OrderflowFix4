@@ -38,8 +38,8 @@ Thank you!
   {
     id: "proof_ready_paint",
     name: "Paint Proofs Ready",
-    description: "Sent when paint proofs are uploaded",
-    trigger: "Automatically sent when admin uploads paint proofs",
+    description: "Sent when paint proofs are ready for customer review",
+    trigger: "Automatically sent when Order Stage = Paint and Order Status changes to 'Customer Feedback Needed'",
     default_subject: "Your Paint Proofs Are Ready - Order #{order_number}",
     default_body: `Hi {customer_name},
 
