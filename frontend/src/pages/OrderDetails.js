@@ -336,6 +336,17 @@ const OrderDetails = () => {
                             ))}
                           </div>
                           
+                          {/* Customer change request - show on the round they're responding to (not the latest revision) */}
+                          {approval && approval.status === "changes_requested" && !isLatest && (
+                            <div className="mt-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
+                              <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
+                              <p className="text-gray-700">{approval.message || "No message provided"}</p>
+                              {approval.images && approval.images.length > 0 && (
+                                <p className="text-sm text-gray-600 mt-2">{approval.images.length} reference image(s) attached</p>
+                              )}
+                            </div>
+                          )}
+                          
                           {/* Action Buttons - Only show on latest round */}
                           {canInteract && isLatest && (
                             <div className="mt-6 p-4 bg-white rounded-lg border-2 border-gray-200">
@@ -362,16 +373,6 @@ const OrderDetails = () => {
                                   Request Changes
                                 </Button>
                               </div>
-                            </div>
-                          )}
-
-                          {approval && approval.status === "changes_requested" && (
-                            <div className="mt-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
-                              <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
-                              <p className="text-gray-700">{approval.message || "No message provided"}</p>
-                              {approval.images && approval.images.length > 0 && (
-                                <p className="text-sm text-gray-600 mt-2">{approval.images.length} reference image(s) attached</p>
-                              )}
                             </div>
                           )}
                         </div>
