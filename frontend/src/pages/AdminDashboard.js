@@ -678,11 +678,11 @@ const AdminDashboard = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="sculpting">Painting</SelectItem>
-                            <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="changes_requested">Changes Requested</SelectItem>
+                            <SelectItem value="pending">{getStatusLabel('pending', workflowConfig)}</SelectItem>
+                            <SelectItem value="sculpting">{getStatusLabel('sculpting', workflowConfig)}</SelectItem>
+                            <SelectItem value="feedback_needed">{getStatusLabel('feedback_needed', workflowConfig)}</SelectItem>
+                            <SelectItem value="approved">{getStatusLabel('approved', workflowConfig)}</SelectItem>
+                            <SelectItem value="changes_requested">{getStatusLabel('changes_requested', workflowConfig)}</SelectItem>
                           </SelectContent>
                         </Select>
 
