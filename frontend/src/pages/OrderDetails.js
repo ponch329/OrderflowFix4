@@ -21,6 +21,7 @@ const OrderDetails = () => {
   const navigate = useNavigate();
   const { orderId } = useParams();
   const location = useLocation();
+  const { workflowConfig } = useBranding();
   const [order, setOrder] = useState(location.state?.order || null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [changeMessage, setChangeMessage] = useState("");
