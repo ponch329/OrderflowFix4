@@ -11,6 +11,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ArrowLeft, CheckCircle, XCircle, Image as ImageIcon, Upload, Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { getStatusInfo, shouldShowPingButton } from "@/utils/orderHelpers";
+import { useBranding } from "@/contexts/BrandingContext";
+import { getStageLabel, getStatusLabel } from "@/utils/labelMapper";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
