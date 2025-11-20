@@ -179,9 +179,9 @@ const OrderDetails = () => {
           <div className="flex justify-between items-center">
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <CardTitle className="text-xl capitalize text-blue-900">{stage} Stage</CardTitle>
+                <CardTitle className="text-xl capitalize text-blue-900">{getStageLabel(stage, workflowConfig)}</CardTitle>
                 <Badge className={`${statusInfo.color} text-white text-sm px-2 py-0.5`}>
-                  {isAdmin ? statusInfo.adminLabel : statusInfo.customerLabel}
+                  {getStatusLabel(status, workflowConfig)}
                 </Badge>
                 {isExpanded ? <ChevronUp className="w-4 h-4 text-blue-700" /> : <ChevronDown className="w-4 h-4 text-blue-700" />}
               </div>
