@@ -442,10 +442,10 @@ const AdminDashboard = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="sculpting">Sculpting</SelectItem>
-                  <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="changes_requested">Changes Requested</SelectItem>
+                  <SelectItem value="sculpting">{getStatusLabel('sculpting', workflowConfig)}</SelectItem>
+                  <SelectItem value="feedback_needed">{getStatusLabel('feedback_needed', workflowConfig)}</SelectItem>
+                  <SelectItem value="approved">{getStatusLabel('approved', workflowConfig)}</SelectItem>
+                  <SelectItem value="changes_requested">{getStatusLabel('changes_requested', workflowConfig)}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
