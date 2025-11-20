@@ -11,6 +11,7 @@ import CustomerPortal from "@/pages/CustomerPortal";
 import OrderDetails from "@/pages/OrderDetails";
 import HomePage from "@/pages/HomePage";
 import { Toaster } from "@/components/ui/sonner";
+import { BrandingProvider } from "@/contexts/BrandingContext";
 
 function App() {
   return (
