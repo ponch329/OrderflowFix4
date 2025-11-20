@@ -661,8 +661,8 @@ const AdminDashboard = () => {
 
                     {/* Paint Stage */}
                     <div className="relative p-3 bg-blue-50 rounded-lg border border-blue-200 min-w-0">
-                      <Badge className="absolute top-2 right-2 bg-blue-500 text-white text-xs py-0">PAINT</Badge>
-                      <h4 className="font-bold text-sm mb-1 pr-12">Paint Stage</h4>
+                      <Badge className="absolute top-2 right-2 bg-blue-500 text-white text-xs py-0">{getStageLabel('paint', workflowConfig).toUpperCase()}</Badge>
+                      <h4 className="font-bold text-sm mb-1 pr-12">{getStageLabel('paint', workflowConfig)}</h4>
                       {order.paint_entered_at && (
                         <p className="text-xs text-gray-500 mb-2">
                           {formatStageTimestamp(order.paint_entered_at)}
