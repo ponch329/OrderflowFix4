@@ -420,7 +420,7 @@ const OrderDetails = () => {
               </div>
               <div className="flex gap-2 items-center flex-wrap">
                 <Badge className={`${getStageColor(order.stage)} text-white text-sm px-3 py-1`} data-testid="current-stage-badge">
-                  {order.stage.toUpperCase()}
+                  {getStageLabel(order.stage, workflowConfig).toUpperCase()}
                 </Badge>
                 {order.stage === 'clay' && order.clay_status && (
                   <Badge className={`${getStatusInfo(order.clay_status).color} text-white text-sm px-3 py-1`}>
