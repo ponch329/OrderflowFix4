@@ -61,6 +61,14 @@ class Order(BaseModel):
     is_archived: bool = False  # True if order is archived
     shopify_fulfillment_status: Optional[str] = None  # fulfilled, partial, null
     
+    # Tracking information
+    tracking_number: Optional[str] = None
+    tracking_url: Optional[str] = None
+    tracking_company: Optional[str] = None  # e.g., "UPS", "FedEx", "USPS"
+    shipment_status: Optional[str] = None  # e.g., "in_transit", "delivered", "out_for_delivery"
+    estimated_delivery: Optional[str] = None
+    shipped_at: Optional[str] = None
+    
     # Stage timestamps
     clay_entered_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
     paint_entered_at: Optional[datetime] = None
