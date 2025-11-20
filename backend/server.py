@@ -186,8 +186,22 @@ async def update_admin_order_status(order_id: str, update_data: dict):
             update_fields["clay_entered_at"] = now.isoformat()
         elif stage == "paint":
             update_fields["paint_entered_at"] = now.isoformat()
-        elif stage == "fulfilled":
+        elif stage == "fulfilled" or stage == "shipped":
             update_fields["fulfilled_at"] = now.isoformat()
+            
+            # Fetch tracking information from Shopify when order ships
+            if order.get("shopify_order_id"):
+                from utils.tracking import update_order_tracking
+                try:
+                    await update_order_tracking(
+                        order_id,
+                        order["shopify_order_id"],
+                        db,
+                        tenant
+                    )
+                except Exception as e:
+                    import logging
+                    logging.error(f"Failed to fetch tracking for order {order_id}: {e}")
         elif stage == "canceled":
             update_fields["canceled_at"] = now.isoformat()
     
