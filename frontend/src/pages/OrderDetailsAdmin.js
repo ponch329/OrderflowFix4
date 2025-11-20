@@ -223,7 +223,23 @@ const OrderDetailsAdmin = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold">Order #{order.order_number}</h1>
+          <div>
+            <h1 className="text-3xl font-bold">Order #{order.order_number}</h1>
+            {order.tracking_number && (
+              <p className="text-sm text-gray-600 mt-1">
+                📦 <strong>Tracking:</strong>{' '}
+                <a 
+                  href={order.tracking_url || `https://www.google.com/search?q=track+${order.tracking_number}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline hover:text-blue-800 font-semibold"
+                >
+                  {order.tracking_number}
+                </a>
+                {order.tracking_company && ` via ${order.tracking_company}`}
+              </p>
+            )}
+          </div>
           {order.parent_order_id && (
             <Badge variant="outline" className="bg-blue-50">Sub-order</Badge>
           )}
