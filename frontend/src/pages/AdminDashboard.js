@@ -544,6 +544,19 @@ const AdminDashboard = () => {
                           Vendor: {order.item_vendor}
                         </p>
                       )}
+                      {order.tracking_number && (
+                        <p className="text-xs text-blue-600 font-semibold mt-1">
+                          📦 Tracking: <a 
+                            href={order.tracking_url || `https://www.google.com/search?q=track+${order.tracking_number}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline hover:text-blue-800"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {order.tracking_number}
+                          </a>
+                        </p>
+                      )}
                       <p className="text-xs text-gray-500 mt-1">
                         Last updated: {formatTimestamp(order.last_updated_at, order.last_updated_by)}
                       </p>
