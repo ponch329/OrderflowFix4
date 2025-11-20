@@ -426,9 +426,9 @@ const AdminDashboard = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Stages</SelectItem>
-                  <SelectItem value="clay">Clay</SelectItem>
-                  <SelectItem value="paint">Paint</SelectItem>
-                  <SelectItem value="fulfilled">Fulfilled</SelectItem>
+                  <SelectItem value="clay">{getStageLabel('clay', workflowConfig)}</SelectItem>
+                  <SelectItem value="paint">{getStageLabel('paint', workflowConfig)}</SelectItem>
+                  <SelectItem value="fulfilled">{getStageLabel('shipped', workflowConfig)}</SelectItem>
                   <SelectItem value="canceled">Canceled</SelectItem>
                   <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
