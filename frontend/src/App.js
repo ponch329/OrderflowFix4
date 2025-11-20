@@ -16,22 +16,24 @@ import { BrandingProvider } from "@/contexts/BrandingContext";
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<UserManagement />} />
-          <Route path="/admin/settings" element={<Settings />} />
-          <Route path="/admin/email-templates" element={<EmailTemplates />} />
-          <Route path="/admin/orders/:orderId" element={<OrderDetailsAdmin />} />
-          <Route path="/manufacturer/dashboard" element={<ManufacturerDashboard />} />
-          <Route path="/customer" element={<CustomerPortal />} />
-          <Route path="/order/:orderId" element={<OrderDetails />} />
-        </Routes>
-      </BrowserRouter>
-      <Toaster position="top-right" richColors />
+      <BrandingProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/settings" element={<Settings />} />
+            <Route path="/admin/email-templates" element={<EmailTemplates />} />
+            <Route path="/admin/orders/:orderId" element={<OrderDetailsAdmin />} />
+            <Route path="/manufacturer/dashboard" element={<ManufacturerDashboard />} />
+            <Route path="/customer" element={<CustomerPortal />} />
+            <Route path="/order/:orderId" element={<OrderDetails />} />
+          </Routes>
+        </BrowserRouter>
+        <Toaster position="top-right" richColors />
+      </BrandingProvider>
     </div>
   );
 }
