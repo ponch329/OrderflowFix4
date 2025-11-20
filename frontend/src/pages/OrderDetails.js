@@ -417,6 +417,25 @@ const OrderDetails = () => {
                 <CardDescription className="text-base mt-1 text-blue-100">
                   {order.customer_name} • {order.customer_email}
                 </CardDescription>
+                {order.tracking_number && (
+                  <CardDescription className="text-sm mt-2 text-blue-100">
+                    📦 <strong>Tracking:</strong>{' '}
+                    <a 
+                      href={order.tracking_url || `https://www.google.com/search?q=track+${order.tracking_number}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-white font-semibold"
+                    >
+                      {order.tracking_number}
+                    </a>
+                    {order.tracking_company && ` (${order.tracking_company})`}
+                    {order.shipment_status && (
+                      <span className="ml-2 px-2 py-0.5 bg-white bg-opacity-20 rounded text-xs">
+                        {order.shipment_status.replace('_', ' ').toUpperCase()}
+                      </span>
+                    )}
+                  </CardDescription>
+                )}
               </div>
               <div className="flex gap-2 items-center flex-wrap">
                 <Badge className={`${getStageColor(order.stage)} text-white text-sm px-3 py-1`} data-testid="current-stage-badge">
