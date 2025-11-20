@@ -424,12 +424,12 @@ const OrderDetails = () => {
                 </Badge>
                 {order.stage === 'clay' && order.clay_status && (
                   <Badge className={`${getStatusInfo(order.clay_status).color} text-white text-sm px-3 py-1`}>
-                    {getStatusInfo(order.clay_status).customerLabel}
+                    {getStatusLabel(order.clay_status, workflowConfig)}
                   </Badge>
                 )}
                 {order.stage === 'paint' && order.paint_status && (
                   <Badge className={`${getStatusInfo(order.paint_status).color} text-white text-sm px-3 py-1`}>
-                    {getStatusInfo(order.paint_status).customerLabel}
+                    {getStatusLabel(order.paint_status, workflowConfig)}
                   </Badge>
                 )}
               </div>
