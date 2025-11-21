@@ -38,8 +38,8 @@ const Settings = () => {
     manufacturer_can_add_notes: true,
     notes_visible_to_customer: false,
     manufacturer_can_email_customers: false,
-    manufacturer_can_upload_tracking: false,
-    order_manager_can_upload_tracking: false
+    manufacturer_can_upload_tracking: true,
+    order_manager_can_upload_tracking: true
   });
   
   // Workflow settings
