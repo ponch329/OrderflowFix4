@@ -276,7 +276,7 @@ const OrderDetailsAdmin = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold">Order #{order.order_number}</h1>
             {order.tracking_number && (
               <p className="text-sm text-gray-600 mt-1">
@@ -292,6 +292,20 @@ const OrderDetailsAdmin = () => {
                 {order.tracking_company && ` via ${order.tracking_company}`}
               </p>
             )}
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => {
+                setTrackingNumber(order.tracking_number || "");
+                setTrackingCompany(order.tracking_company || "");
+                setTrackingUrl(order.tracking_url || "");
+                setTrackingDialogOpen(true);
+              }}
+            >
+              <Package className="w-4 h-4 mr-2" />
+              {order.tracking_number ? "Edit Tracking" : "Add Tracking"}
+            </Button>
           </div>
           {order.parent_order_id && (
             <Badge variant="outline" className="bg-blue-50">Sub-order</Badge>
