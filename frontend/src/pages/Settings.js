@@ -486,6 +486,32 @@ const Settings = () => {
                       onCheckedChange={(checked) => setEmailSettings({ ...emailSettings, notes_visible_to_customer: checked })}
                     />
                   </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Manufacturer Can Upload Tracking</Label>
+                      <p className="text-sm text-gray-500">
+                        Allow manufacturer role to add tracking information
+                      </p>
+                    </div>
+                    <Switch
+                      checked={emailSettings.manufacturer_can_upload_tracking}
+                      onCheckedChange={(checked) => setEmailSettings({ ...emailSettings, manufacturer_can_upload_tracking: checked })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Order Manager Can Upload Tracking</Label>
+                      <p className="text-sm text-gray-500">
+                        Allow customer service role to add tracking information
+                      </p>
+                    </div>
+                    <Switch
+                      checked={emailSettings.order_manager_can_upload_tracking}
+                      onCheckedChange={(checked) => setEmailSettings({ ...emailSettings, order_manager_can_upload_tracking: checked })}
+                    />
+                  </div>
                 </div>
 
                 <Button onClick={handleSaveEmail} disabled={saving} className="w-full">
