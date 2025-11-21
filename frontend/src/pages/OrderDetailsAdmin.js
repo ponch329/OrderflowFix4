@@ -37,6 +37,13 @@ const OrderDetailsAdmin = () => {
   const [selectedClayStatus, setSelectedClayStatus] = useState("");
   const [selectedPaintStatus, setSelectedPaintStatus] = useState("");
   
+  // Tracking dialog state
+  const [trackingDialogOpen, setTrackingDialogOpen] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [trackingCompany, setTrackingCompany] = useState("");
+  const [trackingUrl, setTrackingUrl] = useState("");
+  const [fetchingFromShopify, setFetchingFromShopify] = useState(false);
+  
   // Notification confirmation
   const [notifyDialogOpen, setNotifyDialogOpen] = useState(false);
   const [pendingStatusChange, setPendingStatusChange] = useState(null);
