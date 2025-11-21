@@ -104,7 +104,9 @@ const Settings = () => {
         manufacturer_can_change_status: settings.manufacturer_can_change_status ?? false,
         manufacturer_can_add_notes: settings.manufacturer_can_add_notes ?? true,
         notes_visible_to_customer: settings.notes_visible_to_customer ?? false,
-        manufacturer_can_email_customers: settings.manufacturer_can_email_customers ?? false
+        manufacturer_can_email_customers: settings.manufacturer_can_email_customers ?? false,
+        manufacturer_can_upload_tracking: settings.manufacturer_can_upload_tracking ?? false,
+        order_manager_can_upload_tracking: settings.order_manager_can_upload_tracking ?? false
       });
       
       setWorkflowSettings({
