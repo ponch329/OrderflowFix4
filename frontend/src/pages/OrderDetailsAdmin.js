@@ -742,6 +742,85 @@ const OrderDetailsAdmin = () => {
             </div>
           </DialogContent>
         </Dialog>
+        {/* Tracking Dialog */}
+        <Dialog open={trackingDialogOpen} onOpenChange={setTrackingDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Tracking Information</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {order?.shopify_order_id && (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <Button
+                    onClick={handleFetchFromShopify}
+                    disabled={fetchingFromShopify}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    {fetchingFromShopify ? "Fetching..." : "📦 Fetch from Shopify"}
+                  </Button>
+                  <p className="text-xs text-gray-600 mt-2 text-center">
+                    Automatically pull tracking info from Shopify order
+                  </p>
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="tracking-number">Tracking Number *</Label>
+                <Input
+                  id="tracking-number"
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  placeholder="1Z999AA10123456784"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tracking-company">Carrier</Label>
+                <select
+                  id="tracking-company"
+                  className="w-full p-2 border rounded-md"
+                  value={trackingCompany}
+                  onChange={(e) => setTrackingCompany(e.target.value)}
+                >
+                  <option value="">Select Carrier</option>
+                  <option value="UPS">UPS</option>
+                  <option value="FedEx">FedEx</option>
+                  <option value="USPS">USPS</option>
+                  <option value="DHL">DHL</option>
+                  <option value="Canada Post">Canada Post</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tracking-url">Tracking URL (Optional)</Label>
+                <Input
+                  id="tracking-url"
+                  value={trackingUrl}
+                  onChange={(e) => setTrackingUrl(e.target.value)}
+                  placeholder="https://www.ups.com/track?tracknum=..."
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setTrackingDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveTracking}
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : "Save Tracking"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );
