@@ -78,6 +78,10 @@ class TenantSettings(BaseModel):
     manufacturer_can_add_notes: bool = True
     notes_visible_to_customer: bool = False
     
+    # Tracking permissions
+    manufacturer_can_upload_tracking: bool = True
+    order_manager_can_upload_tracking: bool = True
+    
     # Workflow configuration
     workflow: WorkflowConfig = Field(default_factory=WorkflowConfig)
 
