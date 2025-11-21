@@ -190,6 +190,52 @@ const OrderDetailsAdmin = () => {
     }
   };
 
+  const handleFetchFromShopify = async () => {
+    setFetchingFromShopify(true);
+    try {
+      const response = await axios.post(`${API}/admin/orders/${orderId}/fetch-tracking`);
+      
+      if (response.data.success && response.data.tracking) {
+        setTrackingNumber(response.data.tracking.tracking_number || "");
+        setTrackingCompany(response.data.tracking.tracking_company || "");
+        setTrackingUrl(response.data.tracking.tracking_url || "");
+        toast.success("Tracking fetched from Shopify!");
+        fetchOrder(); // Refresh order data
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to fetch tracking from Shopify");
+    } finally {
+      setFetchingFromShopify(false);
+    }
+  };
+
+  const handleSaveTracking = async () => {
+    if (!trackingNumber.trim()) {
+      toast.error("Please enter a tracking number");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.patch(`${API}/admin/orders/${orderId}/tracking`, {
+        tracking_number: trackingNumber,
+        tracking_company: trackingCompany,
+        tracking_url: trackingUrl,
+        shipment_status: "in_transit"
+      });
+
+      toast.success("Tracking information saved!");
+      setTrackingDialogOpen(false);
+      fetchOrder(); // Refresh order data
+    } catch (error) {
+      toast.error("Failed to save tracking information");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePingCustomer = async (stage) => {
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
