@@ -148,6 +148,54 @@ async def update_admin_order_info(order_id: str, update_data: dict):
     
     return {"message": "Order updated successfully"}
 
+@api_router.post("/admin/orders/{order_id}/fetch-tracking")
+async def fetch_tracking_from_shopify(order_id: str):
+    """Fetch tracking information from Shopify for this order"""
+    from utils.tracking import update_order_tracking
+    
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    if not order.get("shopify_order_id"):
+        raise HTTPException(status_code=400, detail="Order does not have a Shopify order ID")
+    
+    # Get tenant settings
+    tenant_id = order.get("tenant_id")
+    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0}) if tenant_id else None
+    
+    if not tenant:
+        raise HTTPException(status_code=400, detail="Tenant not found")
+    
+    # Fetch tracking from Shopify
+    try:
+        success = await update_order_tracking(
+            order_id,
+            order["shopify_order_id"],
+            db,
+            tenant.get("settings", {})
+        )
+        
+        if success:
+            # Return updated order
+            updated_order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+            return {
+                "success": True,
+                "message": "Tracking fetched from Shopify",
+                "tracking": {
+                    "tracking_number": updated_order.get("tracking_number"),
+                    "tracking_url": updated_order.get("tracking_url"),
+                    "tracking_company": updated_order.get("tracking_company"),
+                    "shipment_status": updated_order.get("shipment_status")
+                }
+            }
+        else:
+            raise HTTPException(status_code=404, detail="No tracking information found in Shopify")
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to fetch tracking from Shopify: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch tracking: {str(e)}")
+
 @api_router.patch("/admin/orders/{order_id}/tracking")
 async def update_order_tracking_manual(
     order_id: str,
@@ -174,7 +222,62 @@ async def update_order_tracking_manual(
         {"$set": update_fields}
     )
     
+    # Sync to Shopify if configured
+    tenant_id = order.get("tenant_id")
+    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0}) if tenant_id else None
+    
+    if tenant and order.get("shopify_order_id"):
+        try:
+            await sync_tracking_to_shopify(
+                order["shopify_order_id"],
+                tracking_data.get("tracking_number"),
+                tracking_data.get("tracking_company"),
+                tracking_data.get("tracking_url"),
+                tenant.get("settings", {})
+            )
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to sync tracking to Shopify: {e}")
+    
     return {"success": True, "message": "Tracking information updated"}
+
+async def sync_tracking_to_shopify(shopify_order_id: str, tracking_number: str, carrier: str, tracking_url: str, tenant_settings: dict):
+    """Sync tracking information back to Shopify"""
+    try:
+        import shopify
+        
+        shopify_shop_name = tenant_settings.get("shopify_shop_name")
+        shopify_access_token = tenant_settings.get("shopify_access_token")
+        
+        if not shopify_shop_name or not shopify_access_token:
+            return
+        
+        # Initialize Shopify session
+        shopify_api_version = "2024-10"
+        session = shopify.Session(
+            f"{shopify_shop_name}.myshopify.com",
+            shopify_api_version,
+            shopify_access_token
+        )
+        shopify.ShopifyResource.activate_session(session)
+        
+        # Get the order
+        shopify_order = shopify.Order.find(shopify_order_id)
+        
+        if shopify_order and hasattr(shopify_order, 'fulfillments') and shopify_order.fulfillments:
+            # Update the most recent fulfillment with tracking
+            fulfillment = shopify_order.fulfillments[-1]
+            fulfillment.tracking_number = tracking_number
+            fulfillment.tracking_company = carrier
+            if tracking_url:
+                fulfillment.tracking_url = tracking_url
+            fulfillment.save()
+        
+        shopify.ShopifyResource.clear_session()
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to sync tracking to Shopify: {e}")
+        raise
 
 @api_router.patch("/admin/orders/{order_id}/status")
 async def update_admin_order_status(order_id: str, update_data: dict):
