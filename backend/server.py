@@ -148,6 +148,34 @@ async def update_admin_order_info(order_id: str, update_data: dict):
     
     return {"message": "Order updated successfully"}
 
+@api_router.patch("/admin/orders/{order_id}/tracking")
+async def update_order_tracking_manual(
+    order_id: str,
+    tracking_data: dict
+):
+    """Manually update order tracking information"""
+    from datetime import datetime, timezone
+    
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    update_fields = {
+        "tracking_number": tracking_data.get("tracking_number"),
+        "tracking_url": tracking_data.get("tracking_url"),
+        "tracking_company": tracking_data.get("tracking_company"),
+        "shipment_status": tracking_data.get("shipment_status", "in_transit"),
+        "shipped_at": tracking_data.get("shipped_at", datetime.now(timezone.utc).isoformat()),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": update_fields}
+    )
+    
+    return {"success": True, "message": "Tracking information updated"}
+
 @api_router.patch("/admin/orders/{order_id}/status")
 async def update_admin_order_status(order_id: str, update_data: dict):
     """
