@@ -25,7 +25,7 @@ const OrderNotes = ({ orderId, notes = [], onNotesUpdate }) => {
 
     setLoading(true);
     try {
-      await axios.post(`${API}/admin/orders/${orderId}/notes`, {
+      await axios.post(`${API}/orders/${orderId}/notes`, {
         content: newNote,
         visible_to_customer: visibleToCustomer
       });
