@@ -145,7 +145,7 @@ async def get_email_templates(
     db = Depends(get_db)
 ):
     """
-    Get all available email templates
+    Get all available email templates with saved settings
     Requires: VIEW_SETTINGS permission
     """
     # Get tenant settings
@@ -153,32 +153,31 @@ async def get_email_templates(
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
     
-    templates = [
-        {
-            "id": "proof_ready",
-            "name": "Proofs Ready",
-            "description": "Sent when proofs are uploaded and ready for customer review",
-            "enabled": tenant.get("settings", {}).get("email_templates_enabled", True)
-        },
-        {
-            "id": "approved",
-            "name": "Proof Approved",
-            "description": "Sent to admin when customer approves a proof",
-            "enabled": tenant.get("settings", {}).get("email_templates_enabled", True)
-        },
-        {
-            "id": "changes_requested",
-            "name": "Changes Requested",
-            "description": "Sent to admin when customer requests changes",
-            "enabled": tenant.get("settings", {}).get("email_templates_enabled", True)
-        },
-        {
-            "id": "reminder",
-            "name": "Review Reminder",
-            "description": "Manual reminder sent to customer to review proofs",
-            "enabled": True
-        }
+    # Get saved email template settings
+    saved_templates = tenant.get("settings", {}).get("email_templates", {})
+    
+    # Define all available template IDs
+    template_ids = [
+        "proof_ready_clay",
+        "proof_ready_paint",
+        "approved_clay",
+        "approved_paint",
+        "changes_requested_clay",
+        "changes_requested_paint",
+        "reminder"
     ]
+    
+    templates = []
+    for template_id in template_ids:
+        saved_data = saved_templates.get(template_id, {})
+        templates.append({
+            "id": template_id,
+            "enabled": saved_data.get("enabled", True),
+            "cc_email": saved_data.get("cc_email", ""),
+            "bcc_email": saved_data.get("bcc_email", ""),
+            "subject": saved_data.get("subject", ""),
+            "body": saved_data.get("body", "")
+        })
     
     return templates
 
