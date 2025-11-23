@@ -198,10 +198,27 @@ const EmailTemplates = () => {
   };
 
   const handleSaveTemplate = async () => {
-    // For now, just close the dialog
-    // In a full implementation, this would save to the database
-    toast.success("Template saved successfully!");
-    setEditDialogOpen(false);
+    setLoading(true);
+    try {
+      await axios.patch(`${API}/settings/email-template/${selectedTemplate.id}`, {
+        enabled: enabled,
+        cc_email: ccEmail,
+        bcc_email: bccEmail,
+        subject: subject,
+        body: body
+      });
+      
+      toast.success("Template saved successfully!");
+      setEditDialogOpen(false);
+      
+      // Refresh templates to show updated data
+      await fetchTemplates();
+    } catch (error) {
+      toast.error("Failed to save template");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSendTest = async () => {
