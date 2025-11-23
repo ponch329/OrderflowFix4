@@ -6,7 +6,7 @@ import ManufacturerDashboard from "@/pages/ManufacturerDashboard";
 import UserManagement from "@/pages/UserManagement";
 import Settings from "@/pages/Settings";
 import EmailTemplates from "@/pages/EmailTemplates";
-import OrderDetailsAdmin from "@/pages/OrderDetailsAdmin";
+import OrderDetailsAdmin from "@/pages/OrderDetailsAdminNew";
 import CustomerPortal from "@/pages/CustomerPortal";
 import OrderDetails from "@/pages/OrderDetails";
 import HomePage from "@/pages/HomePage";
