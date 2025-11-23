@@ -182,6 +182,55 @@ async def get_email_templates(
     
     return templates
 
+@router.patch("/email-template/{template_id}")
+async def update_email_template(
+    template_id: str,
+    template_data: dict,
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_SETTINGS)),
+    db = Depends(get_db)
+):
+    """
+    Update a specific email template
+    Requires: MANAGE_SETTINGS permission
+    """
+    tenant = await db.tenants.find_one({"id": auth.tenant_id}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    
+    # Get current settings
+    current_settings = tenant.get("settings", {})
+    
+    # Initialize email_templates dict if it doesn't exist
+    if "email_templates" not in current_settings:
+        current_settings["email_templates"] = {}
+    
+    # Update the specific template
+    current_settings["email_templates"][template_id] = {
+        "enabled": template_data.get("enabled", True),
+        "cc_email": template_data.get("cc_email", ""),
+        "bcc_email": template_data.get("bcc_email", ""),
+        "subject": template_data.get("subject", ""),
+        "body": template_data.get("body", ""),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Save to database
+    await db.tenants.update_one(
+        {"id": auth.tenant_id},
+        {
+            "$set": {
+                "settings": current_settings,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {
+        "message": "Email template updated successfully",
+        "template_id": template_id,
+        "template": current_settings["email_templates"][template_id]
+    }
+
 @router.get("/manufacturer-fields")
 async def get_manufacturer_visible_fields(
     auth: AuthContext = Depends(require_permissions(Permission.VIEW_SETTINGS)),
