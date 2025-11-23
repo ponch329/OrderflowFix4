@@ -597,6 +597,13 @@ const OrderDetailsAdminNew = () => {
           )}
         </Card>
 
+        {/* Order Notes */}
+        <OrderNotes 
+          orderId={orderId} 
+          notes={order.notes || []} 
+          onNotesUpdate={fetchOrder}
+        />
+
         {/* Clay Stage */}
         {renderProofSection('clay', order.clay_proofs || [], order.clay_approval)}
 
