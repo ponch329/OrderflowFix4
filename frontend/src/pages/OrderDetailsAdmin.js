@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Upload, Edit, Save, Package, ChevronDown, ChevronUp, Image as ImageIcon, Bell } from "lucide-react";
 import { toast } from "sonner";
 import DragDropUpload from "@/components/DragDropUpload";
+import OrderNotes from "@/components/OrderNotes";
 import { useBranding } from "@/contexts/BrandingContext";
 import { getStageLabel, getStatusLabel } from "@/utils/labelMapper";
 
