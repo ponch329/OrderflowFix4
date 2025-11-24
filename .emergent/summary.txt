@@ -3,99 +3,81 @@ The user is pivoting a single-tenant Shopify proof approval system into a multi-
 
 **High-Level Requirements:**
 1.  **Multi-User & Multi-Tenant Architecture:** A Main Admin should manage tenants. Within each tenant, there should be user accounts with different roles (Manufacturer, Customer Service, Order Manager) and configurable permissions.
-2.  **Admin Settings & Branding:** A settings portal for admins to manage branding (logo, colors, fonts), company name, and email configurations (WYSIWYG editor, templates, BCC, test sends).
+2.  **Admin Settings & Branding:** A settings portal for admins to manage branding (logo, colors, fonts), company name, and email configurations. It should also include highly configurable workflow settings for order stages and statuses.
 3.  **Advanced Order & Vendor Logic:**
     *   Split Shopify orders with multiple vendors into sub-orders.
     *   Allow admins to control which order details are visible to vendors.
-    *   Filter orders by vendor.
 4.  **Enhanced Admin & Customer Workflow:**
-    *   An admin-specific order details page to change stage/status and upload proofs.
-    *   A clear proof versioning system to handle multiple revision rounds within a stage, for both admin and customer views.
-    *   Popups for admins to input revision text when requesting changes.
-    *   Admins must be able to see customer-submitted revision requests (text and images).
-    *   Order sorting capabilities (by date, last edited, user).
-    *   Ability to edit manual orders.
-    *   Archive functionality should be a stage/status, not a separate button.
+    *   A clear proof versioning system for both admin and customer views.
+    *   Admins must be able to see customer-submitted revision requests.
     *   Confirmation prompts for admins on whether to notify a customer when changing an order's status.
+    *   Admins need the ability to edit all aspects of a customer order, such as editing customer-requested changes and deleting proof images.
+5.  **Shopify Integration:**
+    *   Fetch real-time tracking information from Shopify when an order is marked as shipped.
+    *   Display the tracking number as a hyperlink in both admin and customer portals.
+    *   Allow authorized users to manually upload tracking information, with the ability to sync it back to Shopify.
+6.  **Bug Fix:** Email Template settings (enabled status, CC, BCC) are not saving correctly.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application has been successfully refactored from a single-tenant monolith into a multi-tenant SaaS foundation.
--   **Backend:** The FastAPI backend is now modular, with logic separated into , , , and . A Role-Based Access Control (RBAC) system is in place. All data is now tenant-aware, with existing data migrated to a default tenant.
--   **Frontend:** The React frontend now includes:
-    -   A comprehensive User Management page to create/edit/delete users with specific roles.
-    -   A detailed Settings page with tabs for Branding (company name, logo, colors), Email (template management link, BCC), and Permissions (role-specific toggles).
-    -   An Email Templates management page listing all 7 templates with edit/preview functionality. The editor includes a WYSIWYG interface and CC/BCC fields.
-    -   The Admin Dashboard features server-side pagination (50 orders/page), advanced sorting, and filtering by vendor and archive status.
-    -   A new admin-only Order Details page () where admins can manage status, upload proofs with revision tracking, and view customer change requests.
+The application is a multi-tenant SaaS with a modular FastAPI backend and a React frontend. The critical compilation error on the Admin Order Details page has been fixed. This page has been completely redesigned to match the modern, compact layout of the customer-facing UI.
+
+Key new features have been added:
+-   **Admin Order Editing:** Admins can now delete individual proof images and edit the text of customer change requests directly from the order details page.
+-   **Internal Order Notes:** A new section on the Admin Order Details page allows admins to add and view internal notes for an order, which are not visible to the customer.
+-   **Email Template Fix:** The bug preventing email template settings (enabled status, CC, BCC) from being saved has been resolved.
+
+The backend crash that prevented orders from loading on the admin dashboard has also been fixed. The last interaction involved the agent assisting the user with a non-coding, platform-related question about how to stop application deployment.
 
 **Last working item**:
-The agent was in the process of improving the customer-facing order view to handle multiple proof revisions more clearly.
+The agent fixed a critical backend crash that was preventing orders from loading on the admin dashboard. The crash was caused by using an incorrect permission enum ( instead of ). The agent corrected the code, restarted the backend, and verified that orders are now loading correctly in the UI.
 
--   **Last item agent was working:** Refactoring the customer-facing order details page () to organize and display proofs by revision rounds.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** N
--   **Which testing method agent to use?**: screenshot tool (After the UI refactor is complete, take a screenshot of the customer order view to verify the new layout.)
+-   **Last item agent was working:** Fixing a backend crash that blocked order listing on the admin dashboard.
+-   **Status:** USER VERIFICATION PENDING
+-   **Agent Testing Done:** Y
+-   **Which testing method agent to use?**: screenshot tool. The agent should log in as admin, navigate to the  to confirm orders are loading, then click into an order to verify the new editing features (delete proof button, edit change request button) are present and functional without crashing the app.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** The customer-facing proof view is confusing when multiple revisions exist for one stage. (P0)
+-   **Issue 1: Manufacturer Login Fails (P1)**
 
 **Issues Detail:**
--   **Issue 1: Confusing Proof Revision Display for Customers**
-    -   **Attempted fixes:** None yet. The agent had just started by viewing the relevant file ().
+-   **Issue 1: Manufacturer Login Fails**
+    -   **Attempted fixes:** The agent tried to log in using the credentials from the previous handoff summary ( / ) and received an Invalid username or password error. No further debugging was attempted.
     -   **Next debug checklist:**
-        1.  Modify the  component to group proofs by their  number within each stage (, ).
-        2.  Render each round as a distinct section, clearly labeled (e.g., Round 1: Original Proofs, Round 2: Revisions - Nov 17, 2025).
-        3.  Ensure the latest round is displayed most prominently, perhaps at the top.
-        4.  The Approve and Request Changes buttons should only apply to the *latest* round of proofs.
-    -   **Why fix this issue and what will be achieved with the fix?** To prevent customer confusion and provide a clear history of revisions, improving the user experience and reducing support queries.
-    -   **Status:** IN PROGRESS
+        1.  The agent should not attempt to access the user database directly.
+        2.  Instead, investigate the user creation or seeding script to confirm the correct credentials for the 'manufacturer' role.
+        3.  Examine the  endpoint in  to understand the authentication logic.
+        4.  Check backend logs during a login attempt for any specific errors.
+    -   **Why fix this issue and what will be achieved with the fix?** The Manufacturer Dashboard is a key part of the application logic, but it's currently inaccessible. Fixing this will allow for testing and further development of features related to the manufacturer role.
+    -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Frontend
+    -   **Should Test frontend/backend/both after fix?** Both
     -   **Blocked on other issue:** None
 
 **In progress Task List**:
--   **Task 1: Complete Phase 3 UI Enhancements (P1)**
-    -   **Where to resume:** After fixing the customer-facing proof view, implement the remaining Phase 3 UI features.
-        -   Add visual indicators on the main admin dashboard for orders that have been split from a parent Shopify order.
-        -   Create a dedicated, permission-restricted view or dashboard for the Manufacturer role, showing only the orders and details relevant to them.
-    -   **What will be achieved with this?** This will complete the advanced vendor and order management functionality requested by the user.
-    -   **Status:** NOT STARTED
-    -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on something:**  should be completed first.
+-   None.
 
 **Upcoming and Future Tasks**
-*   **Phase 4: Manufacturer Workflow Enhancements (P2)**
-    *   Add a notes feature to orders, allowing both Admins and Manufacturers to add comments.
-    *   Implement an admin toggle to control the visibility of manufacturer notes to the end customer.
-    *   Implement a global toggle for the Main Admin to grant/revoke the Manufacturer role's ability to change an order's status (this may already be partially covered by the permissions UI, but needs verification and potential backend logic).
+*   **Upcoming Tasks:**
+    *   **Implement Shopify Sync for Manual Tracking (P2):** The UI and backend endpoint () exist. However, the logic within the endpoint to call the  utility function is present but may not be correctly wired or tested. This needs to be verified and completed.
+    *   **Apply Global Branding (P2):** The  sets CSS variables for colors and fonts. A global CSS file was created, but a full audit is needed to ensure all components consistently use these variables for a unified look and feel.
+*   **Future Tasks:**
+    *   **Verify Manufacturer Dashboard Functionality (P3):** Once the login is fixed (Issue 1), the dashboard needs to be tested to ensure it correctly filters and displays only the orders assigned to that manufacturer's vendor.
+    *   **Add Order Notes to Manufacturer Dashboard (P3):** Discuss with the user whether the internal notes feature, currently on the admin page, should also be available on the manufacturer dashboard, perhaps with different permissions.
 
 **Completed work in this session**
--   **Phase 1: Multi-User Authentication & Permissions (DONE)**
-    -   Refactored the backend into a modular, multi-tenant architecture.
-    -   Migrated all existing data (orders, etc.) to a default tenant.
-    -   Implemented a full RBAC system with , , and  roles.
-    -   Created a frontend User Management UI () to create, view, and manage users.
--   **Phase 2: Admin Settings & Customization (DONE)**
-    -   Created a multi-tab Settings page ().
-    -   Implemented Branding controls (company name, logo URL, brand colors, fonts).
-    -   Created an Email Template management page () with a WYSIWYG editor and CC/BCC fields.
-    -   Implemented advanced role-based permission toggles.
--   **Phase 3: Advanced Order Logic (Partially Complete)**
-    -   Implemented backend logic for splitting multi-vendor orders.
-    -   Redesigned the Admin Dashboard with sorting, vendor filtering, and pagination (50 orders/page).
-    -   Moved Archive from a button to a filterable status.
-    -   Created a new  page for admin actions.
-    -   Implemented proof revision tracking, admin request changes flow, and display of customer revision requests.
-    -   Added a Notify Customer? confirmation dialog when admins change order status.
--   **User-Requested Features (DONE)**
-    -   Added an Emailed Customer column to the Google Sheets log.
-    -   Added timestamps to proof rounds and uploads.
+-   **Critical Bug Fix:** Resolved a JavaScript compilation error in  that was breaking the admin order view.
+-   **UI Redesign:** Completely overhauled the  page, refactoring its 800+ lines of code into a modern, compact, and component-based design that matches the customer-facing UI.
+-   **Feature Implementation (Admin Editing):** Added backend endpoints and frontend UI for admins to delete proof images and edit customer-requested changes on an order.
+-   **Feature Implementation (Order Notes):** Added a system for internal-only order notes on the Admin Order Details page.
+-   **Bug Fix (Email Templates):** Corrected an issue where email template settings were not being saved to the backend.
+-   **Critical Bug Fix (Backend Crash):** Fixed a server startup crash () by correcting the permission enum to , which resolved the orders are not loading issue.
+-   **User Support:** Assisted the user with a platform-level question about stopping deployment by using the .
 
 **Earlier issues found/mentioned but not fixed**
--   None. All user-reported issues (, , ) were investigated and resolved.
+-   None.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -104,68 +86,65 @@ The agent was in the process of improving the customer-facing order view to hand
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, Pydantic, Motor, JWT, Passlib
--   **Frontend:** React, Axios, TailwindCSS, Shadcn UI
+-   **Backend:** FastAPI, Pydantic, Motor, JWT
+-   **Frontend:** React, React Context, Axios, TailwindCSS, Shadcn UI
 -   **Database:** MongoDB
--   **Architecture:** Multi-Tenant SaaS with Role-Based Access Control (RBAC)
+-   **Architecture:** Multi-Tenant SaaS, RBAC, Configurable Workflow Engine
 
 **key DB schema**
--   **tenants**: 
--   **users**: 
--   **orders**: 
+-   **tenants**:  object now correctly stores the full configuration for each template, including , , and .
+-   **orders**: The  array within the order document now stores internal notes added by admins. The  array can now be modified by admins.
 
 **changes in tech stack**
 -   None.
 
 **All files**
-*   **Created (Backend):**
-    *   , , ,  (and all files within) - Complete modular refactor.
-*   **Created (Frontend):**
-    *   : UI for managing users.
-    *   : UI for tenant-level settings.
-    *   : UI for managing email templates.
-    *   : Admin-specific view for managing a single order.
-*   **Updated (Backend):**
-    *   : Rewritten to be a lightweight app that includes modular routers. Still contains some legacy routes for frontend compatibility.
-*   **Updated (Frontend):**
-    *   : Heavily modified to add sorting, filtering, pagination, clickable order cards, and new UI elements.
-    *   : Updated with new protected routes for User Management, Settings, and Email Templates.
+*   **Created:**
+    *   : A new React component for adding and displaying internal order notes.
+    *   : Documentation for the admin UI overhaul.
+    *   : Documentation for the P2/P3 tasks that were completed.
+*   **Updated:**
+    *   : Major refactor for redesign, and integrated new features (notes, proof deletion, approval editing).
+    *   : Implemented the API call in  to persist changes.
+    *   : Routing was temporarily changed for the new admin page and then reverted after renaming.
+    *   : Added  and . Replaced all instances of  with .
+    *   : Added  endpoint to save individual email templates.
+*   **Deleted:**
+    *   : This temporary file for the redesign was renamed to .
 
 **Areas that need refactoring**:
--   The frontend is in a hybrid state. It uses the new tenant-aware APIs for new features (Settings, User Management) but still relies on some legacy, non-tenant-aware endpoints in  for core functionality like fetching all orders. These calls should be migrated to the new, fully authenticated endpoints in  to complete the transition.
+-    was the main candidate and has now been significantly refactored. No new urgent refactoring is needed.
 
 **key api endpoints**
--   : Authenticates any user (admin, manufacturer, etc.) and returns a JWT.
--   : Full CRUD for user management.
--   : Get and update settings for the current user's tenant.
--   : Get a list of unique vendors for filtering.
--   : Allows admin to submit change requests.
--   : Fetches detailed order data for the admin view.
+-   : Saves an individual email template's settings.
+-   : Allows an admin to delete a specific proof image from an order.
+-   : Allows an admin to edit the content of a customer's change request.
 
 **Critical Info for New Agent**
--   You are working on a multi-tenant application. All new backend logic MUST be tenant-aware, typically by using the  dependency to get the .
--   The immediate priority is to fix the customer-facing proof revision display (), as this is a critical part of the customer experience.
--   After resolving the customer UI, proceed with the remaining Phase 3 tasks (split-order indicators, manufacturer view).
+-   The last coding task was fixing a backend crash that prevented orders from loading. This is complete and verified. You should now confirm with the user if they have had a chance to test the new admin editing features (deleting proofs, editing change requests).
+-   The immediate blocker to further progress on role-specific features is the failing manufacturer login. This should be prioritized (Issue 1).
+-   The agent previously believed several P2/P3 tasks were complete, but they require verification and potentially more work (e.g., Shopify sync for manual uploads, full application of branding). Do not assume these are finished.
 
 **documents created in this job**
--   None.
+-   /app/ADMIN_UI_REDESIGN.md
+-   /app/P2_P3_TASKS_COMPLETED.md
 
 **Last 5 User Messages and any pending user messages**
-1.  **User:** Reports that admins cannot see the text/images from a customer's change request. (Status: **RESOLVED**)
-2.  **Agent:** Implemented a new section in the admin order details page to display this information.
-3.  **User:** Reiterates the need for a better proof revision system on the *customer-facing* order page, suggesting a Stage, Round, Status structure for clarity. (Status: **IN PROGRESS**)
-4.  **Agent:** Acknowledged the request and began inspecting  to plan the refactor.
-5.  There are no other pending user messages. The agent's next action should be to implement the customer-facing revision UI.
+1.  **User:**  (Status: **COMPLETED**, verification pending)
+2.  **User:**  (Status: **COMPLETED**, this was fixed)
+3.  **User:**  (Status: **COMPLETED**, handled by )
+4.  **User:**  (Status: **COMPLETED**, handled by )
+5.  There are no other pending user messages. The agent should prompt the user for verification of the latest features.
 
 **Project Health Check:**
-*   **Broken:** The customer-facing proof revision display is functionally confusing but not technically broken.
+*   **Broken:** Manufacturer login is not working, making the Manufacturer Dashboard inaccessible.
 *   **Mocked:** None.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. The testing agent was used multiple times to verify complex UI interactions (Settings page saving, order navigation, email template editing) after the user reported problems, confirming the functionality was working correctly.
+-   **Testing agent used after significant changes:** NO (Agent used screenshot tool instead).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None manually. Test scripts were generated by the testing agent.
--   **Known regressions:** None.
+-   **Test files created:** None
+-   **Known regressions:** The previously working manufacturer login is now confirmed to be broken.
 
 **Credentials to test flow:**
 -   **Main Admin:**
@@ -177,6 +156,9 @@ The agent was in the process of improving the customer-facing order view to hand
 -   **Manufacturer:**
     -   Username: 
     -   Password: 
+    -   **Note:** Login is currently failing for this user.
 
 **What agent forgot to execute**
--   The agent initially overlooked several key requirements for Phase 2 (WYSIWYG editor, logo upload, etc.) but successfully implemented them after the user provided clarification. All subsequent user requests have been addressed or are currently in progress.</analysis>
+-   The agent did not debug the manufacturer login failure after it was discovered.
+-   The agent performed incomplete testing on the admin editing features before finishing, which led to the user discovering the order loading bug.
+-   The agent did not fully verify that the  function was correctly called from the manual tracking upload endpoint.</analysis>
