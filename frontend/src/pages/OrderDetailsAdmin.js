@@ -445,17 +445,30 @@ const OrderDetailsAdminNew = () => {
                         {roundProofs.map((proof, idx) => (
                           <div 
                             key={proof.id} 
-                            className="relative group cursor-pointer border-2 border-gray-200 rounded-lg overflow-hidden hover:border-blue-600 transition-all"
-                            onClick={() => setSelectedImage(proof.url)}
+                            className="relative group border-2 border-gray-200 rounded-lg overflow-hidden hover:border-blue-600 transition-all"
                           >
                             <img 
                               src={proof.url} 
                               alt={proof.filename}
-                              className="w-full h-48 object-cover"
+                              className="w-full h-48 object-cover cursor-pointer"
+                              onClick={() => setSelectedImage(proof.url)}
                             />
                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                              <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={32} />
+                              <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" size={32} onClick={() => setSelectedImage(proof.url)} />
                             </div>
+                            {/* Delete button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteProof(proof.id, stage);
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Delete proof"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </button>
                           </div>
                         ))}
                       </div>
