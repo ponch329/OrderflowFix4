@@ -475,8 +475,19 @@ const OrderDetailsAdminNew = () => {
                       
                       {/* Customer Change Request */}
                       {approval && approval.status === "changes_requested" && (sortedRounds.length === 1 || !isLatest) && (
-                        <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
-                          <p className="font-semibold mb-2 text-orange-900">Customer Requested Changes:</p>
+                        <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded relative">
+                          <div className="flex justify-between items-start mb-2">
+                            <p className="font-semibold text-orange-900">Customer Requested Changes:</p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditApproval(stage, approval)}
+                              className="border-orange-500 text-orange-700 hover:bg-orange-100"
+                            >
+                              <Edit className="w-3 h-3 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
                           <p className="text-gray-700">{approval.message || "No message provided"}</p>
                           {approval.images && approval.images.length > 0 && (
                             <div className="mt-3">
