@@ -42,7 +42,6 @@ import hashlib
 import jwt
 from datetime import datetime, timezone, timedelta
 from models.user import User
-from typing import List
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
@@ -561,7 +560,6 @@ async def admin_upload_proofs_legacy(
 @api_router.get("/admin/analytics")
 async def get_analytics(days: int = 7, compare_days: int = 7):
     """Get dashboard analytics - shows current state of all orders with comparison"""
-    from datetime import timedelta
     from middleware.auth import get_current_user
     
     # For now, get the first tenant (will be enhanced with proper auth)
