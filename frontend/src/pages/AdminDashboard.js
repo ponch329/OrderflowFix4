@@ -553,7 +553,12 @@ const AdminDashboard = () => {
                         value={order.stage} 
                         onValueChange={(value) => handleStatusChange(order.id, order.order_number, 'stage', value)}
                       >
-                        <SelectTrigger className="h-8 text-xs" data-testid={`stage-control-${order.id}`}>
+                        <SelectTrigger className={`h-8 text-xs font-bold ${
+                          order.stage === 'clay' ? 'text-yellow-600' :
+                          order.stage === 'paint' ? 'text-blue-600' :
+                          order.stage === 'fulfilled' ? 'text-green-600' :
+                          order.stage === 'canceled' ? 'text-red-600' : 'text-gray-600'
+                        }`} data-testid={`stage-control-${order.id}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
