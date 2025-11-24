@@ -264,8 +264,8 @@ const OrderDetailsAdminNew = () => {
   const getStageTheme = (stage) => {
     const themes = {
       clay: {
-        bgColor: "bg-yellow-50",
-        badgeBg: "bg-yellow-500",
+        bgColor: "bg-[#fefce8]",
+        badgeBg: "bg-[#eab308]",
         badgeText: "text-white",
         borderColor: "border-yellow-200"
       },
