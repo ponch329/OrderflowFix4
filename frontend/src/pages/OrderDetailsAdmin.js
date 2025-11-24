@@ -13,6 +13,7 @@ import { ArrowLeft, Upload, Edit, Save, Package, ChevronDown, ChevronUp, Image a
 import { toast } from "sonner";
 import DragDropUpload from "@/components/DragDropUpload";
 import OrderNotes from "@/components/OrderNotes";
+import OrderTimeline from "@/components/OrderTimeline";
 import { useBranding } from "@/contexts/BrandingContext";
 import { getStageLabel, getStatusLabel } from "@/utils/labelMapper";
 
