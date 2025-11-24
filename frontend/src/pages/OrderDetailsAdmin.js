@@ -261,6 +261,24 @@ const OrderDetailsAdminNew = () => {
     return colors[stage] || "bg-gray-500";
   };
 
+  const getStageTheme = (stage) => {
+    const themes = {
+      clay: {
+        bgColor: "bg-yellow-50",
+        badgeBg: "bg-yellow-500",
+        badgeText: "text-white",
+        borderColor: "border-yellow-200"
+      },
+      paint: {
+        bgColor: "bg-blue-50",
+        badgeBg: "bg-blue-500",
+        badgeText: "text-white",
+        borderColor: "border-blue-200"
+      }
+    };
+    return themes[stage] || themes.clay;
+  };
+
   const getStatusInfo = (status) => {
     const map = {
       sculpting: "bg-gray-500",
@@ -277,32 +295,76 @@ const OrderDetailsAdminNew = () => {
     const status = order?.[statusField];
     const isExpanded = stage === 'clay' ? clayExpanded : paintExpanded;
     const setExpanded = stage === 'clay' ? setClayExpanded : setPaintExpanded;
+    const theme = getStageTheme(stage);
     
-    // Group proofs by round
-    const rounds = {};
+    // Create chronological timeline of events
+    const chronologicalEvents = [];
+    
+    // Add all proofs with their timestamps
     proofs.forEach(proof => {
-      const round = proof.round || 1;
-      if (!rounds[round]) rounds[round] = [];
-      rounds[round].push(proof);
+      chronologicalEvents.push({
+        type: 'proof',
+        timestamp: proof.uploaded_at,
+        data: proof
+      });
     });
-    const sortedRounds = Object.keys(rounds).sort((a, b) => b - a);
-    const latestRound = Math.max(...Object.keys(rounds));
+    
+    // Add approval if it exists
+    if (approval && approval.status === 'changes_requested') {
+      chronologicalEvents.push({
+        type: 'customer_changes',
+        timestamp: approval.created_at,
+        data: approval
+      });
+    }
+    
+    // Sort by timestamp (oldest first for chronological display)
+    chronologicalEvents.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    // Group into rounds for display
+    const displayGroups = [];
+    let currentRound = [];
+    let currentRoundNumber = 1;
+    
+    chronologicalEvents.forEach((event, idx) => {
+      if (event.type === 'proof') {
+        const proofRound = event.data.round || 1;
+        if (proofRound !== currentRoundNumber && currentRound.length > 0) {
+          displayGroups.push({ round: currentRoundNumber, items: [...currentRound] });
+          currentRound = [];
+          currentRoundNumber = proofRound;
+        }
+        currentRound.push(event);
+      } else if (event.type === 'customer_changes') {
+        // Add customer changes after current round
+        if (currentRound.length > 0) {
+          displayGroups.push({ round: currentRoundNumber, items: [...currentRound] });
+          currentRound = [];
+        }
+        displayGroups.push({ round: null, items: [event] });
+      }
+    });
+    
+    // Add remaining items
+    if (currentRound.length > 0) {
+      displayGroups.push({ round: currentRoundNumber, items: currentRound });
+    }
 
     return (
-      <Card className="mb-4 border-2 border-gray-200">
+      <Card className={`mb-4 border-2 ${theme.borderColor}`}>
         <CardHeader 
-          className="bg-gradient-to-r from-blue-50 to-blue-100 border-b-2 border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors py-3"
+          className={`${theme.bgColor} border-b-2 ${theme.borderColor} cursor-pointer hover:opacity-90 transition-opacity py-3`}
           onClick={() => setExpanded(!isExpanded)}
         >
           <div className="flex justify-between items-center">
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge className="bg-blue-600 text-white text-base px-3 py-1 uppercase font-semibold">
+                <Badge className={`${theme.badgeBg} ${theme.badgeText} text-base px-3 py-1 uppercase font-semibold`}>
                   {getStageLabel(stage, workflowConfig)}
                 </Badge>
-                {isExpanded ? <ChevronUp className="w-4 h-4 text-blue-700" /> : <ChevronDown className="w-4 h-4 text-blue-700" />}
+                {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-700" /> : <ChevronDown className="w-4 h-4 text-gray-700" />}
               </div>
-              <CardDescription className="text-blue-700 text-sm mt-1">
+              <CardDescription className="text-gray-700 text-sm mt-1">
                 {proofs?.length || 0} proof image(s)
               </CardDescription>
             </div>
@@ -327,7 +389,7 @@ const OrderDetailsAdminNew = () => {
         
         {isExpanded && (
           <CardContent className="pt-4">
-            {sortedRounds.length === 0 ? (
+            {displayGroups.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Package className="w-16 h-16 mx-auto mb-3 text-gray-300" />
                 <p>No proofs uploaded yet</p>
@@ -335,77 +397,76 @@ const OrderDetailsAdminNew = () => {
               </div>
             ) : (
               <div className="space-y-6">
-                {sortedRounds.map(round => (
-                  <div key={round} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-semibold text-gray-800">Round {round}</h4>
-                        {parseInt(round) === latestRound && (
-                          <Badge className="bg-green-600 text-white text-sm px-2 py-0.5">
-                            LATEST REVISION
-                          </Badge>
-                        )}
-                        {parseInt(round) !== latestRound && (
-                          <Badge variant="outline" className="text-gray-600 text-sm px-2 py-0.5">
-                            Previous
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-4">
-                      {rounds[round].map((proof, idx) => (
-                        <div key={idx} className="relative group">
-                          <img 
-                            src={proof.url} 
-                            alt={`Proof ${idx + 1}`}
-                            className="w-full h-48 object-cover rounded border-2 cursor-pointer hover:border-blue-500 transition"
-                            onClick={() => setSelectedImage(proof.url)}
-                          />
-                          <button
-                            onClick={() => handleDeleteProof(stage, proof.id)}
-                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Delete proof"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                {displayGroups.map((group, groupIdx) => (
+                  <div key={groupIdx}>
+                    {group.round !== null && (
+                      <div className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-gray-800">Round {group.round}</h4>
+                            {group.round === Math.max(...proofs.map(p => p.round || 1)) && (
+                              <Badge className="bg-green-600 text-white text-sm px-2 py-0.5">
+                                LATEST REVISION
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Customer Change Request */}
-                {approval && approval.status === 'changes_requested' && (
-                  <div className="border-2 border-orange-300 rounded-lg p-4 bg-orange-50">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-semibold text-orange-800 flex items-center gap-2">
-                        Customer Requested Changes
-                      </h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditApproval(stage)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <p className="text-gray-700 whitespace-pre-wrap">{approval.message}</p>
-                    {approval.images && approval.images.length > 0 && (
-                      <div className="grid grid-cols-4 gap-2 mt-3">
-                        {approval.images.map((img, idx) => (
-                          <img 
-                            key={idx}
-                            src={img} 
-                            alt={`Reference ${idx + 1}`}
-                            className="w-full h-24 object-cover rounded border cursor-pointer hover:border-orange-500 transition"
-                            onClick={() => setSelectedImage(img)}
-                          />
-                        ))}
+                        
+                        <div className="grid grid-cols-3 gap-4">
+                          {group.items.filter(item => item.type === 'proof').map((item, idx) => (
+                            <div key={idx} className="relative group">
+                              <img 
+                                src={item.data.url} 
+                                alt={`Proof ${idx + 1}`}
+                                className="w-full h-48 object-cover rounded border-2 cursor-pointer hover:border-blue-500 transition"
+                                onClick={() => setSelectedImage(item.data.url)}
+                              />
+                              <button
+                                onClick={() => handleDeleteProof(stage, item.data.id)}
+                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Delete proof"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Customer Change Request */}
+                    {group.items.some(item => item.type === 'customer_changes') && (
+                      <div className="border-2 border-orange-300 rounded-lg p-4 bg-orange-50">
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-semibold text-orange-800 flex items-center gap-2">
+                            Customer Requested Changes
+                          </h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditApproval(stage)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-gray-700 whitespace-pre-wrap">{group.items.find(i => i.type === 'customer_changes')?.data.message}</p>
+                        {group.items.find(i => i.type === 'customer_changes')?.data.images?.length > 0 && (
+                          <div className="grid grid-cols-4 gap-2 mt-3">
+                            {group.items.find(i => i.type === 'customer_changes')?.data.images.map((img, idx) => (
+                              <img 
+                                key={idx}
+                                src={img} 
+                                alt={`Reference ${idx + 1}`}
+                                className="w-full h-24 object-cover rounded border cursor-pointer hover:border-orange-500 transition"
+                                onClick={() => setSelectedImage(img)}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
+                ))}
               </div>
             )}
           </CardContent>
