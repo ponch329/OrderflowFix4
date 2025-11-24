@@ -646,7 +646,7 @@ async def edit_customer_approval(
 ):
     """
     Edit customer approval/change request
-    Requires: MANAGE_ORDERS permission
+    Requires: EDIT_ORDERS permission
     """
     if stage not in ["clay", "paint"]:
         raise HTTPException(status_code=400, detail="Invalid stage")
@@ -690,7 +690,7 @@ async def delete_approval_image(
 ):
     """
     Delete an image from customer approval/change request
-    Requires: MANAGE_ORDERS permission
+    Requires: EDIT_ORDERS permission
     """
     if stage not in ["clay", "paint"]:
         raise HTTPException(status_code=400, detail="Invalid stage")
@@ -731,7 +731,7 @@ async def delete_proof_image(
 ):
     """
     Delete a proof image
-    Requires: MANAGE_ORDERS permission
+    Requires: EDIT_ORDERS permission
     """
     if stage not in ["clay", "paint"]:
         raise HTTPException(status_code=400, detail="Invalid stage")
@@ -770,7 +770,7 @@ async def edit_proof_note(
 ):
     """
     Edit revision note for a specific proof
-    Requires: MANAGE_ORDERS permission
+    Requires: EDIT_ORDERS permission
     """
     if stage not in ["clay", "paint"]:
         raise HTTPException(status_code=400, detail="Invalid stage")
