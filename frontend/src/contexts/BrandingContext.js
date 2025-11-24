@@ -128,8 +128,17 @@ export const BrandingProvider = ({ children }) => {
   useEffect(() => {
     if (!loading) {
       const root = document.documentElement;
+      // Set custom color variables (for backward compatibility)
       root.style.setProperty('--color-primary', branding.primary_color);
       root.style.setProperty('--color-secondary', branding.secondary_color);
+      
+      // Convert hex to HSL and set Tailwind/Shadcn variables
+      const primaryHSL = hexToHSL(branding.primary_color);
+      const secondaryHSL = hexToHSL(branding.secondary_color);
+      root.style.setProperty('--primary', primaryHSL);
+      root.style.setProperty('--secondary', secondaryHSL);
+      
+      // Set font variables
       root.style.setProperty('--font-family-base', branding.font_family);
       root.style.setProperty('--font-size-base', branding.font_size_base);
     }
