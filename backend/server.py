@@ -836,7 +836,32 @@ async def approve_stage(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.orders.update_one({"id": order_id}, {"$set": update_data})
+    # Create timeline event
+    from utils.timeline import create_timeline_event
+    if status == "approved":
+        timeline_event = create_timeline_event(
+            event_type="approval",
+            user_name=order.get('customer_name', 'Customer'),
+            user_role="customer",
+            description=f"Approved {stage} proofs",
+            metadata={"stage": stage}
+        )
+    else:
+        timeline_event = create_timeline_event(
+            event_type="changes_requested",
+            user_name=order.get('customer_name', 'Customer'),
+            user_role="customer",
+            description=f"Requested changes for {stage} stage",
+            metadata={"stage": stage, "message": message}
+        )
+    
+    await db.orders.update_one(
+        {"id": order_id}, 
+        {
+            "$set": update_data,
+            "$push": {"timeline": timeline_event}
+        }
+    )
     
     # Send email notification and log to sheets
     from utils.helpers import log_to_sheets
