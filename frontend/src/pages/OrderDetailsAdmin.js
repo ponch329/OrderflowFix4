@@ -69,6 +69,12 @@ const OrderDetailsAdminNew = () => {
   const [clayExpanded, setClayExpanded] = useState(true);
   const [paintExpanded, setPaintExpanded] = useState(true);
 
+  // Admin editing dialogs
+  const [editApprovalDialogOpen, setEditApprovalDialogOpen] = useState(false);
+  const [editApprovalStage, setEditApprovalStage] = useState("");
+  const [editApprovalMessage, setEditApprovalMessage] = useState("");
+  const [editApprovalImages, setEditApprovalImages] = useState([]);
+
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     if (!token) {
