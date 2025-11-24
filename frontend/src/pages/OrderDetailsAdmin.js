@@ -252,6 +252,62 @@ const OrderDetailsAdminNew = () => {
     }
   };
 
+
+  // Admin editing functions
+  const handleEditApproval = (stage, approval) => {
+    setEditApprovalStage(stage);
+    setEditApprovalMessage(approval?.message || "");
+    setEditApprovalImages(approval?.images || []);
+    setEditApprovalDialogOpen(true);
+  };
+
+  const handleSaveApproval = async () => {
+    try {
+      await axios.patch(`${API}/orders/${orderId}/approval/${editApprovalStage}`, {
+        message: editApprovalMessage,
+        images: editApprovalImages
+      });
+      toast.success("Customer changes updated successfully!");
+      setEditApprovalDialogOpen(false);
+      fetchOrder();
+    } catch (error) {
+      toast.error("Failed to update customer changes");
+      console.error(error);
+    }
+  };
+
+  const handleDeleteApprovalImage = async (imageUrl) => {
+    if (!confirm("Are you sure you want to delete this image?")) return;
+    
+    try {
+      await axios.delete(`${API}/orders/${orderId}/approval/${editApprovalStage}/image`, {
+        params: { image_url: imageUrl }
+      });
+      setEditApprovalImages(editApprovalImages.filter(img => img !== imageUrl));
+      toast.success("Image deleted successfully!");
+      fetchOrder();
+    } catch (error) {
+      toast.error("Failed to delete image");
+      console.error(error);
+    }
+  };
+
+  const handleDeleteProof = async (proofId, stage) => {
+    if (!confirm("Are you sure you want to delete this proof image? This cannot be undone.")) return;
+    
+    try {
+      await axios.delete(`${API}/orders/${orderId}/proof/${proofId}`, {
+        params: { stage }
+      });
+      toast.success("Proof deleted successfully!");
+      fetchOrder();
+    } catch (error) {
+      toast.error("Failed to delete proof");
+      console.error(error);
+    }
+  };
+
+
   const getStageColor = (stage) => {
     switch(stage) {
       case "clay": return "bg-yellow-500";
