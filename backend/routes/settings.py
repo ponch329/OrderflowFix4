@@ -97,10 +97,12 @@ async def send_test_email(
     db = Depends(get_db)
 ):
     """
-    Send a test email to verify SMTP configuration
+    Send a test email to verify SMTP configuration or preview an email template
     Requires: MANAGE_SETTINGS permission
     """
     to_email = email_data.get("to_email")
+    template_id = email_data.get("template_id")
+    
     if not to_email:
         raise HTTPException(status_code=400, detail="to_email is required")
     
@@ -109,33 +111,69 @@ async def send_test_email(
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
     
-    # Create test email content
-    subject = f"Test Email from {tenant['name']}"
-    html_content = f"""
-    <html>
-    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #2196F3;">Test Email Successful! ✓</h2>
-        <p>This is a test email from your proof approval system.</p>
+    # If template_id is provided, send a preview of that template
+    if template_id:
+        templates = tenant.get("settings", {}).get("email_templates", [])
+        template = next((t for t in templates if t.get("id") == template_id), None)
         
-        <div style="background: #f0f8ff; padding: 20px; border-left: 4px solid #2196F3; margin: 20px 0;">
-            <p><strong>Tenant:</strong> {tenant['name']}</p>
-            <p><strong>Sent by:</strong> {auth.user.full_name} ({auth.user.email})</p>
-            <p><strong>Time:</strong> {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")}</p>
+        if not template:
+            raise HTTPException(status_code=404, detail="Template not found")
+        
+        # Use the template's subject and body, with placeholder data
+        subject = template.get("subject", "Test Email")
+        html_content = template.get("body", "<p>No content</p>")
+        
+        # Replace common placeholders with sample data
+        logo_url = tenant.get("settings", {}).get("logo_url", "")
+        html_content = html_content.replace("{order_number}", "12345-TEST")
+        html_content = html_content.replace("{customer_name}", "Test Customer")
+        html_content = html_content.replace("{stage}", "Clay Stage")
+        html_content = html_content.replace("{customer_message}", "Sample customer feedback message")
+        html_content = html_content.replace("{tracking_number}", "1Z999AA10123456784")
+        html_content = html_content.replace("{tracking_link}", "https://example.com/track")
+        html_content = html_content.replace("{logo_url}", logo_url)
+        html_content = html_content.replace("{company_name}", tenant.get("name", "Your Company"))
+        
+        # Add a header indicating this is a test
+        html_content = f"""
+        <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 10px; margin-bottom: 20px; text-align: center;">
+            <strong>⚠️ TEST EMAIL PREVIEW</strong> - This is how your email template will appear
         </div>
-        
-        <p>If you received this email, your SMTP configuration is working correctly!</p>
-        
-        <p style="color: #888; font-size: 12px; margin-top: 30px;">
-            This is an automated test email from your proof approval system.
-        </p>
-    </body>
-    </html>
-    """
+        {html_content}
+        """
+    else:
+        # Create generic test email content for SMTP verification
+        subject = f"Test Email from {tenant['name']}"
+        html_content = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2196F3;">Test Email Successful! ✓</h2>
+            <p>This is a test email from your proof approval system.</p>
+            
+            <div style="background: #f0f8ff; padding: 20px; border-left: 4px solid #2196F3; margin: 20px 0;">
+                <p><strong>Tenant:</strong> {tenant['name']}</p>
+                <p><strong>Sent by:</strong> {auth.user.full_name} ({auth.user.email})</p>
+                <p><strong>Time:</strong> {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")}</p>
+            </div>
+            
+            <p>If you received this email, your SMTP configuration is working correctly!</p>
+            
+            <p style="color: #888; font-size: 12px; margin-top: 30px;">
+                This is an automated test email from your proof approval system.
+            </p>
+        </body>
+        </html>
+        """
     
     try:
         from utils.helpers import send_email
         await send_email(tenant, to_email, subject, html_content)
-        return {"message": f"Test email sent successfully to {to_email}"}
+        
+        message = f"Test email sent successfully to {to_email}"
+        if template_id:
+            message = f"Template preview sent successfully to {to_email}"
+        
+        return {"message": message}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send test email: {str(e)}")
 
