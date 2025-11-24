@@ -497,10 +497,24 @@ async def admin_upload_proofs_legacy(
     # Update order with proofs and change status to feedback_needed
     field = f"{stage}_proofs"
     status_field = f"{stage}_status"
+    
+    # Create timeline event
+    from utils.timeline import create_timeline_event
+    timeline_event = create_timeline_event(
+        event_type="proof_upload",
+        user_name="Admin",
+        user_role="admin",
+        description=f"Uploaded {len(uploaded_proofs)} proof(s) for {stage} stage",
+        metadata={"stage": stage, "count": len(uploaded_proofs)}
+    )
+    
     await db.orders.update_one(
         {"id": order_id, "tenant_id": tenant_id},
         {
-            "$push": {field: {"$each": uploaded_proofs}},
+            "$push": {
+                field: {"$each": uploaded_proofs},
+                "timeline": timeline_event
+            },
             "$set": {
                 status_field: "feedback_needed",
                 "last_updated_by": "admin",
