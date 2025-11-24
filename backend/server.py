@@ -8,6 +8,13 @@ import os
 import logging
 from pathlib import Path
 
+# Configure logging first
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -18,24 +25,19 @@ try:
     db_name = os.environ.get('DB_NAME')
     
     if not mongo_url:
+        logger.error("MONGO_URL environment variable is not set")
         raise ValueError("MONGO_URL environment variable is not set")
     if not db_name:
+        logger.error("DB_NAME environment variable is not set")
         raise ValueError("DB_NAME environment variable is not set")
     
+    logger.info(f"Initializing MongoDB connection to database: {db_name}")
     client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
     db = client[db_name]
-    
-    logging.info(f"MongoDB connection initialized for database: {db_name}")
+    logger.info(f"✅ MongoDB client initialized for database: {db_name}")
 except Exception as e:
-    logging.error(f"Failed to initialize MongoDB connection: {str(e)}")
+    logger.error(f"❌ Failed to initialize MongoDB connection: {str(e)}")
     raise
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 # Create the main app without a prefix
 app = FastAPI(title="Bobblehead Proof Approval System - Multi-Tenant SaaS")
