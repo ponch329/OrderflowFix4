@@ -89,7 +89,7 @@ const CustomerPortal = () => {
                   <Input
                     id="orderNumber"
                     type="text"
-                    placeholder="#203860"
+                    placeholder="203860"
                     value={orderNumber}
                     onChange={(e) => setOrderNumber(e.target.value)}
                     required
