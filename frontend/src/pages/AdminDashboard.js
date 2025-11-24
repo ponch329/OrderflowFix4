@@ -664,7 +664,12 @@ const AdminDashboard = () => {
 
                     {/* Paint Stage */}
                     <div className="relative p-3 bg-blue-50 rounded-lg border border-blue-200 min-w-0">
-                      <Badge className="absolute top-2 right-2 bg-blue-500 text-white text-xs py-0">{getStageLabel('paint', workflowConfig).toUpperCase()}</Badge>
+                      <Badge className={`absolute top-2 right-2 text-white text-xs py-0 uppercase ${
+                        order.paint_status === 'approved' ? 'bg-green-500' :
+                        order.paint_status === 'changes_requested' ? 'bg-orange-500' :
+                        order.paint_status === 'feedback_needed' ? 'bg-blue-500' :
+                        order.paint_status === 'sculpting' ? 'bg-gray-500' : 'bg-gray-400'
+                      }`}>{getStatusLabel(order.paint_status, workflowConfig)}</Badge>
                       <h4 className="font-bold text-sm mb-1 pr-12">{getStageLabel('paint', workflowConfig)}</h4>
                       {order.paint_entered_at && (
                         <p className="text-xs text-gray-500 mb-2">
