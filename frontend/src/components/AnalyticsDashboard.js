@@ -70,81 +70,70 @@ export default function AnalyticsDashboard() {
         </Select>
       </div>
 
-      {/* Total Orders Card */}
+      {/* Total Orders Card - Compact Single Line */}
       <Card className="bg-gradient-to-br from-purple-50 to-blue-50">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">Total Orders (All Time)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="text-3xl font-bold text-gray-900">{currentMetrics.total}</div>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-xs text-gray-500">
-                  {currentPeriodCount} new in last {period} days
-                </span>
-                {getTrendIcon(newOrdersChange)}
-                <span className={`text-xs font-medium ${
-                  newOrdersChange > 0 ? 'text-green-600' : newOrdersChange < 0 ? 'text-red-600' : 'text-gray-500'
-                }`}>
-                  {newOrdersChange > 0 ? '+' : ''}{newOrdersChange}%
-                </span>
-              </div>
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-600">Total Orders:</span>
+              <span className="text-2xl font-bold text-gray-900">{currentMetrics.total}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-gray-500">{currentPeriodCount} new in last {period} days</span>
+              {getTrendIcon(newOrdersChange)}
+              <span className={`font-medium ${
+                newOrdersChange > 0 ? 'text-green-600' : newOrdersChange < 0 ? 'text-red-600' : 'text-gray-500'
+              }`}>
+                {newOrdersChange > 0 ? '+' : ''}{newOrdersChange}%
+              </span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Orders by Stage */}
+      {/* Orders by Stage - Compact Single Line */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Orders by Stage (Current State)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['clay', 'paint', 'fulfilled', 'canceled'].map((stage) => {
-              const currentCount = currentMetrics.by_stage[stage] || 0;
-              const percentage = currentMetrics.total > 0 ? ((currentCount / currentMetrics.total) * 100).toFixed(1) : 0;
-              
-              return (
-                <div key={stage} className="p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm font-medium text-gray-600 capitalize mb-2">{stage}</div>
-                  <div className="text-2xl font-bold text-gray-900">{currentCount}</div>
-                  <div className="flex items-center gap-1 mt-1">
-                    <span className="text-xs text-gray-500">
-                      {percentage}% of total
-                    </span>
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-600">By Stage:</span>
+            <div className="flex items-center gap-6">
+              {['clay', 'paint', 'fulfilled', 'canceled'].map((stage) => {
+                const currentCount = currentMetrics.by_stage[stage] || 0;
+                const percentage = currentMetrics.total > 0 ? ((currentCount / currentMetrics.total) * 100).toFixed(0) : 0;
+                
+                return (
+                  <div key={stage} className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 capitalize">{stage}:</span>
+                    <span className="text-lg font-bold text-gray-900">{currentCount}</span>
+                    <span className="text-xs text-gray-400">({percentage}%)</span>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Orders by Status */}
+      {/* Orders by Status - Compact Single Line */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Orders by Status (Current State)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(currentMetrics.by_status)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 6)
-              .map(([status, currentCount]) => {
-                return (
-                  <div key={status} className="p-4 bg-gray-50 rounded-lg">
-                    <div className="text-xs font-medium text-gray-600 capitalize mb-2 truncate" title={status}>
-                      {status.replace('_', ' ')}
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-600">By Status:</span>
+            <div className="flex items-center gap-6 flex-wrap">
+              {Object.entries(currentMetrics.by_status)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 5)
+                .map(([status, currentCount]) => {
+                  return (
+                    <div key={status} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 capitalize truncate" title={status}>
+                        {status.replace('_', ' ')}:
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">{currentCount}</span>
                     </div>
-                    <div className="text-xl font-bold text-gray-900">{currentCount}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      orders
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+            </div>
           </div>
         </CardContent>
       </Card>
