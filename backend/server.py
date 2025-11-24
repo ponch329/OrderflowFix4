@@ -975,6 +975,8 @@ async def ping_customer(order_id: str, stage: str):
     
     try:
         from utils.helpers import send_email, log_to_sheets
+        from utils.timeline import create_timeline_event
+        
         await send_email(tenant, order['customer_email'], subject, html_content)
         await log_to_sheets(
             db,
@@ -986,6 +988,21 @@ async def ping_customer(order_id: str, stage: str):
             status=order.get(f"{stage}_status", ''),
             emailed_customer="Yes"
         )
+        
+        # Add timeline event
+        timeline_event = create_timeline_event(
+            event_type="ping",
+            user_name="Admin",
+            user_role="admin",
+            description=f"Sent reminder to customer for {stage} stage",
+            metadata={"stage": stage}
+        )
+        
+        await db.orders.update_one(
+            {"id": order_id},
+            {"$push": {"timeline": timeline_event}}
+        )
+        
         return {"message": "Reminder email sent successfully"}
     except Exception as e:
         logging.error(f"Failed to send reminder email: {e}")
