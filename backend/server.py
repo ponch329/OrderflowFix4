@@ -30,8 +30,39 @@ except Exception as e:
     logging.error(f"Failed to initialize MongoDB connection: {str(e)}")
     raise
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # Create the main app without a prefix
 app = FastAPI(title="Bobblehead Proof Approval System - Multi-Tenant SaaS")
+
+@app.on_event("startup")
+async def startup_event():
+    """Log application startup"""
+    logger.info("=" * 50)
+    logger.info("Application starting up...")
+    logger.info(f"MongoDB URL configured: {mongo_url[:20]}..." if mongo_url else "No MongoDB URL")
+    logger.info(f"Database name: {db_name}")
+    logger.info(f"CORS Origins: {os.environ.get('CORS_ORIGINS', '*')}")
+    logger.info("=" * 50)
+    
+    # Test MongoDB connection
+    try:
+        await db.command("ping")
+        logger.info("✅ MongoDB connection successful")
+    except Exception as e:
+        logger.error(f"❌ MongoDB connection failed: {str(e)}")
+        raise
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up on shutdown"""
+    logger.info("Application shutting down...")
+    client.close()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
