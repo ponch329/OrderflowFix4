@@ -641,7 +641,7 @@ async def edit_customer_approval(
     order_id: str,
     stage: str,
     approval_data: dict,
-    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_ORDERS)),
+    auth: AuthContext = Depends(require_permissions(Permission.EDIT_ORDERS)),
     db = Depends(get_db)
 ):
     """
@@ -685,7 +685,7 @@ async def delete_approval_image(
     order_id: str,
     stage: str,
     image_url: str,
-    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_ORDERS)),
+    auth: AuthContext = Depends(require_permissions(Permission.EDIT_ORDERS)),
     db = Depends(get_db)
 ):
     """
@@ -726,7 +726,7 @@ async def delete_proof_image(
     order_id: str,
     proof_id: str,
     stage: str,
-    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_ORDERS)),
+    auth: AuthContext = Depends(require_permissions(Permission.EDIT_ORDERS)),
     db = Depends(get_db)
 ):
     """
@@ -765,7 +765,7 @@ async def edit_proof_note(
     proof_id: str,
     stage: str,
     note_data: dict,
-    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_ORDERS)),
+    auth: AuthContext = Depends(require_permissions(Permission.EDIT_ORDERS)),
     db = Depends(get_db)
 ):
     """
