@@ -55,6 +55,7 @@ class TenantSettings(BaseModel):
     secondary_color: str = "#9C27B0"
     font_family: str = "Arial, sans-serif"
     font_size_base: str = "16px"
+    customer_portal_url: Optional[str] = None  # URL for customer portal in emails
     
     # Email settings
     bcc_email: Optional[str] = None
