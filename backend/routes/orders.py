@@ -630,3 +630,183 @@ async def admin_request_changes(
     )
     
     return {"message": "Changes requested", "approval": approval}
+
+
+# ============================================
+# ADMIN EDITING ENDPOINTS
+# ============================================
+
+@router.patch("/{order_id}/approval/{stage}")
+async def edit_customer_approval(
+    order_id: str,
+    stage: str,
+    approval_data: dict,
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_ORDERS)),
+    db = Depends(get_db)
+):
+    """
+    Edit customer approval/change request
+    Requires: MANAGE_ORDERS permission
+    """
+    if stage not in ["clay", "paint"]:
+        raise HTTPException(status_code=400, detail="Invalid stage")
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": auth.tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    approval_field = f"{stage}_approval"
+    if not order.get(approval_field):
+        raise HTTPException(status_code=404, detail=f"No {stage} approval found")
+    
+    # Update the approval message and images
+    update_dict = {}
+    if "message" in approval_data:
+        update_dict[f"{approval_field}.message"] = approval_data["message"]
+    if "images" in approval_data:
+        update_dict[f"{approval_field}.images"] = approval_data["images"]
+    
+    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_dict["last_updated_by"] = auth.user_id
+    
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": auth.tenant_id},
+        {"$set": update_dict}
+    )
+    
+    return {"message": f"{stage.capitalize()} approval updated successfully"}
+
+@router.delete("/{order_id}/approval/{stage}/image")
+async def delete_approval_image(
+    order_id: str,
+    stage: str,
+    image_url: str,
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_ORDERS)),
+    db = Depends(get_db)
+):
+    """
+    Delete an image from customer approval/change request
+    Requires: MANAGE_ORDERS permission
+    """
+    if stage not in ["clay", "paint"]:
+        raise HTTPException(status_code=400, detail="Invalid stage")
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": auth.tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    approval_field = f"{stage}_approval"
+    if not order.get(approval_field):
+        raise HTTPException(status_code=404, detail=f"No {stage} approval found")
+    
+    # Remove the image from the images array
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": auth.tenant_id},
+        {
+            "$pull": {f"{approval_field}.images": image_url},
+            "$set": {
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "last_updated_by": auth.user_id
+            }
+        }
+    )
+    
+    return {"message": "Image deleted successfully"}
+
+@router.delete("/{order_id}/proof/{proof_id}")
+async def delete_proof_image(
+    order_id: str,
+    proof_id: str,
+    stage: str,
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_ORDERS)),
+    db = Depends(get_db)
+):
+    """
+    Delete a proof image
+    Requires: MANAGE_ORDERS permission
+    """
+    if stage not in ["clay", "paint"]:
+        raise HTTPException(status_code=400, detail="Invalid stage")
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": auth.tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Remove the proof from the proofs array
+    proof_field = f"{stage}_proofs"
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": auth.tenant_id},
+        {
+            "$pull": {proof_field: {"id": proof_id}},
+            "$set": {
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "last_updated_by": auth.user_id
+            }
+        }
+    )
+    
+    return {"message": "Proof image deleted successfully"}
+
+@router.patch("/{order_id}/proof/{proof_id}/note")
+async def edit_proof_note(
+    order_id: str,
+    proof_id: str,
+    stage: str,
+    note_data: dict,
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_ORDERS)),
+    db = Depends(get_db)
+):
+    """
+    Edit revision note for a specific proof
+    Requires: MANAGE_ORDERS permission
+    """
+    if stage not in ["clay", "paint"]:
+        raise HTTPException(status_code=400, detail="Invalid stage")
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": auth.tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Update the revision note for the specific proof
+    proof_field = f"{stage}_proofs"
+    proofs = order.get(proof_field, [])
+    
+    proof_found = False
+    for i, proof in enumerate(proofs):
+        if proof.get("id") == proof_id:
+            proofs[i]["revision_note"] = note_data.get("revision_note", "")
+            proof_found = True
+            break
+    
+    if not proof_found:
+        raise HTTPException(status_code=404, detail="Proof not found")
+    
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": auth.tenant_id},
+        {
+            "$set": {
+                proof_field: proofs,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "last_updated_by": auth.user_id
+            }
+        }
+    )
+    
+    return {"message": "Proof note updated successfully"}
+
