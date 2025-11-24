@@ -98,6 +98,9 @@ class Order(BaseModel):
     # Notes
     notes: List[OrderNote] = Field(default_factory=list)
     
+    # Timeline
+    timeline: List[TimelineEvent] = Field(default_factory=list)
+    
     # Metadata
     last_updated_by: str = "admin"  # admin or customer or user_id
     last_updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
