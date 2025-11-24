@@ -12,10 +12,23 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# MongoDB connection with error handling
+try:
+    mongo_url = os.environ.get('MONGO_URL')
+    db_name = os.environ.get('DB_NAME')
+    
+    if not mongo_url:
+        raise ValueError("MONGO_URL environment variable is not set")
+    if not db_name:
+        raise ValueError("DB_NAME environment variable is not set")
+    
+    client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
+    db = client[db_name]
+    
+    logging.info(f"MongoDB connection initialized for database: {db_name}")
+except Exception as e:
+    logging.error(f"Failed to initialize MongoDB connection: {str(e)}")
+    raise
 
 # Create the main app without a prefix
 app = FastAPI(title="Bobblehead Proof Approval System - Multi-Tenant SaaS")
