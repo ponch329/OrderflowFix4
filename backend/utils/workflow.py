@@ -190,6 +190,28 @@ def get_workflow_engine(tenant_settings: Dict[str, Any]) -> WorkflowEngine:
     """
     workflow_config_data = tenant_settings.get("workflow", {})
     
+    # Migrate old list-based labels to dict format (backward compatibility)
+    if workflow_config_data:
+        # Handle stage_labels migration
+        if "stage_labels" in workflow_config_data and isinstance(workflow_config_data["stage_labels"], list):
+            # Convert list to dict using default stage names
+            stages = ["clay", "paint", "shipped", "fulfilled", "canceled"]
+            labels = workflow_config_data["stage_labels"]
+            workflow_config_data["stage_labels"] = {
+                stage: labels[i] if i < len(labels) and labels[i] else stage.title()
+                for i, stage in enumerate(stages)
+            }
+        
+        # Handle status_labels migration
+        if "status_labels" in workflow_config_data and isinstance(workflow_config_data["status_labels"], list):
+            # Convert list to dict using default status names
+            statuses = ["pending", "sculpting", "feedback_needed", "changes_requested", "approved"]
+            labels = workflow_config_data["status_labels"]
+            workflow_config_data["status_labels"] = {
+                status: labels[i] if i < len(labels) and labels[i] else status.replace("_", " ").title()
+                for i, status in enumerate(statuses)
+            }
+    
     # Create WorkflowConfig with defaults if not present
     workflow_config = WorkflowConfig(**workflow_config_data) if workflow_config_data else WorkflowConfig()
     
