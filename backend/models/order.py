@@ -35,6 +35,18 @@ class OrderNote(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class TimelineEvent(BaseModel):
+    """Event in order timeline for tracking changes"""
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    event_type: str  # 'status_change', 'proof_upload', 'approval', 'note_added', 'ping', 'tracking_update', etc.
+    user_name: str  # Who performed the action
+    user_role: str  # Role of user (admin, customer, manufacturer, etc.)
+    description: str  # Human-readable description
+    metadata: dict = Field(default_factory=dict)  # Additional event data
+
 class Order(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
