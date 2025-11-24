@@ -948,6 +948,68 @@ const OrderDetailsAdminNew = () => {
             <img src={selectedImage} alt="Preview" className="w-full rounded-lg" />
           </DialogContent>
         </Dialog>
+
+        {/* Edit Customer Approval Dialog */}
+        <Dialog open={editApprovalDialogOpen} onOpenChange={setEditApprovalDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Customer Change Request</DialogTitle>
+              <DialogDescription>
+                Edit the customer's change request message and reference images
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Customer Message</Label>
+                <Textarea
+                  value={editApprovalMessage}
+                  onChange={(e) => setEditApprovalMessage(e.target.value)}
+                  rows={4}
+                  placeholder="Customer's change request..."
+                />
+              </div>
+              
+              {editApprovalImages.length > 0 && (
+                <div>
+                  <Label>Reference Images</Label>
+                  <div className="grid grid-cols-3 gap-4 mt-2">
+                    {editApprovalImages.map((img, idx) => (
+                      <div key={idx} className="relative group">
+                        <img 
+                          src={img} 
+                          alt={`Reference ${idx + 1}`}
+                          className="w-full h-32 object-cover rounded border"
+                        />
+                        <button
+                          onClick={() => handleDeleteApprovalImage(img)}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Delete image"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 justify-end">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setEditApprovalDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveApproval}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
