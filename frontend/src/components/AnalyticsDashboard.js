@@ -54,8 +54,8 @@ export default function AnalyticsDashboard() {
   const newOrdersChange = calculateChange(currentPeriodCount, comparePeriodCount);
 
   return (
-    <div className="mb-6 space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="mb-6">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-gray-800">Dashboard Analytics</h2>
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-48">
@@ -70,73 +70,75 @@ export default function AnalyticsDashboard() {
         </Select>
       </div>
 
-      {/* Total Orders Card - Compact Single Line */}
-      <Card className="bg-gradient-to-br from-purple-50 to-blue-50">
-        <CardContent className="py-3 px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-600">Total Orders:</span>
-              <span className="text-2xl font-bold text-gray-900">{currentMetrics.total}</span>
+      <div className="space-y-3">
+        {/* Total Orders Card */}
+        <Card className="bg-gradient-to-br from-purple-50 to-blue-50">
+          <CardContent className="py-4 px-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-600">Total Orders:</span>
+                <span className="text-3xl font-bold text-gray-900">{currentMetrics.total}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-500">{currentPeriodCount} new in last {period} days</span>
+                {getTrendIcon(newOrdersChange)}
+                <span className={`font-medium ${
+                  newOrdersChange > 0 ? 'text-green-600' : newOrdersChange < 0 ? 'text-red-600' : 'text-gray-500'
+                }`}>
+                  {newOrdersChange > 0 ? '+' : ''}{newOrdersChange}%
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-gray-500">{currentPeriodCount} new in last {period} days</span>
-              {getTrendIcon(newOrdersChange)}
-              <span className={`font-medium ${
-                newOrdersChange > 0 ? 'text-green-600' : newOrdersChange < 0 ? 'text-red-600' : 'text-gray-500'
-              }`}>
-                {newOrdersChange > 0 ? '+' : ''}{newOrdersChange}%
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Orders by Stage - Compact Single Line */}
-      <Card>
-        <CardContent className="py-3 px-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600">By Stage:</span>
-            <div className="flex items-center gap-6">
-              {['clay', 'paint', 'fulfilled', 'canceled'].map((stage) => {
-                const currentCount = currentMetrics.by_stage[stage] || 0;
-                const percentage = currentMetrics.total > 0 ? ((currentCount / currentMetrics.total) * 100).toFixed(0) : 0;
-                
-                return (
-                  <div key={stage} className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 capitalize">{stage}:</span>
-                    <span className="text-lg font-bold text-gray-900">{currentCount}</span>
-                    <span className="text-xs text-gray-400">({percentage}%)</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Orders by Status - Compact Single Line */}
-      <Card>
-        <CardContent className="py-3 px-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600">By Status:</span>
-            <div className="flex items-center gap-6 flex-wrap">
-              {Object.entries(currentMetrics.by_status)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 5)
-                .map(([status, currentCount]) => {
+        {/* By Stage Card */}
+        <Card>
+          <CardContent className="py-4 px-6">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-600">By Stage:</span>
+              <div className="flex items-center gap-6 flex-wrap">
+                {['clay', 'paint', 'fulfilled', 'canceled'].map((stage) => {
+                  const currentCount = currentMetrics.by_stage[stage] || 0;
+                  const percentage = currentMetrics.total > 0 ? ((currentCount / currentMetrics.total) * 100).toFixed(0) : 0;
+                  
                   return (
-                    <div key={status} className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 capitalize truncate" title={status}>
-                        {status.replace('_', ' ')}:
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">{currentCount}</span>
+                    <div key={stage} className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500 capitalize">{stage}:</span>
+                      <span className="text-xl font-bold text-gray-900">{currentCount}</span>
+                      <span className="text-sm text-gray-400">({percentage}%)</span>
                     </div>
                   );
                 })}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* By Status Card */}
+        <Card>
+          <CardContent className="py-4 px-6">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-600">By Status:</span>
+              <div className="flex items-center gap-6 flex-wrap">
+                {Object.entries(currentMetrics.by_status)
+                  .sort(([, a], [, b]) => b - a)
+                  .slice(0, 5)
+                  .map(([status, currentCount]) => {
+                    return (
+                      <div key={status} className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500 capitalize truncate" title={status}>
+                          {status.replace('_', ' ')}:
+                        </span>
+                        <span className="text-xl font-bold text-gray-900">{currentCount}</span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

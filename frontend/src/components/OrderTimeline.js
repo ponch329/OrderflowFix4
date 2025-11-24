@@ -41,26 +41,31 @@ const OrderTimeline = ({ timeline = [] }) => {
     return colorMap[eventType] || 'bg-gray-400';
   };
 
-  const formatTimestamp = (timestamp) => {
+  const formatDateTime = (timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+    const isToday = date.toDateString() === now.toDateString();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-      hour: 'numeric',
-      minute: '2-digit'
+    const timeStr = date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
     });
+
+    if (isToday) {
+      return `Today ${timeStr}`;
+    } else if (isYesterday) {
+      return `Yesterday ${timeStr}`;
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+      }) + ' ' + timeStr;
+    }
   };
 
   // Sort timeline by timestamp (newest first)
@@ -80,31 +85,39 @@ const OrderTimeline = ({ timeline = [] }) => {
         {sortedTimeline.length === 0 ? (
           <p className="text-gray-500 text-center py-4">No timeline events yet</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {sortedTimeline.map((event, index) => {
               const Icon = getEventIcon(event.event_type);
               const colorClass = getEventColor(event.event_type);
               
+              // Extract actual message for changes_requested events
+              const displayDescription = event.event_type === 'changes_requested' && event.metadata?.message
+                ? `Requested changes: "${event.metadata.message}"`
+                : event.description;
+              
               return (
-                <div key={event.id || index} className="flex gap-3 items-start">
-                  <div className={`${colorClass} p-2 rounded-full shrink-0`}>
+                <div key={event.id || index} className="flex gap-3">
+                  {/* Date/Time on the left */}
+                  <div className="w-32 flex-shrink-0 text-right">
+                    <span className="text-xs text-gray-500">
+                      {formatDateTime(event.timestamp)}
+                    </span>
+                  </div>
+                  
+                  {/* Icon */}
+                  <div className={`${colorClass} p-2 rounded-full shrink-0 h-9 w-9 flex items-center justify-center`}>
                     <Icon className="w-4 h-4 text-white" />
                   </div>
+                  
+                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 flex-wrap">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{event.description}</p>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <Badge variant="outline" className="text-xs">
-                            {event.user_name}
-                          </Badge>
-                          <span className="text-xs text-gray-500">
-                            {event.user_role}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-xs text-gray-400 whitespace-nowrap">
-                        {formatTimestamp(event.timestamp)}
+                    <p className="text-sm text-gray-900">{displayDescription}</p>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <Badge variant="outline" className="text-xs">
+                        {event.user_name}
+                      </Badge>
+                      <span className="text-xs text-gray-500">
+                        {event.user_role}
                       </span>
                     </div>
                   </div>
