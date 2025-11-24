@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import axios from 'axios';
@@ -33,9 +33,9 @@ export default function AnalyticsDashboard() {
   };
 
   const getTrendIcon = (change) => {
-    if (change > 0) return <TrendingUp className="w-4 h-4 text-green-600" />;
-    if (change < 0) return <TrendingDown className="w-4 h-4 text-red-600" />;
-    return <Minus className="w-4 h-4 text-gray-400" />;
+    if (change > 0) return <TrendingUp className="w-3 h-3 text-green-600" />;
+    if (change < 0) return <TrendingDown className="w-3 h-3 text-red-600" />;
+    return <Minus className="w-3 h-3 text-gray-400" />;
   };
 
   if (loading || !analytics) {
@@ -55,10 +55,10 @@ export default function AnalyticsDashboard() {
 
   return (
     <div className="mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Dashboard Analytics</h2>
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-xl font-bold text-gray-800">Analytics</h2>
         <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-40 h-8 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -70,17 +70,16 @@ export default function AnalyticsDashboard() {
         </Select>
       </div>
 
-      <div className="space-y-3">
-        {/* Total Orders Card */}
-        <Card className="bg-gradient-to-br from-purple-50 to-blue-50">
-          <CardContent className="py-4 px-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-600">Total Orders:</span>
-                <span className="text-3xl font-bold text-gray-900">{currentMetrics.total}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-500">{currentPeriodCount} new in last {period} days</span>
+      {/* Single Compact Card */}
+      <Card className="bg-gradient-to-br from-purple-50 to-blue-50">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center justify-between gap-6 flex-wrap">
+            {/* Total Orders */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-gray-600 whitespace-nowrap">Total Orders:</span>
+              <span className="text-2xl font-bold text-gray-900">{currentMetrics.total}</span>
+              <div className="flex items-center gap-1 text-xs">
+                <span className="text-gray-500">{currentPeriodCount} new</span>
                 {getTrendIcon(newOrdersChange)}
                 <span className={`font-medium ${
                   newOrdersChange > 0 ? 'text-green-600' : newOrdersChange < 0 ? 'text-red-600' : 'text-gray-500'
@@ -89,56 +88,46 @@ export default function AnalyticsDashboard() {
                 </span>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* By Stage Card */}
-        <Card>
-          <CardContent className="py-4 px-6">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">By Stage:</span>
-              <div className="flex items-center gap-6 flex-wrap">
-                {['clay', 'paint', 'fulfilled', 'canceled'].map((stage) => {
-                  const currentCount = currentMetrics.by_stage[stage] || 0;
-                  const percentage = currentMetrics.total > 0 ? ((currentCount / currentMetrics.total) * 100).toFixed(0) : 0;
-                  
+            <div className="h-8 w-px bg-gray-300"></div>
+
+            {/* By Stage */}
+            <div className="flex items-center gap-4">
+              {['clay', 'paint', 'fulfilled'].map((stage) => {
+                const currentCount = currentMetrics.by_stage[stage] || 0;
+                const percentage = currentMetrics.total > 0 ? ((currentCount / currentMetrics.total) * 100).toFixed(0) : 0;
+                
+                return (
+                  <div key={stage} className="flex items-center gap-1.5">
+                    <span className="text-xs text-gray-500 capitalize">{stage}:</span>
+                    <span className="text-lg font-bold text-gray-900">{currentCount}</span>
+                    <span className="text-xs text-gray-400">({percentage}%)</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="h-8 w-px bg-gray-300"></div>
+
+            {/* By Status */}
+            <div className="flex items-center gap-4">
+              {Object.entries(currentMetrics.by_status)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 3)
+                .map(([status, currentCount]) => {
                   return (
-                    <div key={stage} className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500 capitalize">{stage}:</span>
-                      <span className="text-xl font-bold text-gray-900">{currentCount}</span>
-                      <span className="text-sm text-gray-400">({percentage}%)</span>
+                    <div key={status} className="flex items-center gap-1.5">
+                      <span className="text-xs text-gray-500 capitalize truncate" title={status}>
+                        {status.replace('_', ' ')}:
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">{currentCount}</span>
                     </div>
                   );
                 })}
-              </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* By Status Card */}
-        <Card>
-          <CardContent className="py-4 px-6">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">By Status:</span>
-              <div className="flex items-center gap-6 flex-wrap">
-                {Object.entries(currentMetrics.by_status)
-                  .sort(([, a], [, b]) => b - a)
-                  .slice(0, 5)
-                  .map(([status, currentCount]) => {
-                    return (
-                      <div key={status} className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500 capitalize truncate" title={status}>
-                          {status.replace('_', ' ')}:
-                        </span>
-                        <span className="text-xl font-bold text-gray-900">{currentCount}</span>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -127,6 +127,7 @@ const OrderDetailsAdminNew = () => {
       toast.success(notifyCustomer ? "Status updated & customer notified!" : "Stage and status updated!");
       setConfirmDialogOpen(false);
       setEditStageDialogOpen(false);
+      setNotifyCustomer(false);
       fetchOrder();
     } catch (error) {
       toast.error("Failed to update status");
@@ -541,69 +542,74 @@ const OrderDetailsAdminNew = () => {
           </CardHeader>
         </Card>
 
-        {/* Order Info */}
+        {/* Order Info - COMPACT VERSION */}
         <Card className="mb-6">
-          <CardHeader>
+          <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
-              <CardTitle>Order Information</CardTitle>
+              <CardTitle className="text-lg">Order Information</CardTitle>
               {!isEditingInfo ? (
-                <Button variant="outline" onClick={() => setIsEditingInfo(true)}>
-                  <Edit className="w-4 h-4 mr-2" />
+                <Button variant="outline" size="sm" onClick={() => setIsEditingInfo(true)}>
+                  <Edit className="w-3 h-3 mr-1" />
                   Edit Info
                 </Button>
               ) : null}
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {!isEditingInfo ? (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <Label className="text-gray-600">Customer Name</Label>
-                  <p className="font-medium">{order.customer_name}</p>
+                  <Label className="text-xs text-gray-500">Order Number</Label>
+                  <p className="font-semibold text-sm">{order.order_number}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-600">Customer Email</Label>
-                  <p className="font-medium">{order.customer_email}</p>
+                  <Label className="text-xs text-gray-500">Customer Name</Label>
+                  <p className="font-semibold text-sm">{order.customer_name}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-600">Order Number</Label>
-                  <p className="font-medium">{order.order_number}</p>
+                  <Label className="text-xs text-gray-500">Customer Email</Label>
+                  <p className="font-semibold text-sm truncate">{order.customer_email}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-600">Vendor</Label>
-                  <p className="font-medium">{order.item_vendor || 'N/A'}</p>
+                  <Label className="text-xs text-gray-500">Vendor</Label>
+                  <p className="font-semibold text-sm">{order.item_vendor || 'N/A'}</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div>
-                  <Label>Customer Name</Label>
-                  <Input 
-                    value={editedOrderInfo.customer_name}
-                    onChange={(e) => setEditedOrderInfo({...editedOrderInfo, customer_name: e.target.value})}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs">Customer Name</Label>
+                    <Input 
+                      value={editedOrderInfo.customer_name}
+                      onChange={(e) => setEditedOrderInfo({...editedOrderInfo, customer_name: e.target.value})}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Customer Email</Label>
+                    <Input 
+                      value={editedOrderInfo.customer_email}
+                      onChange={(e) => setEditedOrderInfo({...editedOrderInfo, customer_email: e.target.value})}
+                      className="h-8 text-sm"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label>Customer Email</Label>
-                  <Input 
-                    value={editedOrderInfo.customer_email}
-                    onChange={(e) => setEditedOrderInfo({...editedOrderInfo, customer_email: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>Order Number</Label>
+                  <Label className="text-xs">Order Number</Label>
                   <Input 
                     value={editedOrderInfo.order_number}
                     onChange={(e) => setEditedOrderInfo({...editedOrderInfo, order_number: e.target.value})}
+                    className="h-8 text-sm"
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setIsEditingInfo(false)}>
+                  <Button variant="outline" size="sm" onClick={() => setIsEditingInfo(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleSaveEdit}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
+                  <Button size="sm" onClick={handleSaveEdit}>
+                    <Save className="w-3 h-3 mr-1" />
+                    Save
                   </Button>
                 </div>
               </div>
