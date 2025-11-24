@@ -690,6 +690,9 @@ const OrderDetailsAdminNew = () => {
         {/* Paint Stage */}
         {renderProofSection('paint', order.paint_proofs || [], order.paint_approval)}
 
+        {/* Order Timeline */}
+        <OrderTimeline timeline={order.timeline || []} />
+
         {/* Order Notes - Moved to bottom */}
         <OrderNotes 
           orderId={orderId} 
