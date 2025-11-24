@@ -683,18 +683,18 @@ const OrderDetailsAdminNew = () => {
           )}
         </Card>
 
-        {/* Order Notes */}
-        <OrderNotes 
-          orderId={orderId} 
-          notes={order.notes || []} 
-          onNotesUpdate={fetchOrder}
-        />
-
         {/* Clay Stage */}
         {renderProofSection('clay', order.clay_proofs || [], order.clay_approval)}
 
         {/* Paint Stage */}
         {renderProofSection('paint', order.paint_proofs || [], order.paint_approval)}
+
+        {/* Order Notes - Moved to bottom */}
+        <OrderNotes 
+          orderId={orderId} 
+          notes={order.notes || []} 
+          onNotesUpdate={fetchOrder}
+        />
 
         {/* Edit Stage/Status Dialog */}
         <Dialog open={editStageDialogOpen} onOpenChange={setEditStageDialogOpen}>
