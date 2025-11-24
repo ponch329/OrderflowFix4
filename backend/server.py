@@ -1140,6 +1140,28 @@ async def sheets_callback(code: str, state: str):
 async def root():
     return {"message": "Bobblehead Order Approval System API - Multi-Tenant SaaS", "version": "2.0"}
 
+# Health check endpoints (not behind /api prefix for Kubernetes probes)
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Kubernetes liveness probe"""
+    return {"status": "healthy", "service": "backend"}
+
+@app.get("/ready")
+async def readiness_check():
+    """Readiness check endpoint for Kubernetes readiness probe"""
+    try:
+        # Check MongoDB connection
+        await db.command("ping")
+        return {"status": "ready", "database": "connected"}
+    except Exception as e:
+        logging.error(f"Readiness check failed: {str(e)}")
+        raise HTTPException(status_code=503, detail=f"Database connection failed: {str(e)}")
+
+@app.get("/")
+async def app_root():
+    """Root endpoint for the application"""
+    return {"message": "Bobblehead Order Approval System", "status": "running", "version": "2.0"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
