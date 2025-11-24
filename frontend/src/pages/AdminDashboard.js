@@ -590,7 +590,12 @@ const AdminDashboard = () => {
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                     {/* Clay Stage */}
                     <div className="relative p-3 bg-yellow-50 rounded-lg border border-yellow-200 min-w-0">
-                      <Badge className="absolute top-2 right-2 bg-yellow-500 text-white text-xs py-0">{getStageLabel('clay', workflowConfig).toUpperCase()}</Badge>
+                      <Badge className={`absolute top-2 right-2 text-white text-xs py-0 uppercase ${
+                        order.clay_status === 'approved' ? 'bg-green-500' :
+                        order.clay_status === 'changes_requested' ? 'bg-orange-500' :
+                        order.clay_status === 'feedback_needed' ? 'bg-blue-500' :
+                        order.clay_status === 'sculpting' ? 'bg-gray-500' : 'bg-gray-400'
+                      }`}>{getStatusLabel(order.clay_status, workflowConfig)}</Badge>
                       <h4 className="font-bold text-sm mb-1 pr-12">{getStageLabel('clay', workflowConfig)}</h4>
                       {order.clay_entered_at && (
                         <p className="text-xs text-gray-500 mb-2">
