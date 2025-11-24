@@ -439,10 +439,10 @@ const AdminDashboard = () => {
               </Select>
             </div>
 
-            <div className="w-64">
+            <div className="w-48">
               <Select value={vendorFilter} onValueChange={setVendorFilter}>
-                <SelectTrigger data-testid="vendor-filter">
-                  <SelectValue placeholder="Filter by Vendor" />
+                <SelectTrigger data-testid="vendor-filter" className="h-10">
+                  <SelectValue placeholder="Vendor" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Vendors</SelectItem>
@@ -454,18 +454,14 @@ const AdminDashboard = () => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-            {(searchQuery || stageFilter !== "all" || statusFilter !== "all" || vendorFilter !== "all" || showArchived) && (
-              <p className="text-sm text-gray-600">
-                Found {totalCount} order(s)
-                {searchQuery && ` matching "${searchQuery}"`}
-                {stageFilter !== "all" && ` in ${stageFilter} stage`}
-                {statusFilter !== "all" && ` with status: ${statusFilter}`}
-                {vendorFilter !== "all" && ` from vendor: ${vendorFilter}`}
-                {showArchived && ` (archived)`}
-              </p>
-            )}
+            
+            <Button
+              onClick={() => setCreateOrderDialogOpen(true)}
+              className="bg-green-600 hover:bg-green-700 h-10 whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Order
+            </Button>
           </div>
         </div>
 
