@@ -209,6 +209,39 @@ const Settings = () => {
     }
   };
   
+  const handleSaveIntegrations = async () => {
+    setSaving(true);
+    try {
+      // Prepare integration settings, only including non-empty values
+      const integrationSettings = {
+        ...smtpSettings,
+        ...shopifySettings
+      };
+      
+      // Remove empty password/secret fields to avoid overwriting with blanks
+      if (!smtpSettings.smtp_password) {
+        delete integrationSettings.smtp_password;
+      }
+      if (!shopifySettings.shopify_api_secret) {
+        delete integrationSettings.shopify_api_secret;
+      }
+      if (!shopifySettings.shopify_access_token) {
+        delete integrationSettings.shopify_access_token;
+      }
+      
+      const response = await axios.patch(`${API}/settings/tenant`, {
+        settings: integrationSettings
+      });
+      toast.success("Integration settings saved successfully!");
+      console.log("Saved integration settings:", response.data);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to save integration settings");
+      console.error("Save error:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+  
   const handleSaveWorkflow = async () => {
     setSaving(true);
     try {
