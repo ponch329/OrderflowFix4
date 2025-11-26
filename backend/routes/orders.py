@@ -470,9 +470,48 @@ async def update_order_status(
     if paint_status:
         update_data["paint_status"] = paint_status
     
+    # Add timeline events for changes
+    from utils.timeline import create_timeline_event
+    timeline_events = []
+    
+    if stage and stage != order.get('stage'):
+        timeline_event = create_timeline_event(
+            event_type="stage_change",
+            user_name=auth.user.full_name,
+            user_role=auth.role.value,
+            description=f"Moved order from {order.get('stage', 'N/A')} to {stage} stage",
+            metadata={"old_stage": order.get('stage'), "new_stage": stage}
+        )
+        timeline_events.append(timeline_event)
+    
+    if clay_status and clay_status != order.get('clay_status'):
+        timeline_event = create_timeline_event(
+            event_type="status_change",
+            user_name=auth.user.full_name,
+            user_role=auth.role.value,
+            description=f"Changed clay status from {order.get('clay_status', 'N/A')} to {clay_status}",
+            metadata={"stage": "clay", "old_status": order.get('clay_status'), "new_status": clay_status}
+        )
+        timeline_events.append(timeline_event)
+    
+    if paint_status and paint_status != order.get('paint_status'):
+        timeline_event = create_timeline_event(
+            event_type="status_change",
+            user_name=auth.user.full_name,
+            user_role=auth.role.value,
+            description=f"Changed paint status from {order.get('paint_status', 'N/A')} to {paint_status}",
+            metadata={"stage": "paint", "old_status": order.get('paint_status'), "new_status": paint_status}
+        )
+        timeline_events.append(timeline_event)
+    
+    # Update order with timeline events
+    update_ops = {"$set": update_data}
+    if timeline_events:
+        update_ops["$push"] = {"timeline": {"$each": timeline_events}}
+    
     await db.orders.update_one(
         {"id": order_id, "tenant_id": auth.tenant_id},
-        {"$set": update_data}
+        update_ops
     )
     
     # Log to sheets
