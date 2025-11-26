@@ -113,8 +113,12 @@ async def send_test_email(
     
     # If template_id is provided, send a preview of that template
     if template_id:
-        templates = tenant.get("settings", {}).get("email_templates", [])
-        template = next((t for t in templates if t.get("id") == template_id), None)
+        templates = tenant.get("settings", {}).get("email_templates", {})
+        # Handle both dict and list formats for backwards compatibility
+        if isinstance(templates, dict):
+            template = templates.get(template_id)
+        else:
+            template = next((t for t in templates if t.get("id") == template_id), None)
         
         if not template:
             raise HTTPException(status_code=404, detail="Template not found")
