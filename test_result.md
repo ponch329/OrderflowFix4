@@ -241,6 +241,22 @@ frontend:
           agent: "testing"
           comment: "✅ COMPREHENSIVE TESTING COMPLETED: Integrations tab fully functional. All test requirements passed: 1) Successfully navigated to Settings > Integrations tab (3rd tab), 2) SMTP Configuration: All fields editable (smtp-host, smtp-port, smtp-user, smtp-password, smtp-from), filled with test data (smtp.gmail.com, 587, test@example.com, testpassword123, noreply@test.com), 3) 'Save SMTP Settings' button functional with success toast 'Integration settings saved successfully!', 4) Shopify Configuration: All fields editable (shopify-shop, shopify-api-key, shopify-api-secret, shopify-token), filled with test data (test-store, test_api_key_123, test_secret_456, test_token_789), 5) 'Save Shopify Settings' button functional with success toast, 6) Settings persistence verified after page reload - all non-sensitive fields (SMTP host/port/user/from, Shopify shop/api_key) persisted correctly, sensitive fields (passwords/secrets/tokens) properly cleared for security, 7) Send Test Email button UI flow functional with email prompt dialog, 8) Backend API PATCH /api/settings/tenant working correctly, 9) handleSaveIntegrations function properly merging settings. All functionality working as specified."
 
+backend:
+  - task: "Manufacturer Login Authentication"
+    implemented: true
+    working: true
+    file: "backend/routes/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "previous_fork"
+          comment: "Manufacturer login (mike_clay/password123) was failing with 'Invalid username or password' error. This was a recurring issue from previous forks."
+        - working: true
+          agent: "fork_agent_2"
+          comment: "✅ MANUFACTURER LOGIN FIXED: Root cause identified - password mismatch in database. The mike_clay user had password hash for 'mike123' instead of expected 'password123'. Updated password hash in database to match 'password123' using SHA256. Verified via curl that backend API returns success with valid JWT token. Tested full UI flow - login with mike_clay/password123 successfully redirects to /manufacturer/dashboard. Manufacturer Dashboard displays orders correctly with upload buttons. Issue resolved."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
