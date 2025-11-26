@@ -86,8 +86,25 @@ async def log_to_sheets(db, tenant_id: str, order_number: str, action: str, deta
 async def send_email(tenant_config: dict, to_email: str, subject: str, html_content: str, attachments: List[dict] = None):
     """Send email via SMTP using tenant configuration"""
     try:
+        # Check both root level and settings level for SMTP config (backwards compatibility)
+        settings = tenant_config.get("settings", {})
+        
+        smtp_from_email = tenant_config.get("smtp_from_email") or settings.get("smtp_from_email", "noreply@example.com")
+        smtp_host = tenant_config.get("smtp_host") or settings.get("smtp_host", "smtp.gmail.com")
+        smtp_port = tenant_config.get("smtp_port") or settings.get("smtp_port", 587)
+        smtp_user = tenant_config.get("smtp_user") or settings.get("smtp_user")
+        smtp_password = tenant_config.get("smtp_password") or settings.get("smtp_password")
+        
+        # Convert port to int if it's a string
+        if isinstance(smtp_port, str):
+            smtp_port = int(smtp_port)
+        
+        if not smtp_user or not smtp_password:
+            logger.warning("SMTP credentials not configured for tenant")
+            raise Exception("SMTP credentials not configured. Please configure SMTP settings in the Integrations tab.")
+        
         msg = MIMEMultipart('related')
-        msg['From'] = tenant_config.get("smtp_from_email", "noreply@example.com")
+        msg['From'] = smtp_from_email
         msg['To'] = to_email
         msg['Subject'] = subject
         
@@ -99,19 +116,14 @@ async def send_email(tenant_config: dict, to_email: str, subject: str, html_cont
                 img.add_header('Content-ID', f"<{att['cid']}>")
                 msg.attach(img)
         
-        smtp_host = tenant_config.get("smtp_host", "smtp.gmail.com")
-        smtp_port = tenant_config.get("smtp_port", 587)
-        smtp_user = tenant_config.get("smtp_user")
-        smtp_password = tenant_config.get("smtp_password")
+        logger.info(f"Attempting to send email via SMTP: {smtp_host}:{smtp_port} from {smtp_from_email}")
         
-        if not smtp_user or not smtp_password:
-            logger.warning("SMTP not configured for tenant")
-            return
-        
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
             server.starttls()
             server.login(smtp_user, smtp_password)
             server.send_message(msg)
+            
+        logger.info(f"Email sent successfully to {to_email}")
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
         raise
