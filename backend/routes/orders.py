@@ -264,13 +264,32 @@ async def upload_proofs(
     # Use workflow engine to determine status after upload
     new_status = workflow_engine.get_status_after_upload(stage)
     
+    # Create timeline event for proof upload
+    from utils.timeline import create_timeline_event
+    note_suffix = f" - {revision_note}" if revision_note else ""
+    timeline_event = create_timeline_event(
+        event_type="proof_upload",
+        user_name=auth.user.full_name,
+        user_role=auth.role.value,
+        description=f"Uploaded {len(uploaded_proofs)} proof(s) for {stage} stage (Round {current_round}){note_suffix}",
+        metadata={
+            "stage": stage,
+            "count": len(uploaded_proofs),
+            "round": current_round,
+            "revision_note": revision_note
+        }
+    )
+    
     # Update order with proofs and change status based on workflow config
     field = f"{stage}_proofs"
     status_field = f"{stage}_status"
     await db.orders.update_one(
         {"id": order_id, "tenant_id": auth.tenant_id},
         {
-            "$push": {field: {"$each": uploaded_proofs}},
+            "$push": {
+                field: {"$each": uploaded_proofs},
+                "timeline": timeline_event
+            },
             "$set": {
                 status_field: new_status,
                 "last_updated_by": auth.user_id,
