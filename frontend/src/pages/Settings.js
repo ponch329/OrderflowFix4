@@ -246,7 +246,7 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="branding" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[800px]">
+          <TabsList className="grid w-full grid-cols-5 lg:w-[1000px]">
             <TabsTrigger value="branding">
               <Palette className="w-4 h-4 mr-2" />
               Branding
@@ -254,6 +254,10 @@ const Settings = () => {
             <TabsTrigger value="email">
               <Mail className="w-4 h-4 mr-2" />
               Email
+            </TabsTrigger>
+            <TabsTrigger value="integrations">
+              <SettingsIcon className="w-4 h-4 mr-2" />
+              Integrations
             </TabsTrigger>
             <TabsTrigger value="permissions">
               <SettingsIcon className="w-4 h-4 mr-2" />
