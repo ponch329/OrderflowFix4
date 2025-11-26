@@ -363,6 +363,16 @@ async def delete_proof(
     if len(updated_proofs) == len(proofs):
         raise HTTPException(status_code=404, detail="Proof not found")
     
+    # Create timeline event for proof deletion
+    from utils.timeline import create_timeline_event
+    timeline_event = create_timeline_event(
+        event_type="proof_deleted",
+        user_name=auth.user.full_name,
+        user_role=auth.role.value,
+        description=f"Deleted a proof from {stage} stage",
+        metadata={"stage": stage, "proof_id": proof_id}
+    )
+    
     await db.orders.update_one(
         {"id": order_id, "tenant_id": auth.tenant_id},
         {
@@ -371,7 +381,8 @@ async def delete_proof(
                 "last_updated_by": auth.user_id,
                 "last_updated_at": datetime.now(timezone.utc).isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
-            }
+            },
+            "$push": {"timeline": timeline_event}
         }
     )
     
