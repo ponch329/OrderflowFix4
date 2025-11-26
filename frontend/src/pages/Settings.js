@@ -51,6 +51,14 @@ const Settings = () => {
     smtp_from_email: ""
   });
   
+  // Shopify settings
+  const [shopifySettings, setShopifySettings] = useState({
+    shopify_shop_name: "",
+    shopify_api_key: "",
+    shopify_api_secret: "",
+    shopify_access_token: ""
+  });
+  
   // Workflow settings
   const [workflowSettings, setWorkflowSettings] = useState({
     auto_advance_on_approval: true,
