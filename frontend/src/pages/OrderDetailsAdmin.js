@@ -154,8 +154,12 @@ const OrderDetailsAdminNew = () => {
         formData.append('files', file);
       });
 
+      const token = localStorage.getItem('admin_token');
       await axios.post(`${API}/orders/${orderId}/proofs`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       toast.success("Proofs uploaded successfully!");
