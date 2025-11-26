@@ -145,7 +145,7 @@ const OrderDetailsAdminNew = () => {
         formData.append('files', file);
       });
 
-      await axios.post(`${API}/orders/${orderId}/upload-proofs`, formData, {
+      await axios.post(`${API}/orders/${orderId}/proofs`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
