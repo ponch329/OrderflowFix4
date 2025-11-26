@@ -149,10 +149,8 @@ async def send_customer_proof_notification(db, tenant_id: str, order: dict, stag
         logo_url = tenant.get("settings", {}).get("logo_url")
         company_name = tenant.get("name", "")
         
-        # Get customer portal URL from tenant settings or use backend URL as fallback
-        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:3000')
-        # Remove /api suffix if present and ensure it's the frontend URL
-        frontend_url = backend_url.replace('/api', '')
+        # Get customer portal URL from tenant settings or use FRONTEND_URL env variable
+        frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
         portal_url = tenant.get("settings", {}).get("customer_portal_url", f"{frontend_url}/customer")
         
         subject, html_content = get_customer_proofs_ready_email(
