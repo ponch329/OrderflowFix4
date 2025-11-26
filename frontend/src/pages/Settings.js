@@ -458,6 +458,181 @@ const Settings = () => {
             </Card>
           </TabsContent>
 
+          {/* Integrations Tab */}
+          <TabsContent value="integrations" className="space-y-4">
+            {/* SMTP Configuration */}
+            <Card>
+              <CardHeader>
+                <CardTitle>SMTP / Email Server</CardTitle>
+                <CardDescription>
+                  Configure your email server to send automated notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp-host">SMTP Host *</Label>
+                    <Input
+                      id="smtp-host"
+                      type="text"
+                      placeholder="smtp.gmail.com"
+                      value={smtpSettings.smtp_host}
+                      onChange={(e) => setSmtpSettings({ ...smtpSettings, smtp_host: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp-port">SMTP Port *</Label>
+                    <Input
+                      id="smtp-port"
+                      type="text"
+                      placeholder="587"
+                      value={smtpSettings.smtp_port}
+                      onChange={(e) => setSmtpSettings({ ...smtpSettings, smtp_port: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="smtp-user">SMTP Username *</Label>
+                  <Input
+                    id="smtp-user"
+                    type="text"
+                    placeholder="your-email@gmail.com"
+                    value={smtpSettings.smtp_user}
+                    onChange={(e) => setSmtpSettings({ ...smtpSettings, smtp_user: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="smtp-password">SMTP Password *</Label>
+                  <Input
+                    id="smtp-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={smtpSettings.smtp_password}
+                    onChange={(e) => setSmtpSettings({ ...smtpSettings, smtp_password: e.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">Leave blank to keep existing password</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="smtp-from">From Email Address *</Label>
+                  <Input
+                    id="smtp-from"
+                    type="email"
+                    placeholder="noreply@yourcompany.com"
+                    value={smtpSettings.smtp_from_email}
+                    onChange={(e) => setSmtpSettings({ ...smtpSettings, smtp_from_email: e.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">Email address that appears as the sender</p>
+                </div>
+
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800">
+                    <strong>Gmail Users:</strong> Use "smtp.gmail.com" on port 587. You may need to generate an "App Password" in your Google Account settings.
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <Button onClick={handleSaveIntegrations} disabled={saving} className="w-full">
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? "Saving..." : "Save SMTP Settings"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Shopify Integration */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Shopify Integration</CardTitle>
+                <CardDescription>
+                  Connect to your Shopify store to sync orders and tracking information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="shopify-shop">Shop Name *</Label>
+                  <Input
+                    id="shopify-shop"
+                    type="text"
+                    placeholder="your-store"
+                    value={shopifySettings.shopify_shop_name}
+                    onChange={(e) => setShopifySettings({ ...shopifySettings, shopify_shop_name: e.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">Your Shopify store name (e.g., "your-store" from your-store.myshopify.com)</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="shopify-api-key">API Key *</Label>
+                  <Input
+                    id="shopify-api-key"
+                    type="text"
+                    placeholder="Your Shopify API Key"
+                    value={shopifySettings.shopify_api_key}
+                    onChange={(e) => setShopifySettings({ ...shopifySettings, shopify_api_key: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="shopify-api-secret">API Secret *</Label>
+                  <Input
+                    id="shopify-api-secret"
+                    type="password"
+                    placeholder="••••••••"
+                    value={shopifySettings.shopify_api_secret}
+                    onChange={(e) => setShopifySettings({ ...shopifySettings, shopify_api_secret: e.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">Leave blank to keep existing secret</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="shopify-token">Access Token *</Label>
+                  <Input
+                    id="shopify-token"
+                    type="password"
+                    placeholder="••••••••"
+                    value={shopifySettings.shopify_access_token}
+                    onChange={(e) => setShopifySettings({ ...shopifySettings, shopify_access_token: e.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">Leave blank to keep existing token</p>
+                </div>
+
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-xs text-yellow-800">
+                    <strong>How to get Shopify credentials:</strong> Go to your Shopify Admin → Apps → Develop apps → Create an app → Configure Admin API scopes → Install app → Get API credentials
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <Button onClick={handleSaveIntegrations} disabled={saving} className="w-full">
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? "Saving..." : "Save Shopify Settings"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Google Sheets Integration */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Google Sheets Logging</CardTitle>
+                <CardDescription>
+                  Automatically log order activities to a Google Spreadsheet
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                  <p className="text-sm text-gray-600 mb-2">Google Sheets integration requires OAuth setup</p>
+                  <Button variant="outline" size="sm" disabled>
+                    <SettingsIcon className="w-4 h-4 mr-2" />
+                    Configure Google Sheets (Coming Soon)
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Permissions Tab */}
           <TabsContent value="permissions" className="space-y-4">
             <Card>
