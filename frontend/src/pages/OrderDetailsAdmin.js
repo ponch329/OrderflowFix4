@@ -68,7 +68,7 @@ const OrderDetailsAdminNew = () => {
 
   useEffect(() => {
     // Set up authentication
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('admin_token');
     if (!token) {
       toast.error("Please log in to continue");
       navigate('/admin/login');
