@@ -215,7 +215,12 @@ const OrderDetailsAdminNew = () => {
     if (!window.confirm("Are you sure you want to delete this proof?")) return;
     
     try {
-      await axios.delete(`${API}/admin/orders/${orderId}/proofs/${proofId}`);
+      const token = localStorage.getItem('admin_token');
+      await axios.delete(`${API}/orders/${orderId}/proofs/${proofId}?stage=${stage}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       toast.success("Proof deleted");
       fetchOrder();
     } catch (error) {
