@@ -226,6 +226,18 @@ frontend:
           agent: "testing"
           comment: "✅ Email Template Edit feature with CC and BCC fields fully functional. Comprehensive testing completed: 1) Login flow working correctly (admin/admin123), 2) Navigation to Email Templates page successful, 3) Edit dialog opens when clicking Edit button on first template (Clay Proofs Ready), 4) All required fields present: Template Enabled toggle, CC (Carbon Copy) field, BCC (Blind Carbon Copy) field, Email Subject textarea, Email Body textarea, Save Template button, Send Test button, 5) CC and BCC fields are in side-by-side grid layout as expected, 6) Fields show appropriate placeholder text (cc@example.com, bcc@example.com), 7) Fields have helper text below them ('Send a copy to this email (optional)', 'Hidden copy to this email (optional)'), 8) Fields accept input correctly (test@cc.com, test@bcc.com), 9) Dialog can be closed properly, 10) No console errors found. All requested functionality working correctly."
 
+  - task: "Integrations Tab - SMTP and Shopify Configuration"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Settings.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented new 'Integrations' tab in Settings with SMTP and Shopify configuration sections. Both sections have their own save buttons that call handleSaveIntegrations function. Backend endpoint PATCH /api/settings/tenant merges new settings with existing ones. Needs comprehensive testing to verify save/load functionality and persistence."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
@@ -234,7 +246,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Email Template Edit with CC and BCC Fields"
+    - "Integrations Tab - SMTP and Shopify Configuration"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
