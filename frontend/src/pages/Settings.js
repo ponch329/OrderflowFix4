@@ -42,6 +42,15 @@ const Settings = () => {
     order_manager_can_upload_tracking: true
   });
   
+  // SMTP settings
+  const [smtpSettings, setSmtpSettings] = useState({
+    smtp_host: "",
+    smtp_port: "587",
+    smtp_user: "",
+    smtp_password: "",
+    smtp_from_email: ""
+  });
+  
   // Workflow settings
   const [workflowSettings, setWorkflowSettings] = useState({
     auto_advance_on_approval: true,
