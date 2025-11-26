@@ -67,8 +67,17 @@ const OrderDetailsAdminNew = () => {
   const [editApprovalImages, setEditApprovalImages] = useState([]);
 
   useEffect(() => {
+    // Set up authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error("Please log in to continue");
+      navigate('/admin/login');
+      return;
+    }
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
     fetchOrder();
-  }, [orderId]);
+  }, [orderId, navigate]);
 
   const fetchOrder = async () => {
     try {
