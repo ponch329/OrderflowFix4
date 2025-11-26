@@ -118,6 +118,14 @@ const Settings = () => {
         order_manager_can_upload_tracking: settings.order_manager_can_upload_tracking ?? true
       });
       
+      setSmtpSettings({
+        smtp_host: settings.smtp_host || "",
+        smtp_port: settings.smtp_port || "587",
+        smtp_user: settings.smtp_user || "",
+        smtp_password: "", // Don't load password for security
+        smtp_from_email: settings.smtp_from_email || ""
+      });
+      
       setWorkflowSettings({
         auto_advance_on_approval: settings.workflow?.auto_advance_on_approval ?? true,
         require_admin_confirmation_for_stage_change: settings.workflow?.require_admin_confirmation_for_stage_change ?? false,
