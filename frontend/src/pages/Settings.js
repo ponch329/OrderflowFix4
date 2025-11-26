@@ -134,6 +134,13 @@ const Settings = () => {
         smtp_from_email: settings.smtp_from_email || ""
       });
       
+      setShopifySettings({
+        shopify_shop_name: settings.shopify_shop_name || "",
+        shopify_api_key: settings.shopify_api_key || "",
+        shopify_api_secret: "", // Don't load secret for security
+        shopify_access_token: "" // Don't load token for security
+      });
+      
       setWorkflowSettings({
         auto_advance_on_approval: settings.workflow?.auto_advance_on_approval ?? true,
         require_admin_confirmation_for_stage_change: settings.workflow?.require_admin_confirmation_for_stage_change ?? false,
