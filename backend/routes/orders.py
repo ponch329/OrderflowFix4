@@ -604,16 +604,33 @@ async def update_order_info(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    if order_number:
+    changed_fields = []
+    if order_number and order_number != order.get('order_number'):
         update_data["order_number"] = order_number
-    if customer_name:
+        changed_fields.append(f"order number to {order_number}")
+    if customer_name and customer_name != order.get('customer_name'):
         update_data["customer_name"] = customer_name
-    if customer_email:
+        changed_fields.append(f"customer name to {customer_name}")
+    if customer_email and customer_email != order.get('customer_email'):
         update_data["customer_email"] = customer_email
+        changed_fields.append(f"customer email to {customer_email}")
+    
+    # Create timeline event if changes were made
+    update_ops = {"$set": update_data}
+    if changed_fields:
+        from utils.timeline import create_timeline_event
+        timeline_event = create_timeline_event(
+            event_type="order_edited",
+            user_name=auth.user.full_name,
+            user_role=auth.role.value,
+            description=f"Edited order details: {', '.join(changed_fields)}",
+            metadata={"fields": changed_fields}
+        )
+        update_ops["$push"] = {"timeline": timeline_event}
     
     await db.orders.update_one(
         {"id": order_id, "tenant_id": auth.tenant_id},
-        {"$set": update_data}
+        update_ops
     )
     
     return {"message": "Order info updated successfully"}
