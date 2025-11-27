@@ -1195,6 +1195,87 @@ async def app_root():
     """Root endpoint for the application"""
     return {"message": "Bobblehead Order Approval System", "status": "running", "version": "2.0"}
 
+@app.get("/api/setup-admin")
+async def setup_admin():
+    """
+    One-time setup endpoint to create admin user in production
+    Only works if no admin user exists (security measure)
+    """
+    try:
+        import hashlib
+        from datetime import datetime, timezone
+        from uuid import uuid4
+        
+        # Check if admin already exists
+        existing_admin = await db.users.find_one({"username": "admin"}, {"_id": 0})
+        if existing_admin:
+            return {
+                "success": True,
+                "message": "Admin user already exists! You can log in with: admin / admin123",
+                "status": "already_configured"
+            }
+        
+        # Get or create default tenant
+        tenant = await db.tenants.find_one({}, {"_id": 0})
+        if not tenant:
+            # Create default tenant
+            tenant_id = str(uuid4())
+            tenant = {
+                "id": tenant_id,
+                "name": "Default Company",
+                "subdomain": "default",
+                "settings": {
+                    "workflow": {
+                        "clay": {
+                            "stages": ["pending", "sculpting", "feedback_needed", "changes_requested", "approved"],
+                            "default_status": "pending"
+                        },
+                        "paint": {
+                            "stages": ["pending", "painting", "feedback_needed", "changes_requested", "approved"],
+                            "default_status": "pending"
+                        }
+                    }
+                },
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.tenants.insert_one(tenant)
+            logger.info(f"✅ Created default tenant: {tenant_id}")
+        else:
+            tenant_id = tenant["id"]
+        
+        # Create admin user
+        admin_user = {
+            "id": str(uuid4()),
+            "username": "admin",
+            "password_hash": hashlib.sha256("admin123".encode()).hexdigest(),
+            "full_name": "Main Administrator",
+            "email": "admin@company.com",
+            "role": "admin",
+            "tenant_id": tenant_id,
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.users.insert_one(admin_user)
+        logger.info("✅ Admin user created successfully")
+        
+        return {
+            "success": True,
+            "message": "🎉 Admin user created successfully! You can now log in with:",
+            "credentials": {
+                "username": "admin",
+                "password": "admin123"
+            },
+            "instructions": "Go to your login page and use these credentials to sign in."
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to create admin user: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Failed to create admin user: {str(e)}"
+        }
+
 # Include the router in the main app
 app.include_router(api_router)
 
