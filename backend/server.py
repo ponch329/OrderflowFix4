@@ -1195,6 +1195,48 @@ async def app_root():
     """Root endpoint for the application"""
     return {"message": "Bobblehead Order Approval System", "status": "running", "version": "2.0"}
 
+@app.get("/api/debug-login")
+async def debug_login():
+    """
+    Debug endpoint to check login configuration
+    """
+    try:
+        # Check database connection
+        admin = await db.users.find_one({"username": "admin"}, {"_id": 0})
+        
+        # Check password hash
+        import hashlib
+        expected_hash = hashlib.sha256("admin123".encode()).hexdigest()
+        
+        if not admin:
+            return {
+                "status": "error",
+                "issue": "admin_user_not_found",
+                "message": "Admin user does not exist in database",
+                "solution": "Visit /api/setup-admin to create the admin user"
+            }
+        
+        password_match = admin.get("password_hash") == expected_hash
+        
+        return {
+            "status": "ok" if password_match else "error",
+            "admin_exists": True,
+            "password_hash_correct": password_match,
+            "admin_username": admin.get("username"),
+            "admin_role": admin.get("role"),
+            "admin_active": admin.get("is_active"),
+            "stored_hash": admin.get("password_hash")[:20] + "...",
+            "expected_hash": expected_hash[:20] + "...",
+            "database_connected": True
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "issue": "database_connection_failed",
+            "error": str(e),
+            "message": "Cannot connect to database. Check MONGO_URL and DB_NAME environment variables."
+        }
+
 @app.get("/api/setup-admin")
 async def setup_admin():
     """
