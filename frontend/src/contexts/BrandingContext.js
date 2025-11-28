@@ -45,7 +45,7 @@ const hexToHSL = (hex) => {
   return `${h} ${s}% ${l}%`;
 };
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
 
 export const BrandingProvider = ({ children }) => {

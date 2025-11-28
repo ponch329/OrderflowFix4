@@ -17,7 +17,7 @@ import OrderNotes from "@/components/OrderNotes";
 import OrderTimeline from "@/components/OrderTimeline";
 import { useBranding } from "@/contexts/BrandingContext";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
 
 const OrderDetailsAdminNew = () => {

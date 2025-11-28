@@ -12,7 +12,7 @@ import DragDropUpload from "@/components/DragDropUpload";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getStatusInfo } from "@/utils/orderHelpers";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
 
 const ManufacturerDashboard = () => {

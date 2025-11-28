@@ -6,6 +6,7 @@ from enum import Enum
 
 class UserRole(str, Enum):
     """User roles in the system"""
+    ADMIN = "admin"
     MAIN_ADMIN = "main_admin"  # Full access to everything including user management
     MANUFACTURER = "manufacturer"  # Limited access based on tenant settings
     CUSTOMER_SERVICE = "customer_service"  # Can manage orders and communicate with customers
@@ -49,6 +50,26 @@ class Permission(str, Enum):
 
 # Default permissions for each role
 ROLE_PERMISSIONS = {
+     UserRole.ADMIN: [ 
+        Permission.MANAGE_USERS,
+        Permission.VIEW_USERS,
+        Permission.VIEW_ORDERS,
+        Permission.CREATE_ORDERS,
+        Permission.EDIT_ORDERS,
+        Permission.DELETE_ORDERS,
+        Permission.ARCHIVE_ORDERS,
+        Permission.UPLOAD_PROOFS,
+        Permission.DELETE_PROOFS,
+        Permission.VIEW_PROOFS,
+        Permission.SEND_EMAILS,
+        Permission.VIEW_CUSTOMER_INFO,
+        Permission.MANAGE_SETTINGS,
+        Permission.VIEW_SETTINGS,
+        Permission.SYNC_SHOPIFY,
+        Permission.VIEW_ANALYTICS,
+        Permission.ADD_NOTES,
+        Permission.VIEW_NOTES,
+    ],
     UserRole.MAIN_ADMIN: [
         Permission.MANAGE_USERS,
         Permission.VIEW_USERS,

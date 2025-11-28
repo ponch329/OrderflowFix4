@@ -207,7 +207,7 @@ readinessProbe:
 
 ## No Changes Required
 
-- ✅ Frontend code - already uses `process.env.REACT_APP_BACKEND_URL` correctly
+- ✅ Frontend code - already uses `window.location.origin` correctly
 - ✅ Other backend files - routes and models are properly structured
 - ✅ Environment variables - Emergent manages these via secrets
 - ✅ CORS configuration - already uses `os.environ.get('CORS_ORIGINS', '*')`
