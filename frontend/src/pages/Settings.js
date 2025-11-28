@@ -276,6 +276,31 @@ const Settings = () => {
     }
   };
 
+  const handleShopifySync = async () => {
+    setSyncingShopify(true);
+    try {
+      const response = await axios.post(`${API}/settings/shopify/sync`, null, {
+        params: { limit: 50 }
+      });
+      
+      const result = response.data;
+      toast.success(result.message || `Synced ${result.synced} orders from Shopify!`);
+      
+      if (result.errors && result.errors.length > 0) {
+        console.warn("Shopify sync errors:", result.errors);
+        toast.warning(`Some orders had errors. Check console for details.`);
+      }
+      
+      console.log("Shopify sync result:", result);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to sync Shopify orders");
+      console.error("Shopify sync error:", error);
+    } finally {
+      setSyncingShopify(false);
+    }
+  };
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
       <div className="container mx-auto px-4 py-8">
