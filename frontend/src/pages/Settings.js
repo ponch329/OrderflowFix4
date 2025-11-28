@@ -58,6 +58,7 @@ const Settings = () => {
     shopify_api_secret: "",
     shopify_access_token: ""
   });
+  const [syncingShopify, setSyncingShopify] = useState(false);
   
   // Workflow settings
   const [workflowSettings, setWorkflowSettings] = useState({
