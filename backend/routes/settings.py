@@ -352,13 +352,13 @@ async def update_manufacturer_visible_fields(
 @router.post("/shopify/sync")
 async def sync_shopify_orders_endpoint(
     limit: Optional[int] = 50,
-    auth: AuthContext = Depends(require_permissions(Permission.EDIT_SETTINGS)),
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_SETTINGS)),
     db = Depends(get_db)
 ):
     """
     Sync orders from Shopify
     Fetches recent orders from Shopify and imports them into the system
-    Requires: EDIT_SETTINGS permission
+    Requires: MANAGE_SETTINGS permission
     """
     from utils.shopify_sync import sync_shopify_orders
     
