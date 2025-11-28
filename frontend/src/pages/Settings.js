@@ -299,6 +299,10 @@ const Settings = () => {
       setSyncingShopify(false);
     }
   };
+  
+  // Extract values for button state
+  const shopifyShop = shopifySettings.shopify_shop_name;
+  const shopifyAccessToken = shopifySettings.shopify_access_token;
 
 
   return (
