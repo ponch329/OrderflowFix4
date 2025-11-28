@@ -637,11 +637,27 @@ const Settings = () => {
                   </p>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-2 space-y-2">
                   <Button onClick={handleSaveIntegrations} disabled={saving} className="w-full">
                     <Save className="w-4 h-4 mr-2" />
                     {saving ? "Saving..." : "Save Shopify Settings"}
                   </Button>
+                  
+                  <Button 
+                    onClick={handleShopifySync} 
+                    disabled={syncingShopify || !shopifyShop || !shopifyAccessToken}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${syncingShopify ? 'animate-spin' : ''}`} />
+                    {syncingShopify ? "Syncing..." : "Sync Orders from Shopify"}
+                  </Button>
+                  
+                  {(!shopifyShop || !shopifyAccessToken) && (
+                    <p className="text-xs text-gray-500 text-center">
+                      Save your Shopify credentials first before syncing
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
