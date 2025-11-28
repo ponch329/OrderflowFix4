@@ -1195,6 +1195,46 @@ async def app_root():
     """Root endpoint for the application"""
     return {"message": "Bobblehead Order Approval System", "status": "running", "version": "2.0"}
 
+@app.get("/api/debug-database")
+async def debug_database():
+    """
+    Debug endpoint to check database contents
+    """
+    try:
+        # Count documents in each collection
+        users_count = await db.users.count_documents({})
+        orders_count = await db.orders.count_documents({})
+        tenants_count = await db.tenants.count_documents({})
+        
+        # Get tenant info
+        tenant = await db.tenants.find_one({}, {"_id": 0})
+        tenant_id = tenant.get("id") if tenant else None
+        
+        # Get some sample data
+        sample_orders = await db.orders.find({}, {"_id": 0}).limit(3).to_list(3)
+        sample_users = await db.users.find({}, {"_id": 0, "password_hash": 0}).limit(5).to_list(5)
+        
+        return {
+            "status": "ok",
+            "database_connected": True,
+            "database_name": db.name,
+            "collections": {
+                "users": users_count,
+                "orders": orders_count,
+                "tenants": tenants_count
+            },
+            "tenant_id": tenant_id,
+            "sample_orders": [{"id": o.get("id"), "order_number": o.get("order_number"), "customer_name": o.get("customer_name")} for o in sample_orders],
+            "sample_users": [{"username": u.get("username"), "role": u.get("role")} for u in sample_users],
+            "message": f"Database has {users_count} users, {orders_count} orders, {tenants_count} tenants"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "Failed to query database"
+        }
+
 @app.get("/api/debug-login")
 async def debug_login():
     """
