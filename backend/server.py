@@ -1001,7 +1001,7 @@ async def ping_customer(order_id: str, stage: str):
         </ul>
         
         <p style="text-align: center; margin: 30px 0;">
-            <a href="{os.environ.get('FRONTEND_URL', 'https://approval-hub-16.preview.emergentagent.com')}/customer" 
+            <a href="{os.environ.get('FRONTEND_URL', 'https://proof-sync-saas.preview.emergentagent.com')}/customer" 
                style="background: #2196F3; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                 Review Your Proofs
             </a>
