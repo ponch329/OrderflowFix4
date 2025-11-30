@@ -1235,6 +1235,33 @@ async def debug_database():
             "message": "Failed to query database"
         }
 
+@app.get("/api/debug-routes")
+async def debug_routes():
+    """
+    Debug endpoint to check which routes are available
+    """
+    routes_list = []
+    for route in app.routes:
+        if hasattr(route, 'methods') and hasattr(route, 'path'):
+            for method in route.methods:
+                routes_list.append({
+                    "method": method,
+                    "path": route.path,
+                    "name": route.name
+                })
+    
+    return {
+        "status": "ok",
+        "total_routes": len(routes_list),
+        "routes": sorted(routes_list, key=lambda x: x['path']),
+        "key_endpoints": {
+            "create_order": any(r['path'] == '/api/orders/' and r['method'] == 'POST' for r in routes_list),
+            "get_users": any(r['path'] == '/api/users/' and r['method'] == 'GET' for r in routes_list),
+            "get_settings": any(r['path'] == '/api/settings/tenant' and r['method'] == 'GET' for r in routes_list),
+            "shopify_sync": any(r['path'] == '/api/settings/shopify/sync' and r['method'] == 'POST' for r in routes_list)
+        }
+    }
+
 @app.get("/api/debug-login")
 async def debug_login():
     """
