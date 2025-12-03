@@ -167,6 +167,7 @@ class UserCreate(BaseModel):
     full_name: str
     role: UserRole
     custom_permissions: List[Permission] = Field(default_factory=list)
+    assigned_vendor: Optional[str] = None  # Vendor assignment for manufacturers
 
 class UserUpdate(BaseModel):
     """Schema for updating user information"""
