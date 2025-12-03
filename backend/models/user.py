@@ -137,6 +137,9 @@ class User(BaseModel):
     role: UserRole
     custom_permissions: List[Permission] = Field(default_factory=list)  # Override default permissions
     
+    # Manufacturer-specific fields
+    assigned_vendor: Optional[str] = None  # Vendor name this manufacturer is assigned to
+    
     # Status
     is_active: bool = True
     last_login: Optional[datetime] = None
