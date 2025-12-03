@@ -896,7 +896,7 @@ async def approve_stage(
             user_name=order.get('customer_name', 'Customer'),
             user_role="customer",
             description=f"Requested changes for {stage} stage",
-            metadata={"stage": stage, "message": message}
+            metadata={"stage": stage, "message": message, "images": additional_images}
         )
     
     await db.orders.update_one(
