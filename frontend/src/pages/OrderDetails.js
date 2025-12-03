@@ -310,9 +310,9 @@ const OrderDetails = () => {
                                 <Badge className={`${statusInfo.color} text-white text-sm px-2 py-0.5`}>
                                   {isAdmin ? statusInfo.adminLabel : statusInfo.customerLabel}
                                 </Badge>
-                                {approval && approvalDate && (
+                                {roundApproval && roundApprovalDate && (
                                   <span className="text-xs text-gray-600 italic">
-                                    {approval.status === 'approved' ? 'Approved' : 'Changes Requested'}: {approvalDate}
+                                    {roundApproval.status === 'approved' ? 'Approved' : 'Changes Requested'}: {roundApprovalDate}
                                   </span>
                                 )}
                               </>
@@ -322,9 +322,9 @@ const OrderDetails = () => {
                                 <Badge variant="outline" className="text-gray-600 text-sm px-2 py-0.5">
                                   Previous Version
                                 </Badge>
-                                {approval && approvalDate && (
+                                {roundApproval && roundApprovalDate && (
                                   <span className="text-xs text-gray-600 italic">
-                                    {approval.status === 'approved' ? 'Approved' : 'Changes Requested'}: {approvalDate}
+                                    {roundApproval.status === 'approved' ? 'Approved' : 'Changes Requested'}: {roundApprovalDate}
                                   </span>
                                 )}
                               </>
