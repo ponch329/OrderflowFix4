@@ -279,19 +279,8 @@ const OrderDetails = () => {
                         }
                       }
                       
-                      // Fallback to current approval for latest round if no timeline entry found
-                      if (!roundApproval && isLatest && approval) {
-                        roundApproval = approval;
-                        roundApprovalDate = approval.created_at
-                          ? new Date(approval.created_at).toLocaleDateString('en-US', {
-                              month: 'long',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit'
-                            })
-                          : null;
-                      }
+                      // Don't use fallback for latest round - only show approval if there's an actual timeline event
+                      // This prevents showing old approval timestamps on new rounds awaiting feedback
                       
                       // For customers (non-admin), only latest round is expanded by default
                       const roundKey = `${stage}-${round}`;
