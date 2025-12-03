@@ -422,12 +422,25 @@ const OrderDetailsAdminNew = () => {
                       <div className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-gray-800">Round {group.round}</h4>
-                            {group.round === Math.max(...proofs.map(p => p.round || 1)) && (
-                              <Badge className="bg-green-600 text-white text-sm px-2 py-0.5">
-                                LATEST REVISION
-                              </Badge>
-                            )}
+                            {(() => {
+                              // Get all unique round numbers from proofs
+                              const allRounds = [...new Set(proofs.map(p => p.round || 1))].sort((a, b) => a - b);
+                              const totalRounds = allRounds.length;
+                              const isLatestRound = group.round === Math.max(...allRounds);
+                              
+                              return (
+                                <>
+                                  <h4 className="font-semibold text-gray-800">
+                                    Round {group.round} {totalRounds > 1 && `of ${totalRounds}`}
+                                  </h4>
+                                  {isLatestRound && (
+                                    <Badge className="bg-green-600 text-white text-sm px-2 py-0.5">
+                                      ⭐ LATEST REVISION
+                                    </Badge>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
                         
