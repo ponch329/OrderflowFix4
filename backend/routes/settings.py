@@ -171,11 +171,23 @@ async def send_test_email(
     
     try:
         from utils.helpers import send_email
-        await send_email(tenant, to_email, subject, html_content)
+        
+        # Get CC and BCC from template if applicable
+        cc_email = None
+        bcc_email = None
+        if template_id and template:
+            cc_email = template.get("cc_email")
+            bcc_email = template.get("bcc_email")
+        
+        await send_email(tenant, to_email, subject, html_content, cc_email=cc_email, bcc_email=bcc_email)
         
         message = f"Test email sent successfully to {to_email}"
         if template_id:
             message = f"Template preview sent successfully to {to_email}"
+            if cc_email:
+                message += f" (CC: {cc_email})"
+            if bcc_email:
+                message += f" (BCC: {bcc_email})"
         
         return {"message": message}
     except Exception as e:
