@@ -83,8 +83,8 @@ async def log_to_sheets(db, tenant_id: str, order_number: str, action: str, deta
     except Exception as e:
         logger.error(f"Failed to log to sheets: {e}")
 
-async def send_email(tenant_config: dict, to_email: str, subject: str, html_content: str, attachments: List[dict] = None):
-    """Send email via SMTP using tenant configuration"""
+async def send_email(tenant_config: dict, to_email: str, subject: str, html_content: str, attachments: List[dict] = None, cc_email: str = None, bcc_email: str = None):
+    """Send email via SMTP using tenant configuration with CC and BCC support"""
     try:
         # Check both root level and settings level for SMTP config (backwards compatibility)
         settings = tenant_config.get("settings", {})
@@ -107,6 +107,12 @@ async def send_email(tenant_config: dict, to_email: str, subject: str, html_cont
         msg['From'] = smtp_from_email
         msg['To'] = to_email
         msg['Subject'] = subject
+        
+        # Add CC and BCC if provided
+        if cc_email and cc_email.strip():
+            msg['Cc'] = cc_email.strip()
+        if bcc_email and bcc_email.strip():
+            msg['Bcc'] = bcc_email.strip()
         
         # Convert line breaks to HTML <br> tags if content doesn't already look like HTML
         if not html_content.strip().startswith('<'):
