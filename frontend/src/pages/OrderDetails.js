@@ -520,6 +520,15 @@ const OrderDetails = () => {
                               </div>
                             </div>
                           )}
+                          </>
+                          )}
+                          
+                          {/* Show hint for collapsed rounds */}
+                          {!isRoundExpanded && !isAdmin && !isLatest && (
+                            <div className="mt-2 text-sm text-gray-500 italic">
+                              Click to view this round's details
+                            </div>
+                          )}
                         </div>
                       );
                     })}
