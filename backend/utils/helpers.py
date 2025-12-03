@@ -134,12 +134,19 @@ async def send_email(tenant_config: dict, to_email: str, subject: str, html_cont
         
         logger.info(f"Attempting to send email via SMTP: {smtp_host}:{smtp_port} from {smtp_from_email}")
         
+        # Build recipient list for actual sending (To + CC + BCC)
+        all_recipients = [to_email]
+        if cc_email and cc_email.strip():
+            all_recipients.append(cc_email.strip())
+        if bcc_email and bcc_email.strip():
+            all_recipients.append(bcc_email.strip())
+        
         with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
             server.starttls()
             server.login(smtp_user, smtp_password)
-            server.send_message(msg)
+            server.sendmail(smtp_from_email, all_recipients, msg.as_string())
             
-        logger.info(f"Email sent successfully to {to_email}")
+        logger.info(f"Email sent successfully to {to_email}" + (f" (CC: {cc_email})" if cc_email else "") + (f" (BCC: {bcc_email})" if bcc_email else ""))
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
         raise
