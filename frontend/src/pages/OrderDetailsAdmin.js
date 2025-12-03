@@ -456,6 +456,7 @@ const OrderDetailsAdminNew = () => {
                               <img 
                                 src={item.data.url} 
                                 alt={`Proof ${idx + 1}`}
+                                loading="lazy"
                                 className="w-full h-48 object-cover rounded border-2 cursor-pointer hover:border-blue-500 transition"
                                 onClick={() => setSelectedImage(item.data.url)}
                               />
