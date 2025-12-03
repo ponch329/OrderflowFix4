@@ -181,8 +181,9 @@ const EmailTemplates = () => {
   const openEditDialog = (template) => {
     const templateDef = EMAIL_TEMPLATES.find(t => t.id === template.id);
     setSelectedTemplate({ ...template, ...templateDef });
-    setSubject(templateDef.default_subject);
-    setBody(templateDef.default_body);
+    // Use saved content if available, otherwise use default
+    setSubject(template.subject || templateDef.default_subject);
+    setBody(template.body || templateDef.default_body);
     setEnabled(template.enabled);
     setCcEmail(template.cc_email || "");
     setBccEmail(template.bcc_email || "");
@@ -192,8 +193,9 @@ const EmailTemplates = () => {
   const openPreviewDialog = (template) => {
     const templateDef = EMAIL_TEMPLATES.find(t => t.id === template.id);
     setSelectedTemplate({ ...template, ...templateDef });
-    setSubject(templateDef.default_subject);
-    setBody(templateDef.default_body);
+    // Use saved content if available, otherwise use default
+    setSubject(template.subject || templateDef.default_subject);
+    setBody(template.body || templateDef.default_body);
     setPreviewDialogOpen(true);
   };
 
