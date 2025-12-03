@@ -830,7 +830,7 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-2 gap-4">
                   {selectedOrderObj[`${viewProofsStage}_proofs`].map((proof, idx) => (
                     <div key={proof.id || idx} className="relative group border rounded-lg overflow-hidden bg-gray-50">
-                      <img
+                      <img loading="lazy"
                         src={proof.url}
                         alt={proof.filename || `Proof ${idx + 1}`}
                         className="w-full h-64 object-contain"
