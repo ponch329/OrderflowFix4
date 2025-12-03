@@ -108,6 +108,16 @@ async def send_email(tenant_config: dict, to_email: str, subject: str, html_cont
         msg['To'] = to_email
         msg['Subject'] = subject
         
+        # Convert line breaks to HTML <br> tags if content doesn't already look like HTML
+        if not html_content.strip().startswith('<'):
+            # Plain text - convert newlines to <br> and wrap in basic HTML
+            formatted_content = html_content.replace('\n', '<br>')
+            html_content = f"""<html>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+{formatted_content}
+</body>
+</html>"""
+        
         msg.attach(MIMEText(html_content, 'html'))
         
         if attachments:
