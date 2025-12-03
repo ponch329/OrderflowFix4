@@ -101,6 +101,17 @@ export default function CreateOrderDialog({ open, onOpenChange, onOrderCreated }
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="item_vendor">Vendor (Optional)</Label>
+            <Input
+              id="item_vendor"
+              placeholder="e.g., China Factory"
+              value={formData.item_vendor}
+              onChange={(e) => setFormData({...formData, item_vendor: e.target.value})}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="stage">Initial Stage</Label>
             <Select 
               value={formData.stage} 
