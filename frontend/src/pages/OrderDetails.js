@@ -366,67 +366,107 @@ const OrderDetails = () => {
                             ))}
                           </div>
                           
-                          {/* Customer change request - show when customer has requested changes
-                              - If there's only 1 round: show it on that round
-                              - If there are multiple rounds: show it on the round before the latest (where customer made the comment)
-                          */}
+                          {/* Customer interactions - show ALL change requests and approvals for visibility */}
                           {(() => {
-                            // Find the change request for this specific round from timeline
-                            const roundChangeRequest = order.timeline?.find(
-                              event => event.event_type === 'changes_requested' && 
-                              event.metadata?.stage === stage &&
-                              event.timestamp <= (roundProofs[roundProofs.length - 1]?.uploaded_at || '')
-                            );
+                            // Find ALL interactions for this round from timeline
+                            const thisRoundUploadTime = roundProofs[0]?.uploaded_at;
+                            const nextRoundIndex = sortedRounds.indexOf(round.toString()) - 1;
+                            const nextRoundUploadTime = nextRoundIndex >= 0 && rounds[sortedRounds[nextRoundIndex]]
+                              ? rounds[sortedRounds[nextRoundIndex]][0]?.uploaded_at
+                              : null;
                             
-                            if (!roundChangeRequest && (sortedRounds.length === 1 || !isLatest) && approval?.status === "changes_requested") {
-                              // Fallback to current approval if no timeline entry found
-                              return (
-                                <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
-                                  <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
-                                  <p className="text-gray-700">{approval.message || "No message provided"}</p>
-                                  {approval.images && approval.images.length > 0 && (
-                                    <>
-                                      <p className="text-sm text-gray-600 mt-3 mb-2 font-semibold">📎 Reference Images Uploaded:</p>
-                                      <div className="grid grid-cols-2 gap-2">
-                                        {approval.images.map((img, idx) => (
-                                          <img 
-                                            key={idx} 
-                                            src={img} 
-                                            alt={`Reference ${idx + 1}`}
-                                            className="w-full h-32 object-cover rounded border border-orange-300"
-                                          />
-                                        ))}
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                              );
+                            // Find all customer interactions for this round
+                            const roundInteractions = order.timeline
+                              ?.filter(event => 
+                                (event.event_type === 'approval' || event.event_type === 'changes_requested') &&
+                                event.metadata?.stage === stage &&
+                                event.timestamp > thisRoundUploadTime &&
+                                (!nextRoundUploadTime || event.timestamp < nextRoundUploadTime)
+                              )
+                              .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) || [];
+                            
+                            // For latest round, also check current approval object for images
+                            if (isLatest && approval?.status === "changes_requested" && !roundInteractions.length) {
+                              roundInteractions.push({
+                                event_type: 'changes_requested',
+                                metadata: { 
+                                  message: approval.message,
+                                  images: approval.images 
+                                },
+                                timestamp: approval.created_at
+                              });
                             }
                             
-                            if (roundChangeRequest && (sortedRounds.length === 1 || !isLatest)) {
-                              return (
-                                <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
-                                  <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
-                                  <p className="text-gray-700">{roundChangeRequest.metadata?.message || "No message provided"}</p>
-                                  {approval.images && approval.images.length > 0 && (
-                                    <>
-                                      <p className="text-sm text-gray-600 mt-3 mb-2 font-semibold">📎 Reference Images Uploaded:</p>
-                                      <div className="grid grid-cols-2 gap-2">
-                                        {approval.images.map((img, idx) => (
-                                          <img 
-                                            key={idx} 
-                                            src={img} 
-                                            alt={`Reference ${idx + 1}`}
-                                            className="w-full h-32 object-cover rounded border border-orange-300"
-                                          />
-                                        ))}
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                              );
+                            if (isLatest && approval?.status === "approved" && !roundInteractions.length) {
+                              roundInteractions.push({
+                                event_type: 'approval',
+                                metadata: { stage },
+                                timestamp: approval.created_at
+                              });
                             }
-                            return null;
+                            
+                            return roundInteractions.map((interaction, idx) => {
+                              const interactionDate = new Date(interaction.timestamp).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit'
+                              });
+                              
+                              if (interaction.event_type === 'changes_requested') {
+                                // Get images from approval object if this is the current/latest change request
+                                const images = (isLatest && approval?.status === "changes_requested") 
+                                  ? approval.images 
+                                  : interaction.metadata?.images || [];
+                                
+                                return (
+                                  <div key={`interaction-${idx}`} className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded mb-3" data-testid={`${stage}-changes-message-${round}`}>
+                                    <div className="flex items-start justify-between mb-2">
+                                      <p className="font-semibold text-orange-900">📝 Your Requested Changes</p>
+                                      <span className="text-xs text-gray-600">{interactionDate}</span>
+                                    </div>
+                                    <p className="text-gray-700 mb-2">{interaction.metadata?.message || "No message provided"}</p>
+                                    {images && images.length > 0 && (
+                                      <>
+                                        <p className="text-sm text-gray-600 mt-3 mb-2 font-semibold">📎 Reference Images You Uploaded:</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                          {images.map((img, imgIdx) => (
+                                            <div
+                                              key={imgIdx}
+                                              className="relative group cursor-pointer"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedImage(img);
+                                              }}
+                                            >
+                                              <img 
+                                                src={img} 
+                                                alt={`Reference ${imgIdx + 1}`}
+                                                className="w-full h-32 object-cover rounded border-2 border-orange-300 hover:border-orange-500 transition-all"
+                                              />
+                                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center rounded">
+                                                <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={24} />
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                );
+                              } else if (interaction.event_type === 'approval') {
+                                return (
+                                  <div key={`interaction-${idx}`} className="p-4 bg-green-50 border-l-4 border-green-500 rounded mb-3">
+                                    <div className="flex items-start justify-between">
+                                      <p className="font-semibold text-green-900">✓ You Approved This Round</p>
+                                      <span className="text-xs text-gray-600">{interactionDate}</span>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            });
                           })()}
                           
                           {/* Action Buttons - Only show on latest round */}
