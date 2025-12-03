@@ -230,7 +230,7 @@ def get_changes_requested_email(order_number, customer_name, customer_email, sta
                     {message or '<em>No specific message provided</em>'}
                 </div>
                 
-                {f'<div class="info-row" style="background: #e3f2fd; border-left: 3px solid #2196F3;"><span class="label">📎 Reference Images:</span> {num_images} image(s) attached by customer</div>' if num_images > 0 else ''}
+                {f'<div class="info-row" style="background: #e3f2fd; border-left: 3px solid #2196F3;"><span class="label">📎 Reference Images:</span> {num_images} image(s) attached to this email</div>' if num_images > 0 else ''}
                 
                 <p style="margin-top: 20px; padding: 15px; background: #fff3e0; border-left: 4px solid #FF9800; border-radius: 4px;">
                     <strong>Action Required:</strong><br>
