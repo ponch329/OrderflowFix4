@@ -30,7 +30,7 @@ export default function CreateOrderDialog({ open, onOpenChange, onOrderCreated }
     setLoading(true);
     try {
       const token = localStorage.getItem('admin_token');
-      await axios.post(`${API_URL}/api/orders`, formData, {
+      await axios.post(`${API_URL}/api/orders/`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
