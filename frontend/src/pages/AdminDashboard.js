@@ -135,7 +135,8 @@ const AdminDashboard = () => {
   const fetchOrders = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/admin/orders`);
+      // Add limit parameter to reduce data transfer
+      const response = await axios.get(`${API}/admin/orders?limit=200`);
       // Sort by created_at descending (newest first)
       const sortedOrders = response.data.sort((a, b) => 
         new Date(b.created_at) - new Date(a.created_at)
