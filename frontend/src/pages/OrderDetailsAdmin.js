@@ -126,7 +126,7 @@ const OrderDetailsAdminNew = () => {
 
   const confirmStageStatusChange = async () => {
     try {
-      await axios.patch(`${API}/admin/orders/${orderId}/update-status`, {
+      await axios.patch(`${API}/admin/orders/${orderId}/status`, {
         stage: selectedStage,
         clay_status: selectedClayStatus,
         paint_status: selectedPaintStatus,
