@@ -15,127 +15,191 @@ import { toast } from "sonner";
 const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
 
-// Email template definitions
+// Email template definitions - these match the actual HTML emails being sent
 const EMAIL_TEMPLATES = [
   {
     id: "proof_ready_clay",
-    name: "Clay Proofs Ready",
-    description: "Sent when clay proofs are ready for customer review",
-    trigger: "Automatically sent when Order Stage = Clay and Order Status changes to 'Customer Feedback Needed'",
-    default_subject: "Your Clay Proofs Are Ready - Order #{order_number}",
-    default_body: `Hi {customer_name},
-
-Great news! Your clay proofs for order #{order_number} are ready for review.
-
-Please log in to your customer portal to view and approve your proofs:
-[Customer Portal Link]
-
-If you'd like any changes, simply let us know in the portal.
-
-Thank you!
-{company_name}`
+    name: "Clay Proofs Ready (Customer)",
+    description: "Sent to customer when clay proofs are uploaded and ready for review",
+    trigger: "Automatically sent when proofs are uploaded to Clay stage",
+    default_subject: "Your Clay Proofs Are Ready for Review - Order #{order_number}",
+    default_body: `<html>
+<head><style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+.content { background: #ffffff; padding: 30px 20px; border: 1px solid #e0e0e0; }
+.button { background: #6366f1; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }
+.footer { text-align: center; padding: 20px; color: #888; font-size: 12px; background: #f5f5f5; }
+</style></head>
+<body>
+<div class="container">
+<div class="header"><h1>🎨 Your Clay Proofs Are Ready!</h1></div>
+<div class="content">
+<p>Hi {customer_name},</p>
+<p>Great news! We've uploaded {num_images} clay proof(s) for your order #{order_number}.</p>
+<p>Please review them and let us know if you approve or if you'd like any changes.</p>
+<a href="{portal_url}" class="button">View Your Proofs</a>
+<p style="color: #666; font-size: 14px;">If you have any questions, just reply to this email!</p>
+</div>
+<div class="footer"><p>AllBobbleheads.com | orders@allbobbleheads.com</p></div>
+</div>
+</body>
+</html>`
   },
   {
     id: "proof_ready_paint",
-    name: "Paint Proofs Ready",
-    description: "Sent when paint proofs are ready for customer review",
-    trigger: "Automatically sent when Order Stage = Paint and Order Status changes to 'Customer Feedback Needed'",
-    default_subject: "Your Paint Proofs Are Ready - Order #{order_number}",
-    default_body: `Hi {customer_name},
-
-Your paint proofs for order #{order_number} are ready for your review!
-
-Please visit the customer portal to view your painted bobblehead:
-[Customer Portal Link]
-
-We're excited to show you the final result!
-
-Best regards,
-{company_name}`
+    name: "Paint Proofs Ready (Customer)",
+    description: "Sent to customer when paint proofs are uploaded and ready for review",
+    trigger: "Automatically sent when proofs are uploaded to Paint stage",
+    default_subject: "Your Paint Proofs Are Ready for Review - Order #{order_number}",
+    default_body: `<html>
+<head><style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+.content { background: #ffffff; padding: 30px 20px; border: 1px solid #e0e0e0; }
+.button { background: #ec4899; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }
+.footer { text-align: center; padding: 20px; color: #888; font-size: 12px; background: #f5f5f5; }
+</style></head>
+<body>
+<div class="container">
+<div class="header"><h1>🎨 Your Paint Proofs Are Ready!</h1></div>
+<div class="content">
+<p>Hi {customer_name},</p>
+<p>Excellent news! We've uploaded {num_images} painted proof(s) for your order #{order_number}.</p>
+<p>Please review them and let us know if you approve or if you'd like any adjustments.</p>
+<a href="{portal_url}" class="button">View Your Proofs</a>
+<p style="color: #666; font-size: 14px;">We're excited to show you the final result!</p>
+</div>
+<div class="footer"><p>AllBobbleheads.com | orders@allbobbleheads.com</p></div>
+</div>
+</body>
+</html>`
   },
   {
     id: "approved_clay",
     name: "Clay Approved (Admin Notification)",
-    description: "Sent to admin when customer approves clay",
-    trigger: "Automatically sent when customer approves clay proofs",
-    default_subject: "Clay Approved - Order #{order_number}",
-    default_body: `Order #{order_number} - Clay Stage Approved
-
-Customer: {customer_name}
-Email: {customer_email}
-
-The customer has approved the clay proofs. You can now proceed to the paint stage.
-
-[View Order in Admin Dashboard]`
+    description: "Sent to admin when customer approves clay proofs",
+    trigger: "Automatically sent when customer clicks 'Approve' on clay proofs",
+    default_subject: "Order #{order_number} - Clay Stage Approved ✓",
+    default_body: `<html>
+<head><style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+.content { background: #ffffff; padding: 30px 20px; border: 1px solid #e0e0e0; }
+.info-row { margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 4px; }
+.footer { text-align: center; padding: 20px; color: #888; font-size: 12px; background: #f5f5f5; }
+</style></head>
+<body>
+<div class="container">
+<div class="header"><div style="font-size: 48px;">✓</div><h1>Clay Stage Approved</h1></div>
+<div class="content">
+<p>Great news! Your customer has approved the clay stage proofs.</p>
+<div class="info-row"><strong>Order:</strong> #{order_number}</div>
+<div class="info-row"><strong>Customer:</strong> {customer_name}</div>
+<div class="info-row"><strong>Email:</strong> {customer_email}</div>
+<p style="background: #e8f5e9; padding: 15px; border-left: 4px solid #4CAF50;"><strong>Next Steps:</strong> Move forward with painting stage.</p>
+</div>
+<div class="footer"><p>AllBobbleheads.com | orders@allbobbleheads.com</p></div>
+</div>
+</body>
+</html>`
   },
   {
     id: "approved_paint",
     name: "Paint Approved (Admin Notification)",
-    description: "Sent to admin when customer approves paint",
-    trigger: "Automatically sent when customer approves paint proofs",
-    default_subject: "Paint Approved - Order #{order_number}",
-    default_body: `Order #{order_number} - Paint Stage Approved
-
-Customer: {customer_name}
-Email: {customer_email}
-
-The customer has approved the paint proofs. This order is ready for final production!
-
-[View Order in Admin Dashboard]`
+    description: "Sent to admin when customer approves paint proofs",
+    trigger: "Automatically sent when customer clicks 'Approve' on paint proofs",
+    default_subject: "Order #{order_number} - Paint Stage Approved ✓",
+    default_body: `<html>
+<head><style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+.content { background: #ffffff; padding: 30px 20px; border: 1px solid #e0e0e0; }
+.info-row { margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 4px; }
+.footer { text-align: center; padding: 20px; color: #888; font-size: 12px; background: #f5f5f5; }
+</style></head>
+<body>
+<div class="container">
+<div class="header"><div style="font-size: 48px;">✓</div><h1>Paint Stage Approved</h1></div>
+<div class="content">
+<p>Excellent! Your customer has approved the paint stage proofs.</p>
+<div class="info-row"><strong>Order:</strong> #{order_number}</div>
+<div class="info-row"><strong>Customer:</strong> {customer_name}</div>
+<div class="info-row"><strong>Email:</strong> {customer_email}</div>
+<p style="background: #e8f5e9; padding: 15px; border-left: 4px solid #4CAF50;"><strong>Next Steps:</strong> Ready to ship!</p>
+</div>
+<div class="footer"><p>AllBobbleheads.com | orders@allbobbleheads.com</p></div>
+</div>
+</body>
+</html>`
   },
   {
     id: "changes_requested_clay",
     name: "Clay Changes Requested (Admin Notification)",
-    description: "Sent to admin when customer requests clay changes",
-    trigger: "Automatically sent when customer requests changes to clay proofs",
-    default_subject: "Changes Requested - Order #{order_number}",
-    default_body: `Order #{order_number} - Changes Requested (Clay)
-
-Customer: {customer_name}
-Email: {customer_email}
-
-Customer Message:
-{customer_message}
-
-Please review the requested changes and update the proofs accordingly.
-
-[View Order in Admin Dashboard]`
+    description: "Sent to admin when customer requests changes to clay proofs",
+    trigger: "Automatically sent when customer clicks 'Request Changes' on clay proofs",
+    default_subject: "Order #{order_number} - Clay Stage Changes Requested",
+    default_body: `<html>
+<head><style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+.content { background: #ffffff; padding: 30px 20px; border: 1px solid #e0e0e0; }
+.info-row { margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 4px; }
+.message-box { background: #fff3e0; padding: 20px; border-left: 4px solid #FF9800; margin: 20px 0; }
+.footer { text-align: center; padding: 20px; color: #888; font-size: 12px; background: #f5f5f5; }
+</style></head>
+<body>
+<div class="container">
+<div class="header"><div style="font-size: 48px;">⚠</div><h1>Changes Requested</h1></div>
+<div class="content">
+<p>Your customer has reviewed the clay stage proofs and is requesting some changes.</p>
+<div class="info-row"><strong>Order:</strong> #{order_number}</div>
+<div class="info-row"><strong>Customer:</strong> {customer_name}</div>
+<div class="info-row"><strong>Email:</strong> {customer_email}</div>
+<div class="message-box"><strong>Requested Changes:</strong><br><br>{customer_message}</div>
+<p style="background: #fff3e0; padding: 15px; border-left: 4px solid #FF9800;"><strong>Action Required:</strong> Please review the customer's feedback and make the necessary adjustments to the clay stage.</p>
+</div>
+<div class="footer"><p>AllBobbleheads.com | orders@allbobbleheads.com</p></div>
+</div>
+</body>
+</html>`
   },
   {
     id: "changes_requested_paint",
     name: "Paint Changes Requested (Admin Notification)",
-    description: "Sent to admin when customer requests paint changes",
-    trigger: "Automatically sent when customer requests changes to paint proofs",
-    default_subject: "Changes Requested - Order #{order_number}",
-    default_body: `Order #{order_number} - Changes Requested (Paint)
-
-Customer: {customer_name}
-Email: {customer_email}
-
-Customer Message:
-{customer_message}
-
-Please review the requested changes and update the paint proofs.
-
-[View Order in Admin Dashboard]`
-  },
-  {
-    id: "reminder",
-    name: "Review Reminder",
-    description: "Manual reminder to customer",
-    trigger: "Manually sent by admin using 'Ping Customer' button",
-    default_subject: "Reminder: Please Review Your Proofs - Order #{order_number}",
-    default_body: `Hi {customer_name},
-
-This is a friendly reminder that your proofs for order #{order_number} are waiting for your review.
-
-Please take a moment to check them out in your customer portal:
-[Customer Portal Link]
-
-Let us know if you approve or if you'd like any changes!
-
-Thank you,
-{company_name}`
+    description: "Sent to admin when customer requests changes to paint proofs",
+    trigger: "Automatically sent when customer clicks 'Request Changes' on paint proofs",
+    default_subject: "Order #{order_number} - Paint Stage Changes Requested",
+    default_body: `<html>
+<head><style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+.content { background: #ffffff; padding: 30px 20px; border: 1px solid #e0e0e0; }
+.info-row { margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 4px; }
+.message-box { background: #fff3e0; padding: 20px; border-left: 4px solid #FF9800; margin: 20px 0; }
+.footer { text-align: center; padding: 20px; color: #888; font-size: 12px; background: #f5f5f5; }
+</style></head>
+<body>
+<div class="container">
+<div class="header"><div style="font-size: 48px;">⚠</div><h1>Changes Requested</h1></div>
+<div class="content">
+<p>Your customer has reviewed the paint stage proofs and is requesting some changes.</p>
+<div class="info-row"><strong>Order:</strong> #{order_number}</div>
+<div class="info-row"><strong>Customer:</strong> {customer_name}</div>
+<div class="info-row"><strong>Email:</strong> {customer_email}</div>
+<div class="message-box"><strong>Requested Changes:</strong><br><br>{customer_message}</div>
+<p style="background: #fff3e0; padding: 15px; border-left: 4px solid #FF9800;"><strong>Action Required:</strong> Please review the customer's feedback and make the necessary adjustments to the paint stage.</p>
+</div>
+<div class="footer"><p>AllBobbleheads.com | orders@allbobbleheads.com</p></div>
+</div>
+</body>
+</html>`
   }
 ];
 
