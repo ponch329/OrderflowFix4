@@ -42,7 +42,8 @@ const UserManagement = () => {
     email: "",
     password: "",
     full_name: "",
-    role: "customer_service"
+    role: "customer_service",
+    assigned_vendor: ""
   });
 
   useEffect(() => {
