@@ -7,19 +7,31 @@ from datetime import datetime, timezone
 
 async def split_order_by_vendor(db, order_data: Dict[str, Any], line_items: List[Dict[str, Any]]) -> List[str]:
     """
-    Split an order with multiple vendors into separate sub-orders
+    Split an order with multiple bobbleheads into separate sub-orders
+    Only creates suborders when there are multiple items with Product Category = "Bobblehead Figures"
     
     Args:
         db: Database connection
         order_data: Base order data from Shopify
-        line_items: List of line items with vendor information
+        line_items: List of line items with vendor and product category information
     
     Returns:
         List of created sub-order IDs
     """
-    # Group line items by vendor
+    # First, filter for only Bobblehead Figures
+    bobblehead_items = [
+        item for item in line_items 
+        if item.get('product_category') == 'Bobblehead Figures' or 
+           item.get('product_type') == 'Bobblehead Figures'
+    ]
+    
+    # Only create suborders if there are multiple bobbleheads
+    if len(bobblehead_items) <= 1:
+        return []
+    
+    # Group bobblehead items by vendor
     vendor_groups = {}
-    for item in line_items:
+    for item in bobblehead_items:
         vendor = item.get('vendor', 'Unknown')
         if vendor not in vendor_groups:
             vendor_groups[vendor] = []
