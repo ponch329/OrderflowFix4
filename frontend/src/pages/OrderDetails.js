@@ -387,7 +387,8 @@ const OrderDetails = () => {
                               ? rounds[sortedRounds[nextRoundIndex]][0]?.uploaded_at
                               : null;
                             
-                            // Find all customer interactions for this round
+                            // Find all customer interactions for this round from timeline ONLY
+                            // Don't use fallback to current approval - only show what actually happened for THIS round
                             const roundInteractions = order.timeline
                               ?.filter(event => 
                                 (event.event_type === 'approval' || event.event_type === 'changes_requested') &&
@@ -396,26 +397,6 @@ const OrderDetails = () => {
                                 (!nextRoundUploadTime || event.timestamp < nextRoundUploadTime)
                               )
                               .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) || [];
-                            
-                            // For latest round, also check current approval object for images
-                            if (isLatest && approval?.status === "changes_requested" && !roundInteractions.length) {
-                              roundInteractions.push({
-                                event_type: 'changes_requested',
-                                metadata: { 
-                                  message: approval.message,
-                                  images: approval.images 
-                                },
-                                timestamp: approval.created_at
-                              });
-                            }
-                            
-                            if (isLatest && approval?.status === "approved" && !roundInteractions.length) {
-                              roundInteractions.push({
-                                event_type: 'approval',
-                                metadata: { stage },
-                                timestamp: approval.created_at
-                              });
-                            }
                             
                             return roundInteractions.map((interaction, idx) => {
                               const interactionDate = new Date(interaction.timestamp).toLocaleDateString('en-US', {
