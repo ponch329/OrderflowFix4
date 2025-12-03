@@ -196,6 +196,7 @@ class UserResponse(BaseModel):
     full_name: str
     role: UserRole
     custom_permissions: List[Permission]
+    assigned_vendor: Optional[str] = None
     is_active: bool
     last_login: Optional[datetime]
     created_at: datetime
