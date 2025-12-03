@@ -99,7 +99,8 @@ const UserManagement = () => {
         email: formData.email,
         username: formData.username,
         full_name: formData.full_name,
-        role: formData.role
+        role: formData.role,
+        assigned_vendor: formData.assigned_vendor || null
       };
       
       // Only include password if it's been changed
