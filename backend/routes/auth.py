@@ -78,7 +78,8 @@ async def login(login_data: UserLogin, db = Depends(get_db)):
             "full_name": user.full_name,
             "email": user.email,
             "role": user.role.value,
-            "permissions": [p.value for p in user.get_permissions()]
+            "permissions": [p.value for p in user.get_permissions()],
+            "assigned_vendor": user.assigned_vendor
         }
     }
 
