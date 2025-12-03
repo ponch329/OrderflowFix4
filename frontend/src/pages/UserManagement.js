@@ -346,6 +346,22 @@ const UserManagement = () => {
                   </SelectContent>
                 </Select>
               </div>
+              
+              {formData.role === 'manufacturer' && (
+                <div className="space-y-2">
+                  <Label htmlFor="create-vendor">Assigned Vendor (Optional)</Label>
+                  <Input
+                    id="create-vendor"
+                    placeholder="e.g., China Factory, Vendor A"
+                    value={formData.assigned_vendor}
+                    onChange={(e) => setFormData({ ...formData, assigned_vendor: e.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Manufacturer will only see orders from this vendor
+                  </p>
+                </div>
+              )}
+              
               <Button onClick={handleCreateUser} className="w-full">
                 Create User
               </Button>
