@@ -941,7 +941,23 @@ async def approve_stage(
         
         try:
             from utils.helpers import send_email
-            await send_email(tenant, tenant.get("smtp_from_email", ""), subject, html_content)
+            import base64
+            
+            # Prepare image attachments if customer uploaded reference images
+            email_attachments = []
+            if additional_images:
+                for idx, img_data_uri in enumerate(additional_images):
+                    # Extract base64 data from data URI (format: data:image/jpeg;base64,...)
+                    if ',' in img_data_uri:
+                        base64_data = img_data_uri.split(',')[1]
+                        img_bytes = base64.b64decode(base64_data)
+                        email_attachments.append({
+                            'data': img_bytes,
+                            'cid': f'customer_ref_{idx}'
+                        })
+            
+            admin_email = tenant.get("smtp_from_email", "orders@allbobbleheads.com")
+            await send_email(tenant, admin_email, subject, html_content, attachments=email_attachments)
         except Exception as e:
             logging.warning(f"Email send failed: {e}")
         
