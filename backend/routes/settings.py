@@ -113,6 +113,12 @@ async def send_test_email(
     
     # If template_id is provided, send a preview of that template
     if template_id:
+        from email_templates import (
+            get_customer_proofs_ready_email,
+            get_approval_email,
+            get_changes_requested_email
+        )
+        
         templates = tenant.get("settings", {}).get("email_templates", {})
         # Handle both dict and list formats for backwards compatibility
         if isinstance(templates, dict):
@@ -120,28 +126,52 @@ async def send_test_email(
         else:
             template = next((t for t in templates if t.get("id") == template_id), None)
         
-        if not template:
-            raise HTTPException(status_code=404, detail="Template not found")
-        
-        # Use the template's subject and body, with placeholder data
-        subject = template.get("subject", "Test Email")
-        html_content = template.get("body", "<p>No content</p>")
-        
-        # Replace common placeholders with sample data
+        # Use actual email templates from email_templates.py
         logo_url = tenant.get("settings", {}).get("logo_url", "")
-        html_content = html_content.replace("{order_number}", "12345-TEST")
-        html_content = html_content.replace("{customer_name}", "Test Customer")
-        html_content = html_content.replace("{stage}", "Clay Stage")
-        html_content = html_content.replace("{customer_message}", "Sample customer feedback message")
-        html_content = html_content.replace("{tracking_number}", "1Z999AA10123456784")
-        html_content = html_content.replace("{tracking_link}", "https://example.com/track")
-        html_content = html_content.replace("{logo_url}", logo_url)
-        html_content = html_content.replace("{company_name}", tenant.get("name", "Your Company"))
+        company_name = tenant.get("name", "AllBobbleheads")
+        frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+        portal_url = f"{frontend_url}/customer"
+        
+        # Generate actual email based on template ID
+        if template_id == "proof_ready_clay":
+            subject, html_content = get_customer_proofs_ready_email(
+                "12345-TEST", "Test Customer", "clay", 3,
+                portal_url=portal_url, logo_url=logo_url, company_name=company_name
+            )
+        elif template_id == "proof_ready_paint":
+            subject, html_content = get_customer_proofs_ready_email(
+                "12345-TEST", "Test Customer", "paint", 3,
+                portal_url=portal_url, logo_url=logo_url, company_name=company_name
+            )
+        elif template_id == "approved_clay":
+            subject, html_content = get_approval_email(
+                "12345-TEST", "Test Customer", "test@example.com", "clay", logo_url=logo_url
+            )
+        elif template_id == "approved_paint":
+            subject, html_content = get_approval_email(
+                "12345-TEST", "Test Customer", "test@example.com", "paint", logo_url=logo_url
+            )
+        elif template_id == "changes_requested_clay":
+            subject, html_content = get_changes_requested_email(
+                "12345-TEST", "Test Customer", "test@example.com", "clay",
+                "Please adjust the nose shape and hair color. Thanks!",
+                num_images=2, logo_url=logo_url
+            )
+        elif template_id == "changes_requested_paint":
+            subject, html_content = get_changes_requested_email(
+                "12345-TEST", "Test Customer", "test@example.com", "paint",
+                "The shirt color needs to be brighter. Thanks!",
+                num_images=1, logo_url=logo_url
+            )
+        else:
+            # Fallback for reminder or other templates
+            subject = "Test Email - Order #12345-TEST"
+            html_content = "<p>This is a test email preview.</p>"
         
         # Add a header indicating this is a test
         html_content = f"""
         <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 10px; margin-bottom: 20px; text-align: center;">
-            <strong>⚠️ TEST EMAIL PREVIEW</strong> - This is how your email template will appear
+            <strong>⚠️ TEST EMAIL PREVIEW</strong> - This is how your actual email will appear
         </div>
         {html_content}
         """
