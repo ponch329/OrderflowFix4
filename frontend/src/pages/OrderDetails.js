@@ -30,6 +30,7 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(false);
   const [clayExpanded, setClayExpanded] = useState(true);
   const [paintExpanded, setPaintExpanded] = useState(true);
+  const [expandedRounds, setExpandedRounds] = useState({}); // Track which rounds are expanded
   const isAdmin = location.state?.isAdmin || false;
 
   useEffect(() => {
