@@ -40,6 +40,7 @@ export default function CreateOrderDialog({ open, onOpenChange, onOrderCreated }
         order_number: '',
         customer_name: '',
         customer_email: '',
+        item_vendor: '',
         stage: 'clay'
       });
       onOpenChange(false);
