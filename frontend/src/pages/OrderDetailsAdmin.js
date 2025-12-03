@@ -343,22 +343,27 @@ const OrderDetailsAdminNew = () => {
     // Group into rounds for display
     const displayGroups = [];
     let currentRound = [];
-    let currentRoundNumber = 1;
+    let currentRoundNumber = null; // Start as null to detect first proof
     
     chronologicalEvents.forEach((event, idx) => {
       if (event.type === 'proof') {
         const proofRound = event.data.round || 1;
-        if (proofRound !== currentRoundNumber && currentRound.length > 0) {
+        
+        // If this is a new round (different from current), save the old group and start new one
+        if (currentRoundNumber !== null && proofRound !== currentRoundNumber && currentRound.length > 0) {
           displayGroups.push({ round: currentRoundNumber, items: [...currentRound] });
           currentRound = [];
-          currentRoundNumber = proofRound;
         }
+        
+        // Update current round number and add event
+        currentRoundNumber = proofRound;
         currentRound.push(event);
       } else if (event.type === 'customer_changes') {
         // Add customer changes after current round
         if (currentRound.length > 0) {
           displayGroups.push({ round: currentRoundNumber, items: [...currentRound] });
           currentRound = [];
+          currentRoundNumber = null; // Reset for next round
         }
         displayGroups.push({ round: null, items: [event] });
       }
