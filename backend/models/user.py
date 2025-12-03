@@ -178,6 +178,7 @@ class UserUpdate(BaseModel):
     role: Optional[UserRole] = None
     custom_permissions: Optional[List[Permission]] = None
     is_active: Optional[bool] = None
+    assigned_vendor: Optional[str] = None  # Vendor assignment for manufacturers
 
 class UserLogin(BaseModel):
     """Schema for user login"""
