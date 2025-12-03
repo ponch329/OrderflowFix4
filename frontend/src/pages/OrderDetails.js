@@ -240,16 +240,57 @@ const OrderDetails = () => {
                           })
                         : null;
                       
-                      // Format approval timestamp if it exists
-                      const approvalDate = approval && approval.created_at
-                        ? new Date(approval.created_at).toLocaleDateString('en-US', { 
-                            month: 'long', 
+                      // Find the approval/change request for this specific round from timeline
+                      let roundApproval = null;
+                      let roundApprovalDate = null;
+                      
+                      if (order.timeline) {
+                        // Find approval or changes_requested event for this round
+                        // Look for events that happened after this round's upload but before next round's upload
+                        const thisRoundUploadTime = roundProofs[0]?.uploaded_at;
+                        const nextRoundIndex = sortedRounds.indexOf(round.toString()) - 1;
+                        const nextRoundUploadTime = nextRoundIndex >= 0 && rounds[sortedRounds[nextRoundIndex]]
+                          ? rounds[sortedRounds[nextRoundIndex]][0]?.uploaded_at
+                          : null;
+                        
+                        // Find the approval/changes event for this round
+                        const roundEvent = order.timeline
+                          .filter(event => 
+                            (event.event_type === 'approval' || event.event_type === 'changes_requested') &&
+                            event.metadata?.stage === stage &&
+                            event.timestamp > thisRoundUploadTime &&
+                            (!nextRoundUploadTime || event.timestamp < nextRoundUploadTime)
+                          )
+                          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+                        
+                        if (roundEvent) {
+                          roundApproval = {
+                            status: roundEvent.event_type === 'approval' ? 'approved' : 'changes_requested',
+                            created_at: roundEvent.timestamp
+                          };
+                          roundApprovalDate = new Date(roundEvent.timestamp).toLocaleDateString('en-US', {
+                            month: 'long',
                             day: 'numeric', 
                             year: 'numeric',
                             hour: 'numeric',
                             minute: '2-digit'
-                          })
-                        : null;
+                          });
+                        }
+                      }
+                      
+                      // Fallback to current approval for latest round if no timeline entry found
+                      if (!roundApproval && isLatest && approval) {
+                        roundApproval = approval;
+                        roundApprovalDate = approval.created_at
+                          ? new Date(approval.created_at).toLocaleDateString('en-US', {
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit'
+                            })
+                          : null;
+                      }
                       
                       return (
                         <div 
