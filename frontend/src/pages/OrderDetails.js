@@ -293,15 +293,34 @@ const OrderDetails = () => {
                           : null;
                       }
                       
+                      // For customers (non-admin), only latest round is expanded by default
+                      const roundKey = `${stage}-${round}`;
+                      const isRoundExpanded = isAdmin ? true : (expandedRounds[roundKey] !== undefined ? expandedRounds[roundKey] : isLatest);
+                      
+                      const toggleRound = () => {
+                        if (!isAdmin) {
+                          setExpandedRounds(prev => ({
+                            ...prev,
+                            [roundKey]: !isRoundExpanded
+                          }));
+                        }
+                      };
+                      
                       return (
                         <div 
                           key={round} 
                           className={`${isLatest ? 'border-3 border-green-500 bg-green-50' : 'border-2 border-gray-300 bg-gray-50'} p-4 rounded-lg`}
                         >
-                          {/* Round Header */}
-                          <div className="flex items-center gap-2 mb-3 flex-wrap">
-                            <h3 className="text-lg font-bold text-gray-900">
+                          {/* Round Header - Clickable for customers on non-latest rounds */}
+                          <div 
+                            className={`flex items-center gap-2 mb-3 flex-wrap ${!isAdmin && !isLatest ? 'cursor-pointer hover:bg-gray-100 -m-4 p-4 rounded-t-lg transition-colors' : ''}`}
+                            onClick={!isAdmin && !isLatest ? toggleRound : undefined}
+                          >
+                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                               Round {round} {sortedRounds.length > 1 && `of ${sortedRounds.length}`}
+                              {!isAdmin && !isLatest && (
+                                isRoundExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />
+                              )}
                             </h3>
                             {isLatest && (
                               <>
