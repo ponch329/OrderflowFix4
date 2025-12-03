@@ -61,12 +61,20 @@ const ManufacturerDashboard = () => {
     try {
       const response = await axios.get(`${API}/admin/orders?limit=1000`);
       
-      // Filter orders: only show sub-orders (those with parent_order_id) or orders with a specific vendor
-      // Manufacturers only see orders related to their work
+      // Filter orders: manufacturers only see orders assigned to their vendor
       const manufacturerOrders = response.data.filter(order => {
-        // For now, show all orders since we don't have vendor assignment per user
-        // In a production system, you'd filter by: order.item_vendor === userInfo.assigned_vendor
-        return !order.is_archived && order.stage !== "archived";
+        // Don't show archived orders
+        if (order.is_archived || order.stage === "archived") {
+          return false;
+        }
+        
+        // If manufacturer has assigned vendor, only show orders from that vendor
+        if (userInfo?.assigned_vendor) {
+          return order.item_vendor === userInfo.assigned_vendor;
+        }
+        
+        // If no assigned vendor, show all orders (for backwards compatibility)
+        return true;
       });
       
       setOrders(manufacturerOrders);
