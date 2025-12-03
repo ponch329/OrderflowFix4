@@ -329,15 +329,64 @@ const OrderDetails = () => {
                               - If there's only 1 round: show it on that round
                               - If there are multiple rounds: show it on the round before the latest (where customer made the comment)
                           */}
-                          {approval && approval.status === "changes_requested" && (sortedRounds.length === 1 || !isLatest) && (
-                            <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
-                              <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
-                              <p className="text-gray-700">{approval.message || "No message provided"}</p>
-                              {approval.images && approval.images.length > 0 && (
-                                <p className="text-sm text-gray-600 mt-2">{approval.images.length} reference image(s) attached</p>
-                              )}
-                            </div>
-                          )}
+                          {(() => {
+                            // Find the change request for this specific round from timeline
+                            const roundChangeRequest = order.timeline?.find(
+                              event => event.event_type === 'changes_requested' && 
+                              event.metadata?.stage === stage &&
+                              event.timestamp <= (roundProofs[roundProofs.length - 1]?.uploaded_at || '')
+                            );
+                            
+                            if (!roundChangeRequest && (sortedRounds.length === 1 || !isLatest) && approval?.status === "changes_requested") {
+                              // Fallback to current approval if no timeline entry found
+                              return (
+                                <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
+                                  <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
+                                  <p className="text-gray-700">{approval.message || "No message provided"}</p>
+                                  {approval.images && approval.images.length > 0 && (
+                                    <>
+                                      <p className="text-sm text-gray-600 mt-3 mb-2 font-semibold">📎 Reference Images Uploaded:</p>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        {approval.images.map((img, idx) => (
+                                          <img 
+                                            key={idx} 
+                                            src={img} 
+                                            alt={`Reference ${idx + 1}`}
+                                            className="w-full h-32 object-cover rounded border border-orange-300"
+                                          />
+                                        ))}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            }
+                            
+                            if (roundChangeRequest && (sortedRounds.length === 1 || !isLatest)) {
+                              return (
+                                <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded" data-testid={`${stage}-changes-message`}>
+                                  <p className="font-semibold mb-2 text-orange-900">Your Requested Changes:</p>
+                                  <p className="text-gray-700">{roundChangeRequest.metadata?.message || "No message provided"}</p>
+                                  {approval.images && approval.images.length > 0 && (
+                                    <>
+                                      <p className="text-sm text-gray-600 mt-3 mb-2 font-semibold">📎 Reference Images Uploaded:</p>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        {approval.images.map((img, idx) => (
+                                          <img 
+                                            key={idx} 
+                                            src={img} 
+                                            alt={`Reference ${idx + 1}`}
+                                            className="w-full h-32 object-cover rounded border border-orange-300"
+                                          />
+                                        ))}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                           
                           {/* Action Buttons - Only show on latest round */}
                           {canInteract && isLatest && (
