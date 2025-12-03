@@ -496,6 +496,7 @@ const OrderDetailsAdminNew = () => {
                                 key={idx}
                                 src={img} 
                                 alt={`Reference ${idx + 1}`}
+                                loading="lazy"
                                 className="w-full h-24 object-cover rounded border cursor-pointer hover:border-orange-500 transition"
                                 onClick={() => setSelectedImage(img)}
                               />
