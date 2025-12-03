@@ -141,7 +141,8 @@ const UserManagement = () => {
       email: user.email,
       password: "", // Don't pre-fill password
       full_name: user.full_name,
-      role: user.role
+      role: user.role,
+      assigned_vendor: user.assigned_vendor || ""
     });
     setEditDialogOpen(true);
   };
@@ -152,7 +153,8 @@ const UserManagement = () => {
       email: "",
       password: "",
       full_name: "",
-      role: "customer_service"
+      role: "customer_service",
+      assigned_vendor: ""
     });
   };
 
