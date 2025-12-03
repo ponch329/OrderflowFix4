@@ -366,7 +366,7 @@ const OrderDetails = () => {
                                 onClick={() => setSelectedImage(proof.url)}
                                 data-testid={`proof-image-${stage}-${round}-${idx}`}
                               >
-                                <img 
+                                <img loading="lazy" 
                                   src={proof.url} 
                                   alt={proof.filename}
                                   className="w-full h-48 object-cover"
@@ -433,7 +433,7 @@ const OrderDetails = () => {
                                                 setSelectedImage(img);
                                               }}
                                             >
-                                              <img 
+                                              <img loading="lazy" 
                                                 src={img} 
                                                 alt={`Reference ${imgIdx + 1}`}
                                                 className="w-full h-32 object-cover rounded border-2 border-orange-300 hover:border-orange-500 transition-all"
@@ -534,7 +534,7 @@ const OrderDetails = () => {
           </Button>
           
           {/* Logo on top right */}
-          <img 
+          <img loading="lazy" 
             src="https://customer-assets.emergentagent.com/job_order-status-10/artifacts/eprlbu95_Allbobbleheads.com%20logo_color%20512x512.png" 
             alt="AllBobbleheads Logo" 
             className="h-16 w-16 object-contain"
