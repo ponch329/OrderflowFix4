@@ -351,6 +351,9 @@ const OrderDetails = () => {
                             )}
                           </div>
                           
+                          {/* Round Content - Collapsible for customers on older rounds */}
+                          {isRoundExpanded && (
+                          <>
                           {/* Round Info */}
                           <div className="mb-3 space-y-1">
                             {roundDate && (
