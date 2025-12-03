@@ -81,8 +81,9 @@ const OrderDetailsAdminNew = () => {
 
   const fetchOrder = async () => {
     try {
-      const response = await axios.get(`${API}/admin/orders`);
-      const foundOrder = response.data.find(o => o.id === orderId);
+      // Fetch single order by ID for better performance
+      const response = await axios.get(`${API}/orders/${orderId}`);
+      const foundOrder = response.data;
       if (foundOrder) {
         setOrder(foundOrder);
         setSelectedStage(foundOrder.stage);
