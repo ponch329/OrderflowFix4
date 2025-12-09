@@ -188,7 +188,10 @@ const Settings = () => {
     try {
       const response = await axios.patch(`${API}/settings/tenant`, {
         name: tenantName,
-        settings: brandingSettings
+        settings: {
+          ...brandingSettings,
+          default_dashboard: defaultDashboard
+        }
       });
       toast.success("Company branding saved successfully!");
       console.log("Saved settings:", response.data);
