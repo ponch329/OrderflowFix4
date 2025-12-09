@@ -59,9 +59,23 @@ const AdminDashboard = () => {
     // Set default authorization header for all axios requests
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     
+    // Check default dashboard preference
+    checkDashboardPreference();
     fetchOrders();
     fetchVendors();
   }, [navigate]);
+  
+  const checkDashboardPreference = async () => {
+    try {
+      const response = await axios.get(`${API}/settings/tenant`);
+      const defaultDashboard = response.data.settings?.default_dashboard;
+      if (defaultDashboard === 'orderdesk') {
+        navigate('/admin/orderdesk');
+      }
+    } catch (error) {
+      console.error("Failed to check dashboard preference:", error);
+    }
+  };
 
   const fetchVendors = async () => {
     try {
