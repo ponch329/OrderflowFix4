@@ -430,12 +430,42 @@ export default function OrderDesk() {
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-800">'All Orders'</h1>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => navigate('/admin/users')}
+                variant="outline"
+                size="sm"
+                className="border-purple-200 text-purple-600 hover:bg-purple-50"
+              >
+                <UserIcon className="w-4 h-4 mr-2" />
+                Users
+              </Button>
+              <Button 
+                onClick={() => navigate('/admin/settings')}
+                variant="outline"
+                size="sm"
+                className="border-blue-200 text-blue-600 hover:bg-blue-50"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
               <Button variant="ghost" size="icon" onClick={() => window.print()}>
                 <Printer className="w-4 h-4" />
               </Button>
               <Button variant="ghost" size="icon">
                 <Info className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={() => {
+                  localStorage.removeItem('admin_token');
+                  navigate('/admin/login');
+                  toast.success('Logged out successfully');
+                }}
+                variant="outline"
+                size="sm"
+                className="border-red-200 text-red-600 hover:bg-red-50"
+              >
+                Logout
               </Button>
               <Dialog open={customizeOpen} onOpenChange={setCustomizeOpen}>
                 <DialogTrigger asChild>
