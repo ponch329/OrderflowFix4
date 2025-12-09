@@ -188,7 +188,7 @@ async def get_audit_logs(
     """
     try:
         logs = await db.audit_logs.find(
-            {"tenant_id": tenant_id, "section": {"$in": ["workflow", "stages", "statuses", "rules"]}},
+            {"tenant_id": auth.tenant_id, "section": {"$in": ["workflow", "stages", "statuses", "rules"]}},
             {"_id": 0}
         ).sort("timestamp", -1).limit(limit).to_list(limit)
         
