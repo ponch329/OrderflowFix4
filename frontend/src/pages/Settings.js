@@ -454,6 +454,20 @@ const Settings = () => {
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="default-dashboard">Default Dashboard View</Label>
+                  <select
+                    id="default-dashboard"
+                    className="w-full p-2 border rounded-md"
+                    value={defaultDashboard}
+                    onChange={(e) => setDefaultDashboard(e.target.value)}
+                  >
+                    <option value="classic">Classic Dashboard</option>
+                    <option value="orderdesk">OrderDesk View</option>
+                  </select>
+                  <p className="text-sm text-gray-500">Choose which dashboard view to show by default when logging in</p>
+                </div>
+
                 <Button onClick={handleSaveBranding} disabled={saving} className="w-full">
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? "Saving..." : "Save Branding Settings"}
