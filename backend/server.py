@@ -75,6 +75,7 @@ from routes.users import router as users_router
 from routes.orders import router as orders_router
 from routes.settings import router as settings_router
 from routes.vendors import router as vendors_router
+from routes.workflow import router as workflow_router
 
 # Include routers
 api_router.include_router(auth_router)
@@ -82,6 +83,7 @@ api_router.include_router(users_router)
 api_router.include_router(orders_router)
 api_router.include_router(settings_router)
 api_router.include_router(vendors_router)
+api_router.include_router(workflow_router)
 
 # Legacy admin routes (for backwards compatibility during transition)
 import hashlib
