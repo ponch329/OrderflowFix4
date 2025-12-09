@@ -134,7 +134,7 @@ function SortableStageItem({ stage, index, onUpdate, onDelete, stagesInUse }) {
 }
 
 export default function WorkflowConfig({ initialSettings, onSave }) {
-  const [workflowSettings, setWorkflowSettings] = useState(initialSettings);
+  const [workflowSettings, setWorkflowSettings] = useState(initialSettings || {});
   const [stages, setStages] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [validationIssues, setValidationIssues] = useState([]);
@@ -152,15 +152,18 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
 
   useEffect(() => {
     // Convert workflow settings to stage/status arrays
-    loadStagesFromSettings();
-    loadStatusesFromSettings();
-    fetchStagesInUse();
+    if (initialSettings) {
+      setWorkflowSettings(initialSettings);
+      loadStagesFromSettings();
+      loadStatusesFromSettings();
+      fetchStagesInUse();
+    }
   }, [initialSettings]);
 
   const loadStagesFromSettings = () => {
-    const stageList = workflowSettings.stage_labels || [];
-    const stageTrans = workflowSettings.workflow?.stage_transitions || {};
-    const stageApproval = workflowSettings.workflow?.stage_requires_customer_approval || {};
+    const stageList = initialSettings?.stage_labels || [];
+    const stageTrans = initialSettings?.stage_transitions || {};
+    const stageApproval = initialSettings?.stage_requires_customer_approval || {};
     
     // Convert to array format for editing
     const stagesArray = [];
