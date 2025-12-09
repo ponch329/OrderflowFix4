@@ -28,7 +28,9 @@ import {
   Download, 
   Settings2,
   GripVertical,
-  Search
+  Search,
+  User as UserIcon,
+  Settings
 } from "lucide-react";
 import { toast } from "sonner";
 import {
