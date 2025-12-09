@@ -702,12 +702,22 @@ const Settings = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
-                  <p className="text-sm text-gray-600 mb-2">Google Sheets integration requires OAuth setup</p>
-                  <Button variant="outline" size="sm" disabled>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                  <p className="text-sm text-blue-800 mb-3">
+                    Click below to connect your Google account and select a spreadsheet for logging
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.href = `${API}/oauth/sheets/login`}
+                    className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                  >
                     <SettingsIcon className="w-4 h-4 mr-2" />
-                    Configure Google Sheets (Coming Soon)
+                    Configure Google Sheets
                   </Button>
+                  <p className="text-xs text-gray-500 mt-2">
+                    You'll be redirected to Google to authorize access
+                  </p>
                 </div>
               </CardContent>
             </Card>
