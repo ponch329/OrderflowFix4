@@ -200,8 +200,8 @@ async def get_audit_logs(
 async def log_workflow_change(
     log_data: AuditLogCreate,
     request: Request,
-    tenant_id: str = Depends(get_current_tenant),
-    admin = Depends(get_admin_user)
+    auth: AuthContext = Depends(require_permissions(Permission.EDIT_SETTINGS)),
+    db = Depends(get_db)
 ):
     """
     Log a workflow configuration change
