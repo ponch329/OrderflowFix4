@@ -180,8 +180,8 @@ async def import_workflow_config(
 @router.get("/audit-logs")
 async def get_audit_logs(
     limit: int = 50,
-    tenant_id: str = Depends(get_current_tenant),
-    admin = Depends(get_admin_user)
+    auth: AuthContext = Depends(require_permissions(Permission.VIEW_SETTINGS)),
+    db = Depends(get_db)
 ):
     """
     Get audit logs for workflow changes
