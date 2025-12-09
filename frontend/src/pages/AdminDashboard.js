@@ -506,7 +506,10 @@ const AdminDashboard = () => {
               key={order.id} 
               className={`hover:shadow-lg transition-shadow cursor-pointer ${isFulfilled ? 'bg-gray-50 opacity-70' : ''}`}
               data-testid={`order-card-${order.id}`}
-              onClick={() => navigate(`/admin/orders/${order.id}`)}
+              onClick={() => {
+                sessionStorage.setItem('orderDetailsReturnPath', '/admin/dashboard');
+                navigate(`/admin/orders/${order.id}`);
+              }}
             >
               <CardContent className="p-4">
                 <div className="grid grid-cols-[240px_1fr] gap-4">
