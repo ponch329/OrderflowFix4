@@ -356,14 +356,6 @@ const AdminDashboard = () => {
           </div>
           <div className="flex gap-2">
             <Button 
-              onClick={() => navigate('/admin/orderdesk')}
-              variant="outline"
-              className="border-green-200 text-green-600 hover:bg-green-50"
-            >
-              <FolderOpen className="w-4 h-4 mr-2" />
-              OrderDesk View
-            </Button>
-            <Button 
               onClick={() => navigate('/admin/users')}
               variant="outline"
               className="border-purple-200 text-purple-600 hover:bg-purple-50"
