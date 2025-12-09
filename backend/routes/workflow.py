@@ -2,12 +2,19 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import Dict, Any, List
 from datetime import datetime, timezone
 from models.audit_log import AuditLog, AuditLogCreate
-import uuid
+from models.user import Permission
+from middleware.auth import AuthContext, require_permissions
+from motor.motor_asyncio import AsyncIOMotorClient
+import os
 
-router = APIRouter(prefix="/api/workflow", tags=["workflow"])
+router = APIRouter(prefix="/workflow", tags=["workflow"])
 
-# Import auth and db from server.py
-from server import get_current_tenant, get_admin_user, db
+def get_db():
+    """Dependency to get database connection"""
+    mongo_url = os.environ['MONGO_URL']
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[os.environ['DB_NAME']]
+    return db
 
 @router.post("/validate")
 async def validate_workflow_config(
