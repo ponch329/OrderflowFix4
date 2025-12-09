@@ -232,6 +232,18 @@ frontend:
           agent: "testing"
           comment: "✅ ORDER ROW CLICK NAVIGATION FEATURE FULLY FUNCTIONAL: Comprehensive testing completed successfully. All test requirements passed: 1) Login with admin/admin123 ✅, 2) Navigate to /admin/orderdesk ✅, 3) Orders displayed in table (4 orders found) ✅, 4) Click on order row navigates to order details page (/admin/orders/{order_id}) ✅, 5) Order details page loads correctly with order information ✅, 6) Different order navigation works (tested 2 different orders with different URLs) ✅, 7) Checkbox click does NOT trigger navigation ✅, 8) Hover effects working (blue hover effect with pointer cursor) ✅. Implementation details verified: onClick handler properly excludes checkbox clicks using e.target.type === 'checkbox' check, navigation uses navigate(`/admin/orders/${order.id}`), hover:bg-blue-50 and cursor-pointer classes applied correctly. All functionality working as specified in the review request."
 
+  - task: "Sub-folder Navigation and Back Button Behavior"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/OrderDesk.js, frontend/src/pages/OrderDetailsAdmin.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ SUB-FOLDER NAVIGATION AND BACK BUTTON BEHAVIOR FULLY FUNCTIONAL: Comprehensive testing completed successfully. All test requirements passed: 1) Login with admin/admin123 ✅, 2) Navigate to /admin/orderdesk ✅, 3) CLAY main folder click filters to 3 orders ✅, 4) PAINT main folder click filters to 1 order ✅, 5) All sub-folders present and clickable: Clay - In Progress, Clay - Feedback Needed, Clay - Changes Requested, Clay - Approved, Paint - In Progress, Paint - Feedback Needed, Paint - Changes Requested, Paint - Approved ✅, 6) Sub-folder filtering working correctly with proper order counts ✅, 7) Selected folders show blue highlight ✅, 8) Back button from OrderDesk: OrderDesk → Order Details → Back → returns to /admin/orderdesk ✅, 9) Back button from regular dashboard: /admin → Order Details → Back → returns to /admin ✅, 10) sessionStorage implementation working correctly to remember source page ✅. Implementation verified: sessionStorage.setItem('orderDetailsReturnPath', '/admin/orderdesk') in OrderDesk.js line 536, sessionStorage.getItem('orderDetailsReturnPath') in OrderDetailsAdmin.js line 540. All sub-folder navigation and back button behavior working as specified."
+
   - task: "Proof Upload Functionality in Admin Order Details"
     implemented: true
     working: true
