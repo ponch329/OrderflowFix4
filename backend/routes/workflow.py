@@ -208,9 +208,9 @@ async def log_workflow_change(
     """
     try:
         audit_entry = AuditLog(
-            tenant_id=tenant_id,
-            user_id=admin.get("id"),
-            user_email=admin.get("email"),
+            tenant_id=auth.tenant_id,
+            user_id=auth.user.id,
+            user_email=auth.user.email,
             action=log_data.action,
             section=log_data.section,
             changes=log_data.changes,
