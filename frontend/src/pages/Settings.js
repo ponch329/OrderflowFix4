@@ -89,6 +89,9 @@ const Settings = () => {
       ""
     ]
   });
+  
+  // Dashboard preference
+  const [defaultDashboard, setDefaultDashboard] = useState("classic");
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
