@@ -84,8 +84,8 @@ async def validate_workflow_config(
 
 @router.get("/stages-in-use")
 async def get_stages_in_use(
-    tenant_id: str = Depends(get_current_tenant),
-    admin = Depends(get_admin_user)
+    auth: AuthContext = Depends(require_permissions(Permission.VIEW_SETTINGS)),
+    db = Depends(get_db)
 ):
     """
     Get list of stages currently used by active orders
