@@ -111,23 +111,25 @@ function SortableColumnHeader({ column, onSort, sortConfig }) {
 }
 
 // Folder Item Component
-function FolderItem({ folder, isActive, onClick, count }) {
+function FolderItem({ folder, isActive, onClick, count, selectedFolder }) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const isThisFolderActive = selectedFolder === folder.id;
 
   return (
     <div className="mb-1">
       <div
         onClick={() => {
+          // Always call onClick for any folder/subfolder
+          onClick(folder.id);
+          // If it has children, also toggle expansion
           if (folder.children) {
             setIsExpanded(!isExpanded);
-          } else {
-            onClick();
           }
         }}
         className={`
           flex items-center justify-between px-4 py-2 cursor-pointer rounded-md
           transition-colors
-          ${isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100'}
+          ${isThisFolderActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100'}
           ${folder.isCategory ? 'font-bold text-sm uppercase' : 'text-sm ml-2'}
         `}
       >
@@ -154,9 +156,10 @@ function FolderItem({ folder, isActive, onClick, count }) {
             <FolderItem
               key={child.id}
               folder={child}
-              isActive={isActive}
+              isActive={isThisFolderActive}
               onClick={onClick}
               count={child.count || 0}
+              selectedFolder={selectedFolder}
             />
           ))}
         </div>
