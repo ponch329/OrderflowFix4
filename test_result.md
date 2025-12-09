@@ -216,6 +216,21 @@ frontend:
         - working: true
           agent: "testing"
           comment: "✅ ORDERDESK VIEW TESTING COMPLETED SUCCESSFULLY: Comprehensive testing completed with all requested features working correctly. 1) Login flow (admin/admin123) successful, 2) OrderDesk page loads with complete UI structure: left sidebar with hierarchical folder navigation (CLAY, PAINT, SHIPPED, FULFILLED), order counts displayed in folders, main order table with all specified columns (Checkbox, Order ID, Order Date, Email, Folder, Name, Stage, Status, Last Updated), 3) Header elements present: search bar, Customize button, Export button, 4) Orders loading and displaying correctly (4 orders found) with proper formatting: Order IDs with $ prefix and green color, status badges with appropriate colors, customer data, timestamps, 5) Folder navigation working - CLAY folder expands to show subfolders, 6) Customize dialog opens correctly with column checkboxes and Reset to Default button, 7) Search functionality operational, 8) Table styling with alternating row colors working, 9) Fixed API endpoint issue (changed from /api/orders to /api/admin/orders) during testing. All core functionality working as specified. Minor: Initial API endpoint was incorrect but fixed during testing."
+        - working: true
+          agent: "testing"
+          comment: "✅ ORDER ROW CLICK NAVIGATION TESTING COMPLETED SUCCESSFULLY: Comprehensive testing of new row click navigation feature completed with all requirements met. Test results: 1) Login with admin/admin123 successful, 2) OrderDesk page loads correctly with 4 orders displayed in table, 3) Row click navigation working perfectly - clicking on first order (TEST-IMAGES-999) navigates to /admin/orders/{order_id}, 4) Order details page loads correctly with Order Information section, Back to Dashboard button present, 5) Different order navigation tested - clicking second order (TEST-IMG-001) navigates to different order details page with different URL, 6) Checkbox click behavior working correctly - clicking checkbox does NOT trigger navigation (stays on OrderDesk page), 7) Hover effects working - blue hover effect appears on row hover with pointer cursor, 8) All navigation URLs follow expected pattern /admin/orders/{order_id}, 9) No console errors found. All specified functionality working as expected. Screenshots captured showing OrderDesk view, order details page, and hover effects."
+
+  - task: "Order Row Click Navigation"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ORDER ROW CLICK NAVIGATION FEATURE FULLY FUNCTIONAL: Comprehensive testing completed successfully. All test requirements passed: 1) Login with admin/admin123 ✅, 2) Navigate to /admin/orderdesk ✅, 3) Orders displayed in table (4 orders found) ✅, 4) Click on order row navigates to order details page (/admin/orders/{order_id}) ✅, 5) Order details page loads correctly with order information ✅, 6) Different order navigation works (tested 2 different orders with different URLs) ✅, 7) Checkbox click does NOT trigger navigation ✅, 8) Hover effects working (blue hover effect with pointer cursor) ✅. Implementation details verified: onClick handler properly excludes checkbox clicks using e.target.type === 'checkbox' check, navigation uses navigate(`/admin/orders/${order.id}`), hover:bg-blue-50 and cursor-pointer classes applied correctly. All functionality working as specified in the review request."
 
   - task: "Proof Upload Functionality in Admin Order Details"
     implemented: true
