@@ -93,7 +93,7 @@ async def get_stages_in_use(
     """
     try:
         # Get all orders for this tenant
-        orders = await db.orders.find({"tenant_id": tenant_id}, {"stage": 1, "_id": 0}).to_list(10000)
+        orders = await db.orders.find({"tenant_id": auth.tenant_id}, {"stage": 1, "_id": 0}).to_list(10000)
         
         # Count orders per stage
         stages_in_use = {}
