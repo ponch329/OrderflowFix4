@@ -202,6 +202,18 @@ backend:
           comment: "✅ New stages support fully functional. PATCH /api/admin/orders/{order_id}/update-status successfully updates order stages to 'fulfilled' and 'canceled'. Stage transitions work correctly and persist in database."
 
 frontend:
+  - task: "OrderDesk View Implementation"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented new OrderDesk-style dashboard view with left sidebar hierarchical folder navigation (CLAY, PAINT, SHIPPED, FULFILLED), order table with customizable columns, drag-and-drop column reordering, column visibility toggles via 'Customize' button, search functionality, and export to CSV. Needs comprehensive testing."
+
   - task: "Proof Upload Functionality in Admin Order Details"
     implemented: true
     working: true
