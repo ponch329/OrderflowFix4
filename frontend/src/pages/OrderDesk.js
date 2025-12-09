@@ -523,13 +523,24 @@ export default function OrderDesk() {
                 {filteredOrders.map((order, idx) => (
                   <tr
                     key={order.id}
-                    className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${
+                    onClick={(e) => {
+                      // Don't navigate if clicking checkbox
+                      if (e.target.type === 'checkbox' || e.target.closest('[role="checkbox"]')) {
+                        return;
+                      }
+                      navigate(`/admin/orders/${order.id}`);
+                    }}
+                    className={`border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer ${
                       idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                     }`}
                   >
                     {visibleColumns.map((column) => (
                       <td key={column.id} className="p-3 text-sm">
-                        {column.id === 'checkbox' && <Checkbox />}
+                        {column.id === 'checkbox' && (
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Checkbox />
+                          </div>
+                        )}
                         {column.id === 'order_id' && (
                           <span className="text-green-600 font-mono flex items-center gap-1">
                             <span className="text-green-500">$</span>
