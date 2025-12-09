@@ -379,16 +379,25 @@ export default function OrderDesk() {
 
           <div className="mb-4">
             <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2 px-4">FOLDERS</h3>
-            <div className="space-y-1">
+            <div>
               {folderStructure.map((folder) => (
-                <FolderItem
-                  key={folder.id}
-                  folder={folder}
-                  isActive={selectedFolder === folder.id}
-                  onClick={(folderId) => setSelectedFolder(folderId)}
-                  count={folder.count}
-                  selectedFolder={selectedFolder}
-                />
+                <div key={folder.id}>
+                  <FolderItem
+                    folder={folder}
+                    onClick={(folderId) => setSelectedFolder(folderId)}
+                    count={folder.count}
+                    selectedFolder={selectedFolder}
+                  />
+                  {folder.children && folder.children.map((child) => (
+                    <FolderItem
+                      key={child.id}
+                      folder={child}
+                      onClick={(folderId) => setSelectedFolder(folderId)}
+                      count={child.count}
+                      selectedFolder={selectedFolder}
+                    />
+                  ))}
+                </div>
               ))}
             </div>
           </div>
