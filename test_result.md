@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the newly implemented features for the bobblehead proof approval system: 1. Manual Order Creation, 2. Analytics Dashboard, 3. Shopify Fulfillment Status Sync, 4. New Stages Support (fulfilled/canceled)"
+user_problem_statement: "Test the new OrderDesk view at /admin/orderdesk with hierarchical folder navigation, order table with customizable columns, drag-and-drop column reordering, column visibility toggles, search functionality, and export to CSV"
 
 backend:
   - task: "Admin Login Authentication"
