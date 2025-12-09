@@ -111,8 +111,8 @@ async def get_stages_in_use(
 
 @router.post("/export")
 async def export_workflow_config(
-    tenant_id: str = Depends(get_current_tenant),
-    admin = Depends(get_admin_user)
+    auth: AuthContext = Depends(require_permissions(Permission.VIEW_SETTINGS)),
+    db = Depends(get_db)
 ):
     """
     Export current workflow configuration as JSON
