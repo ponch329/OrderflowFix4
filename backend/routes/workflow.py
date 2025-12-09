@@ -137,8 +137,8 @@ async def export_workflow_config(
 async def import_workflow_config(
     config_data: Dict[str, Any],
     request: Request,
-    tenant_id: str = Depends(get_current_tenant),
-    admin = Depends(get_admin_user)
+    auth: AuthContext = Depends(require_permissions(Permission.EDIT_SETTINGS)),
+    db = Depends(get_db)
 ):
     """
     Import workflow configuration from JSON
