@@ -572,7 +572,15 @@ export default function OrderDesk() {
                         )}
                         {column.id === 'name' && order.customer_name}
                         {column.id === 'stage' && (
-                          <span className="capitalize">{order.stage}</span>
+                          <span 
+                            className="px-3 py-1 rounded-full text-xs font-medium capitalize inline-block"
+                            style={{
+                              backgroundColor: order.stage === 'clay' ? '#ffad46' : order.stage === 'paint' ? '#6d9eeb' : '#e0e0e0',
+                              color: '#ffffff'
+                            }}
+                          >
+                            {order.stage}
+                          </span>
                         )}
                         {column.id === 'status' && (
                           <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeColor(order[`${order.stage}_status`])}`}>
