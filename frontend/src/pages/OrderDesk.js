@@ -112,59 +112,28 @@ function SortableColumnHeader({ column, onSort, sortConfig }) {
   );
 }
 
-// Folder Item Component
-function FolderItem({ folder, isActive, onClick, count, selectedFolder }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+// Folder Item Component - Single line per folder
+function FolderItem({ folder, onClick, count, selectedFolder }) {
   const isThisFolderActive = selectedFolder === folder.id;
 
   return (
-    <div className="mb-1">
-      <div
-        onClick={() => {
-          // Always call onClick for any folder/subfolder
-          onClick(folder.id);
-          // If it has children, also toggle expansion
-          if (folder.children) {
-            setIsExpanded(!isExpanded);
-          }
-        }}
-        className={`
-          flex items-center justify-between px-4 py-2 cursor-pointer rounded-md
-          transition-colors
-          ${isThisFolderActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100'}
-          ${folder.isCategory ? 'font-bold text-sm uppercase' : 'text-sm ml-2'}
-        `}
-      >
-        <div className="flex items-center gap-2">
-          {folder.children && (
-            isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
-          )}
-          {!folder.children && !folder.isCategory && <div className="w-4" />}
-          <span>{folder.label}</span>
-        </div>
-        {count > 0 && (
-          <span className={`
-            text-xs px-2 py-0.5 rounded-full
-            ${folder.isCategory ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700'}
-          `}>
-            {count}
-          </span>
-        )}
-      </div>
-      
-      {folder.children && isExpanded && (
-        <div className="ml-2 mt-1">
-          {folder.children.map((child) => (
-            <FolderItem
-              key={child.id}
-              folder={child}
-              isActive={isThisFolderActive}
-              onClick={onClick}
-              count={child.count || 0}
-              selectedFolder={selectedFolder}
-            />
-          ))}
-        </div>
+    <div
+      onClick={() => onClick(folder.id)}
+      className={`
+        flex items-center justify-between px-3 py-1.5 cursor-pointer
+        transition-colors text-xs
+        ${isThisFolderActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100'}
+        ${folder.isCategory ? 'font-bold uppercase mt-2' : 'ml-4'}
+      `}
+    >
+      <span className="truncate">{folder.label}</span>
+      {count > 0 && (
+        <span className={`
+          text-xs px-1.5 py-0.5 rounded-full ml-2 flex-shrink-0
+          ${folder.isCategory ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700'}
+        `}>
+          {count}
+        </span>
       )}
     </div>
   );
