@@ -607,7 +607,7 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
                   </p>
                 </div>
                 <Switch
-                  checked={workflowSettings.auto_advance_on_approval ?? true}
+                  checked={initialSettings?.auto_advance_on_approval ?? true}
                   onCheckedChange={(checked) => setWorkflowSettings({ ...workflowSettings, auto_advance_on_approval: checked })}
                 />
               </div>
@@ -620,9 +620,9 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
                   </p>
                 </div>
                 <Switch
-                  checked={workflowSettings.require_admin_confirmation_for_stage_change ?? false}
+                  checked={initialSettings?.require_admin_confirmation_for_stage_change ?? false}
                   onCheckedChange={(checked) => setWorkflowSettings({ ...workflowSettings, require_admin_confirmation_for_stage_change: checked })}
-                  disabled={!workflowSettings.auto_advance_on_approval}
+                  disabled={!(initialSettings?.auto_advance_on_approval ?? true)}
                 />
               </div>
 
@@ -630,7 +630,7 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
                 <Label>Status After Admin Uploads Proofs</Label>
                 <select
                   className="w-full p-2 border rounded-md"
-                  value={workflowSettings.status_after_upload || "feedback_needed"}
+                  value={initialSettings?.status_after_upload || "feedback_needed"}
                   onChange={(e) => setWorkflowSettings({ ...workflowSettings, status_after_upload: e.target.value })}
                 >
                   <option value="feedback_needed">Customer Feedback Needed</option>
@@ -647,7 +647,7 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
                   </p>
                 </div>
                 <Switch
-                  checked={workflowSettings.notify_customer_on_upload ?? true}
+                  checked={initialSettings?.notify_customer_on_upload ?? true}
                   onCheckedChange={(checked) => setWorkflowSettings({ ...workflowSettings, notify_customer_on_upload: checked })}
                 />
               </div>
@@ -660,7 +660,7 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
                   </p>
                 </div>
                 <Switch
-                  checked={workflowSettings.notify_admin_on_customer_response ?? true}
+                  checked={initialSettings?.notify_admin_on_customer_response ?? true}
                   onCheckedChange={(checked) => setWorkflowSettings({ ...workflowSettings, notify_admin_on_customer_response: checked })}
                 />
               </div>
