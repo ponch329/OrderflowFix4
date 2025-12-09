@@ -244,6 +244,18 @@ frontend:
           agent: "testing"
           comment: "✅ SUB-FOLDER NAVIGATION AND BACK BUTTON BEHAVIOR FULLY FUNCTIONAL: Comprehensive testing completed successfully. All test requirements passed: 1) Login with admin/admin123 ✅, 2) Navigate to /admin/orderdesk ✅, 3) CLAY main folder click filters to 3 orders ✅, 4) PAINT main folder click filters to 1 order ✅, 5) All sub-folders present and clickable: Clay - In Progress, Clay - Feedback Needed, Clay - Changes Requested, Clay - Approved, Paint - In Progress, Paint - Feedback Needed, Paint - Changes Requested, Paint - Approved ✅, 6) Sub-folder filtering working correctly with proper order counts ✅, 7) Selected folders show blue highlight ✅, 8) Back button from OrderDesk: OrderDesk → Order Details → Back → returns to /admin/orderdesk ✅, 9) Back button from regular dashboard: /admin → Order Details → Back → returns to /admin ✅, 10) sessionStorage implementation working correctly to remember source page ✅. Implementation verified: sessionStorage.setItem('orderDetailsReturnPath', '/admin/orderdesk') in OrderDesk.js line 536, sessionStorage.getItem('orderDetailsReturnPath') in OrderDetailsAdmin.js line 540. All sub-folder navigation and back button behavior working as specified."
 
+  - task: "OrderDesk Improvements - Dashboard Preference, Header Buttons, Condensed Folders, Colored Stage Badges"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Settings.js, frontend/src/pages/AdminDashboard.js, frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ORDERDESK IMPROVEMENTS COMPREHENSIVE TESTING COMPLETED: Successfully tested all 4 major OrderDesk improvements requested. Test Results: 1) Dashboard Preference Setting: ✅ Found 'Default Dashboard View' dropdown in Settings > Branding with 'Classic Dashboard' and 'OrderDesk View' options, ✅ Successfully set to OrderDesk View and saved settings, ✅ Confirmed redirect to /admin/orderdesk after login with OrderDesk preference, ✅ Verified reset to Classic Dashboard works correctly. 2) OrderDesk Header Buttons: ✅ All required buttons present: Users, Settings, Logout, Customize, ✅ Users button navigates correctly to /admin/users, ✅ Settings button navigates correctly to /admin/settings, ✅ Logout button present and functional. 3) Condensed Folder Structure: ✅ Verified compact one-line folder structure in sidebar, ✅ All folders present: All Orders, CLAY, Clay subfolders, PAINT, Paint subfolders, SHIPPED, FULFILLED, ✅ Order counts displayed correctly in badges, ✅ Folder filtering functionality working correctly. 4) Colored Stage Badges: ✅ Stage column displays colored badges, ✅ Found stage badges with proper styling (rounded, white text), ✅ Verified readability and appearance. Additional Features Verified: ✅ Search functionality working, ✅ Export functionality present, ✅ Customize columns dialog opens and functions correctly, ✅ Order table displays 4 orders with all required columns, ✅ All navigation and filtering working as expected. All OrderDesk improvements successfully implemented and tested. No critical issues found."
+
   - task: "Proof Upload Functionality in Admin Order Details"
     implemented: true
     working: true
