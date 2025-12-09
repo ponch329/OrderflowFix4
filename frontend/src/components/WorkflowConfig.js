@@ -161,9 +161,11 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
   }, [initialSettings]);
 
   const loadStagesFromSettings = () => {
-    const stageList = initialSettings?.stage_labels || [];
-    const stageTrans = initialSettings?.stage_transitions || {};
-    const stageApproval = initialSettings?.stage_requires_customer_approval || {};
+    if (!initialSettings) return;
+    
+    const stageList = initialSettings.stage_labels || [];
+    const stageTrans = {};
+    const stageApproval = {};
     
     // Convert to array format for editing
     const stagesArray = [];
@@ -183,11 +185,22 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
       }
     });
     
+    // Default stages if none configured
+    if (stagesArray.length === 0) {
+      stagesArray.push(
+        { id: 'stage-0', name: 'clay', label: 'Clay Stage', nextStage: 'paint', requiresApproval: true, order: 0 },
+        { id: 'stage-1', name: 'paint', label: 'Paint Stage', nextStage: 'shipped', requiresApproval: true, order: 1 },
+        { id: 'stage-2', name: 'shipped', label: 'Shipped', nextStage: '', requiresApproval: false, order: 2 }
+      );
+    }
+    
     setStages(stagesArray);
   };
 
   const loadStatusesFromSettings = () => {
-    const statusList = workflowSettings.status_labels || [];
+    if (!initialSettings) return;
+    
+    const statusList = initialSettings.status_labels || [];
     const statusArray = [];
     const statusNames = ["pending", "sculpting", "feedback_needed", "changes_requested", "approved"];
     
@@ -202,6 +215,17 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
         });
       }
     });
+    
+    // Default statuses if none configured
+    if (statusArray.length === 0) {
+      statusArray.push(
+        { id: 'status-0', name: 'pending', label: 'Pending', description: 'Order received, awaiting work to begin' },
+        { id: 'status-1', name: 'sculpting', label: 'In Progress', description: 'Work in progress' },
+        { id: 'status-2', name: 'feedback_needed', label: 'Feedback Needed', description: 'Awaiting customer review' },
+        { id: 'status-3', name: 'changes_requested', label: 'Changes Requested', description: 'Customer requested modifications' },
+        { id: 'status-4', name: 'approved', label: 'Approved', description: 'Customer approved this stage' }
+      );
+    }
     
     setStatuses(statusArray);
   };
