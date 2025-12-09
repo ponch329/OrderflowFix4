@@ -24,6 +24,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/orderdesk" element={<OrderDesk />} />
             <Route path="/admin/users" element={<UserManagement />} />
             <Route path="/admin/settings" element={<Settings />} />
             <Route path="/admin/email-templates" element={<EmailTemplates />} />
