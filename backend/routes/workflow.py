@@ -19,8 +19,8 @@ def get_db():
 @router.post("/validate")
 async def validate_workflow_config(
     config: Dict[str, Any],
-    tenant_id: str = Depends(get_current_tenant),
-    admin = Depends(get_admin_user)
+    auth: AuthContext = Depends(require_permissions(Permission.EDIT_SETTINGS)),
+    db = Depends(get_db)
 ):
     """
     Validate workflow configuration for issues
