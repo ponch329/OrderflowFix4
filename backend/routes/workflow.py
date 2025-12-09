@@ -149,7 +149,7 @@ async def import_workflow_config(
         
         # Update tenant settings
         result = await db.tenants.update_one(
-            {"id": tenant_id},
+            {"id": auth.tenant_id},
             {
                 "$set": {
                     "settings.workflow": workflow_config,
@@ -163,9 +163,9 @@ async def import_workflow_config(
         
         # Log the import action
         audit_entry = AuditLog(
-            tenant_id=tenant_id,
-            user_id=admin.get("id"),
-            user_email=admin.get("email"),
+            tenant_id=auth.tenant_id,
+            user_id=auth.user.id,
+            user_email=auth.user.email,
             action="workflow_imported",
             section="workflow",
             changes={"imported_from": config_data.get("tenant_name", "unknown")},
