@@ -209,7 +209,7 @@ export default function OrderDesk() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/orders`);
+      const response = await axios.get(`${API}/admin/orders`);
       setOrders(response.data || []);
     } catch (error) {
       toast.error("Failed to load orders");
