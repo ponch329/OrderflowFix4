@@ -532,6 +532,8 @@ export default function OrderDesk() {
                       if (e.target.type === 'checkbox' || e.target.closest('[role="checkbox"]')) {
                         return;
                       }
+                      // Store that we came from OrderDesk
+                      sessionStorage.setItem('orderDetailsReturnPath', '/admin/orderdesk');
                       navigate(`/admin/orders/${order.id}`);
                     }}
                     className={`border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer ${
