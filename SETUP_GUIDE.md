@@ -109,7 +109,7 @@ For logging all order status changes, approvals, and change requests.
    - Name: "Bobblehead Order System"
    - Authorized redirect URIs:
      ```
-     https://proof-approval-hub.preview.emergentagent.com/api/oauth/sheets/callback
+     https://shopify-proof.preview.emergentagent.com/api/oauth/sheets/callback
      ```
    - Click "Create"
    - Download credentials or copy:
@@ -128,7 +128,7 @@ For logging all order status changes, approvals, and change requests.
 
 6. **Authorize the App**
    - After setting up credentials in the system
-   - Visit: `https://proof-approval-hub.preview.emergentagent.com/api/oauth/sheets/login`
+   - Visit: `https://shopify-proof.preview.emergentagent.com/api/oauth/sheets/login`
    - Login with your Google account
    - Grant permissions
 
@@ -136,7 +136,7 @@ For logging all order status changes, approvals, and change requests.
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `SPREADSHEET_ID`
-- `SHEETS_REDIRECT_URI` = `https://proof-approval-hub.preview.emergentagent.com/api/oauth/sheets/callback`
+- `SHEETS_REDIRECT_URI` = `https://shopify-proof.preview.emergentagent.com/api/oauth/sheets/callback`
 
 ---
 
@@ -189,7 +189,7 @@ SHOPIFY_ACCESS_TOKEN="your_access_token_here"
 # Google Sheets Configuration
 GOOGLE_CLIENT_ID="your_client_id_here"
 GOOGLE_CLIENT_SECRET="your_client_secret_here"
-SHEETS_REDIRECT_URI="https://proof-approval-hub.preview.emergentagent.com/api/oauth/sheets/callback"
+SHEETS_REDIRECT_URI="https://shopify-proof.preview.emergentagent.com/api/oauth/sheets/callback"
 SPREADSHEET_ID="your_spreadsheet_id_here"
 
 # SMTP Configuration
@@ -212,7 +212,7 @@ sudo supervisorctl restart backend
 ### Admin Workflow
 
 1. **Access Admin Dashboard**
-   - Go to https://proof-approval-hub.preview.emergentagent.com
+   - Go to https://shopify-proof.preview.emergentagent.com
    - Click "Admin Dashboard"
 
 2. **Sync Orders from Shopify**
@@ -233,7 +233,7 @@ sudo supervisorctl restart backend
 ### Customer Workflow
 
 1. **Access Customer Portal**
-   - Go to https://proof-approval-hub.preview.emergentagent.com
+   - Go to https://shopify-proof.preview.emergentagent.com
    - Click "Customer Portal"
 
 2. **Lookup Order**
@@ -396,6 +396,6 @@ For issues or questions:
 
 ---
 
-**System URL**: https://proof-approval-hub.preview.emergentagent.com
-**Admin Dashboard**: https://proof-approval-hub.preview.emergentagent.com/admin
-**Customer Portal**: https://proof-approval-hub.preview.emergentagent.com/customer
+**System URL**: https://shopify-proof.preview.emergentagent.com
+**Admin Dashboard**: https://shopify-proof.preview.emergentagent.com/admin
+**Customer Portal**: https://shopify-proof.preview.emergentagent.com/customer
