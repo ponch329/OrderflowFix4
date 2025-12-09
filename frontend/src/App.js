@@ -7,6 +7,7 @@ import UserManagement from "@/pages/UserManagement";
 import Settings from "@/pages/Settings";
 import EmailTemplates from "@/pages/EmailTemplates";
 import OrderDetailsAdmin from "@/pages/OrderDetailsAdmin";
+import OrderDesk from "@/pages/OrderDesk";
 import CustomerPortal from "@/pages/CustomerPortal";
 import OrderDetails from "@/pages/OrderDetails";
 import HomePage from "@/pages/HomePage";
