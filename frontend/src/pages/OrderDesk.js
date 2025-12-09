@@ -414,8 +414,9 @@ export default function OrderDesk() {
                   key={folder.id}
                   folder={folder}
                   isActive={selectedFolder === folder.id}
-                  onClick={() => setSelectedFolder(folder.id)}
+                  onClick={(folderId) => setSelectedFolder(folderId)}
                   count={folder.count}
+                  selectedFolder={selectedFolder}
                 />
               ))}
             </div>
