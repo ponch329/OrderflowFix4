@@ -200,7 +200,7 @@ async def get_audit_logs(
 async def log_workflow_change(
     log_data: AuditLogCreate,
     request: Request,
-    auth: AuthContext = Depends(require_permissions(Permission.EDIT_SETTINGS)),
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_SETTINGS)),
     db = Depends(get_db)
 ):
     """
