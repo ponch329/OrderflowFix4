@@ -19,7 +19,7 @@ def get_db():
 @router.post("/validate")
 async def validate_workflow_config(
     config: Dict[str, Any],
-    auth: AuthContext = Depends(require_permissions(Permission.EDIT_SETTINGS)),
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_SETTINGS)),
     db = Depends(get_db)
 ):
     """
