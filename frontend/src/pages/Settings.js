@@ -173,6 +173,8 @@ const Settings = () => {
           ""
         ]
       });
+      
+      setDefaultDashboard(settings.default_dashboard || "classic");
     } catch (error) {
       toast.error("Failed to load settings");
       console.error(error);
