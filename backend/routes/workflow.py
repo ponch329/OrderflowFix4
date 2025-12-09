@@ -118,7 +118,7 @@ async def export_workflow_config(
     Export current workflow configuration as JSON
     """
     try:
-        tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
+        tenant = await db.tenants.find_one({"id": auth.tenant_id}, {"_id": 0})
         if not tenant:
             raise HTTPException(status_code=404, detail="Tenant not found")
         
@@ -127,7 +127,7 @@ async def export_workflow_config(
         return {
             "config": workflow_config,
             "exported_at": datetime.now(timezone.utc).isoformat(),
-            "tenant_id": tenant_id,
+            "tenant_id": auth.tenant_id,
             "tenant_name": tenant.get("name")
         }
     except Exception as e:
