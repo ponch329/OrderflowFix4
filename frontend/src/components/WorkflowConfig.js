@@ -393,7 +393,13 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
       });
 
       toast.success("Workflow configuration saved successfully!");
-      if (onSave) onSave();
+      
+      // Reload the page to fetch fresh settings
+      if (onSave) {
+        onSave();
+      } else {
+        window.location.reload();
+      }
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to save workflow configuration");
       console.error(error);
