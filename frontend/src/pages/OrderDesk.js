@@ -445,6 +445,16 @@ export default function OrderDesk() {
             <h1 className="text-2xl font-bold text-gray-800">'All Orders'</h1>
             <div className="flex items-center gap-2">
               <Button 
+                onClick={handleSyncOrders}
+                disabled={syncing}
+                variant="outline"
+                size="sm"
+                className="border-green-200 text-green-600 hover:bg-green-50"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync Orders'}
+              </Button>
+              <Button 
                 onClick={() => navigate('/admin/users')}
                 variant="outline"
                 size="sm"
