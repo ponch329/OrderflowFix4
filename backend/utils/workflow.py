@@ -124,11 +124,15 @@ class WorkflowEngine:
                 next_stage = self.get_next_stage(current_stage)
                 if next_stage:
                     updates["stage"] = next_stage
-                    # Set next stage status based on whether it's shipped or needs work
+                    # Set next stage status based on the stage type
                     if next_stage == "shipped":
                         # Don't set status for shipped stage
                         pass
+                    elif next_stage == "paint":
+                        # Set to "painting" for paint stage
+                        updates[f"{next_stage}_status"] = "painting"
                     else:
+                        # Default to "sculpting" for other stages
                         updates[f"{next_stage}_status"] = "sculpting"
         
         elif approval_status == "changes_requested":
