@@ -473,15 +473,18 @@ frontend:
           comment: "⚠️ STAGE TRANSITION TESTING INCONCLUSIVE: Analyzed current orders but cannot fully verify the workflow transition logic. **Current State**: Found 4 orders total - 3 Clay orders (all with 'changes_requested' or 'sculpting' status), 1 Paint order (2088565 with 'feedback_needed' status). **Issue**: No Clay orders with 'Approved' status found to test auto-advance to Paint stage. **Backend Code Verified**: Workflow.py lines 132-136 show correct logic - when Clay approved, should advance to Paint with 'painting' status instead of 'sculpting'. **Need**: To fully test this, need either: 1) An order in Clay stage with 'Approved' status to trigger workflow, 2) Manual testing of workflow transition, or 3) Create test scenario. The implementation appears correct in code but needs live workflow transition to verify."
   - task: "Archive Functionality - ARCHIVED Folder with Archive/Unarchive Orders"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/OrderDesk.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented ARCHIVED folder in sidebar with count badge, archive/unarchive functionality with Archive(X)/Unarchive(X) buttons that appear when orders are selected. Backend endpoint POST /api/orders/bulk-archive handles archiving/unarchiving multiple orders. Orders are filtered to show only non-archived in regular folders and only archived in ARCHIVED folder. Needs comprehensive testing of full archive workflow."
+        - working: true
+          agent: "testing"
+          comment: "✅ ARCHIVE FUNCTIONALITY COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY: All requested features working perfectly. **Test Results**: 1) Login with admin/admin123 successful ✅, 2) Navigate to /admin/orderdesk successful ✅, 3) **ARCHIVED Folder**: ✅ ARCHIVED folder visible in sidebar at bottom after FULFILLED, ✅ Shows count badge (initially 0), 4) **Order Selection**: ✅ Found 5 checkboxes using [role='checkbox'] selector, ✅ Successfully selected 2 orders, 5) **Archive Button**: ✅ 'Archive (2)' button appeared when orders selected, ✅ Button positioned correctly next to other action buttons, 6) **Archive Operation**: ✅ Clicked Archive button successfully, ✅ Success toast appeared: '2 order(s) archived successfully', ✅ Orders disappeared from All Orders view (count reduced from 4 to 2), 7) **ARCHIVED Folder View**: ✅ Clicked ARCHIVED folder, ✅ Found 2 archived orders in ARCHIVED folder, ✅ Count badge updated to show 2, 8) **Unarchive Functionality**: ✅ Selected archived order, ✅ 'Unarchive (1)' button appeared, ✅ Clicked Unarchive button, ✅ Order moved back to regular folders (All Orders count increased to 3). **Backend Integration**: ✅ POST /api/orders/bulk-archive endpoint working correctly, ✅ Order filtering working (archived vs non-archived), ✅ Count badges updating dynamically. All archive/unarchive functionality working as specified in review request."
 
   - task: "Resizable Columns - Drag Column Borders to Adjust Widths"
     implemented: true
