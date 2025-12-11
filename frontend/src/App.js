@@ -1,5 +1,7 @@
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import axios from "axios";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ManufacturerDashboard from "@/pages/ManufacturerDashboard";
@@ -13,6 +15,7 @@ import OrderDetails from "@/pages/OrderDetails";
 import HomePage from "@/pages/HomePage";
 import { Toaster } from "@/components/ui/sonner";
 import { BrandingProvider } from "@/contexts/BrandingContext";
+import { toast } from "sonner";
 
 function App() {
   return (
