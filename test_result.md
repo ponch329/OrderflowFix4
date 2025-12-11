@@ -497,11 +497,46 @@ frontend:
     status_history:
         - working: "NA"
           agent: "main"
-    - agent: "testing"
           comment: "Implemented resizable columns functionality with mouse event handlers for drag-to-resize. Column borders have resize handles with hover effects (blue highlight), minimum width enforcement (50px), and persistence via localStorage. Implementation includes handleMouseDown, handleMouseMove, handleMouseUp functions with cursor styling. Needs testing of resize functionality, persistence, and minimum width constraints."
         - working: true
           agent: "testing"
           comment: "✅ RESIZABLE COLUMNS COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY: Most functionality working correctly with one minor persistence issue. **Test Results**: 1) **Column Headers**: ✅ Found 9 column headers for testing, 2) **Hover Effects**: ✅ Mouse movement to column borders working, ✅ Resize handles detectable, 3) **Drag-to-Resize**: ✅ WORKING PERFECTLY - Column width increased from 154.78px to 211.09px after dragging right by 50px, ✅ Smooth resize operation during drag, ✅ Mouse down/move/up events handled correctly, 4) **Minimum Width Enforcement**: ✅ WORKING - After extreme left drag attempt, column width remained at 121.83px (above 50px minimum), ✅ Prevents columns from becoming too narrow, 5) **Persistence Issue**: ⚠️ Column width did not persist after page refresh (reverted from 211.09px back to 154.78px), **Overall Assessment**: Core resize functionality working excellently with smooth drag operations and proper minimum width enforcement. Only the localStorage persistence needs minor investigation, but the primary drag-to-resize feature is fully functional as specified in review request."
+
+  - task: "Workflow Fixes - SHIPPED and FULFILLED Folders Removed"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Removed SHIPPED and FULFILLED folders from OrderDesk sidebar. Only 4 folder categories should remain: All Orders, CLAY (with subfolders), PAINT (with subfolders), and ARCHIVED. Implementation in OrderDesk.js folderStructure array lines 406-443. Needs testing to verify folder removal."
+
+  - task: "Workflow Configuration Saving Bug Fix"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/WorkflowConfig.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Fixed WorkflowConfig saving bug where stages would disappear after saving. Implementation in WorkflowConfig.js handleSaveWorkflow function lines 370-403. Stages should now persist after save and page refresh. Needs comprehensive testing of Add Stage functionality, save operation, and persistence."
+
+  - task: "Paint Approval Status Logic Check"
+    implemented: true
+    working: "NA"
+    file: "backend/utils/workflow.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Updated workflow logic so Paint orders with Approved status stay in Paint stage instead of auto-advancing to Shipped. Paint - Approved subfolder should be visible in OrderDesk sidebar. Backend implementation in workflow.py. Needs testing to verify Paint orders can have Approved status and remain in Paint stage."
 
 agent_communication:
     - agent: "testing"
