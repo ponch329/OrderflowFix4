@@ -359,8 +359,9 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Archive Functionality - ARCHIVED Folder with Archive/Unarchive Orders"
-    - "Resizable Columns - Drag Column Borders to Adjust Widths"
+    - "Workflow Fixes - SHIPPED and FULFILLED Folders Removed"
+    - "Workflow Configuration Saving Bug Fix"
+    - "Paint Approval Status Logic Check"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
