@@ -790,6 +790,24 @@ export default function OrderDesk() {
                             {order[`${order.stage}_status`]?.replace(/_/g, ' ')}
                           </span>
                         )}
+                        {column.id === 'tracking_number' && (
+                          order.tracking_number ? (
+                            <a 
+                              href={order.tracking_url || `https://www.google.com/search?q=${encodeURIComponent(order.carrier + ' ' + order.tracking_number)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {order.tracking_number}
+                            </a>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )
+                        )}
+                        {column.id === 'carrier' && (
+                          <span className="text-gray-700">{order.carrier || '-'}</span>
+                        )}
                         {column.id === 'last_updated' && formatDate(order.updated_at)}
                       </td>
                     ))}
