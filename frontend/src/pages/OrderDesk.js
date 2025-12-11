@@ -133,7 +133,43 @@ export default function OrderDesk() {
     }
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     fetchOrders();
+    fetchTimerRules();
   }, [navigate]);
+
+  const fetchTimerRules = async () => {
+    try {
+      const response = await axios.get(`${API}/settings/tenant`);
+      const settings = response.data.settings || {};
+      setTimerRules(settings.workflow?.timer_rules || []);
+    } catch (error) {
+      console.error("Failed to load timer rules:", error);
+    }
+  };
+
+  const getOrderBackgroundColor = (order) => {
+    if (!order.updated_at) return '';
+    
+    const stage = order.stage;
+    const status = order[`${stage}_status`];
+    const updatedAt = new Date(order.updated_at);
+    const now = new Date();
+    const hoursDiff = (now - updatedAt) / (1000 * 60 * 60);
+    
+    // Find matching timer rule
+    const matchingRule = timerRules.find(rule => 
+      rule.stage?.toLowerCase() === stage?.toLowerCase() &&
+      rule.status?.toLowerCase().replace(/\s+/g, '_') === status?.toLowerCase()
+    );
+    
+    if (matchingRule) {
+      const thresholdHours = (matchingRule.days || 0) * 24 + (matchingRule.hours || 0);
+      if (hoursDiff >= thresholdHours) {
+        return matchingRule.backgroundColor || '';
+      }
+    }
+    
+    return '';
+  };
 
   useEffect(() => {
     filterOrders();
