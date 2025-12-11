@@ -280,6 +280,25 @@ export default function OrderDesk() {
     toast.success("Columns reset to default");
   };
 
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedOrders(filteredOrders.map(o => o.id));
+    } else {
+      setSelectedOrders([]);
+    }
+  };
+
+  const handleSelectOrder = (orderId, checked) => {
+    if (checked) {
+      setSelectedOrders([...selectedOrders, orderId]);
+    } else {
+      setSelectedOrders(selectedOrders.filter(id => id !== orderId));
+    }
+  };
+
+  const isOrderSelected = (orderId) => selectedOrders.includes(orderId);
+  const allSelected = filteredOrders.length > 0 && selectedOrders.length === filteredOrders.length;
+
   const handleExport = () => {
     const csvContent = [
       columns.filter(c => c.visible && c.id !== 'checkbox').map(c => c.label).join(','),
