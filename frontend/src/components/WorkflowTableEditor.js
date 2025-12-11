@@ -140,7 +140,8 @@ export default function WorkflowTableEditor() {
       status_after_upload: 'feedback_needed',
       notify_customer_on_upload: true,
       notify_admin_on_customer_response: true,
-      workflow_rules: rules // Store the raw rules for future editing
+      workflow_rules: rules, // Store the raw rules for future editing
+      timer_rules: timerRules // Store timer configuration
     };
   };
 
