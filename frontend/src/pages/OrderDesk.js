@@ -61,63 +61,6 @@ const DEFAULT_COLUMNS = [
   { id: 'last_updated', label: 'Last Updated', width: '180px', visible: true, sortable: true, sortKey: 'updated_at' },
 ];
 
-// Sortable Column Header Component
-function SortableColumnHeader({ column, onSort, sortConfig, allSelected, onSelectAll }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: column.id, disabled: !column.sortable });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    width: column.width,
-  };
-
-  if (column.id === 'checkbox') {
-    return (
-      <th style={{ width: column.width }} className="p-3 text-left bg-gray-50 border-b border-gray-200">
-        <Checkbox checked={allSelected} onCheckedChange={onSelectAll} />
-      </th>
-    );
-  }
-
-  const isSorted = sortConfig?.key === column.id;
-  const sortDirection = isSorted ? sortConfig.direction : null;
-
-  return (
-    <th
-      ref={setNodeRef}
-      style={style}
-      className="p-3 text-left bg-gray-50 border-b border-gray-200 group"
-    >
-      <div className="flex items-center gap-2">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-          <GripVertical className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100" />
-        </div>
-        <button
-          onClick={() => column.sortable && onSort(column.id)}
-          className={`flex items-center gap-1 font-semibold text-sm ${
-            column.sortable ? 'text-gray-700 hover:text-gray-900 cursor-pointer' : 'text-gray-500 cursor-default'
-          }`}
-        >
-          {column.label}
-          {column.sortable && (
-            <span className="text-gray-400">
-              {isSorted ? (sortDirection === 'asc' ? '▲' : '▼') : '⇅'}
-            </span>
-          )}
-        </button>
-      </div>
-    </th>
-  );
-}
-
 // Folder Item Component - Single line per folder
 function FolderItem({ folder, onClick, count, selectedFolder }) {
   const isThisFolderActive = selectedFolder === folder.id;
