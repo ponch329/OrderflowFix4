@@ -279,7 +279,11 @@ export default function OrderDesk() {
 
   const handleMouseUp = () => {
     if (resizingColumn) {
-      localStorage.setItem('orderdesk_columns', JSON.stringify(columns));
+      // Save the current columns state to localStorage
+      const columnsToSave = columns.map(col => 
+        col.id === resizingColumn ? { ...col, width: `${Math.max(50, startWidth + (document.body.clientX || 0) - startX)}px` } : col
+      );
+      localStorage.setItem('orderdesk_columns', JSON.stringify(columnsToSave));
       setResizingColumn(null);
     }
   };
