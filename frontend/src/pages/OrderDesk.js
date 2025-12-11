@@ -716,7 +716,7 @@ export default function OrderDesk() {
                     return (
                       <th
                         key={column.id}
-                        style={{ width: column.width }}
+                        style={{ width: column.width, position: 'relative' }}
                         className="p-3 text-left bg-gray-50 border-b border-gray-200"
                       >
                         <button
@@ -732,8 +732,14 @@ export default function OrderDesk() {
                             </span>
                           )}
                         </button>
+                        <div
+                          onMouseDown={(e) => handleMouseDown(e, column.id)}
+                          className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 hover:w-1.5"
+                          style={{ userSelect: 'none' }}
+                        />
                       </th>
                     );
+
                   })}
                 </tr>
               </thead>
