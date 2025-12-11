@@ -289,6 +289,124 @@ export default function WorkflowTableEditor() {
             <li>• Click the trash icon to delete a rule</li>
           </ul>
         </div>
+      </TabsContent>
+
+      <TabsContent value="timers" className="space-y-4 mt-4">
+        <div className="mb-4 flex justify-between items-center">
+          <Button onClick={handleAddTimerRule} variant="outline" size="sm">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Timer Rule
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? 'Saving...' : 'Save Timers'}
+          </Button>
+        </div>
+
+        <div className="border rounded-lg overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-32">Stage</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-40">Status</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-24">Days</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-24">Hours</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-40">Background Color</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-700 flex-1">Description</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-16"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {(timerRules.length > 0 ? timerRules : getDefaultTimerRules()).map((rule, idx) => (
+                <tr key={rule.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="p-2">
+                    <Input
+                      value={rule.stage}
+                      onChange={(e) => handleUpdateTimerRule(rule.id, 'stage', e.target.value)}
+                      placeholder="Clay"
+                      className="text-sm"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <Input
+                      value={rule.status}
+                      onChange={(e) => handleUpdateTimerRule(rule.id, 'status', e.target.value)}
+                      placeholder="In Progress"
+                      className="text-sm"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <Input
+                      type="number"
+                      min="0"
+                      value={rule.days}
+                      onChange={(e) => handleUpdateTimerRule(rule.id, 'days', parseInt(e.target.value) || 0)}
+                      className="text-sm"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="23"
+                      value={rule.hours}
+                      onChange={(e) => handleUpdateTimerRule(rule.id, 'hours', parseInt(e.target.value) || 0)}
+                      className="text-sm"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={rule.backgroundColor}
+                        onChange={(e) => handleUpdateTimerRule(rule.id, 'backgroundColor', e.target.value)}
+                        className="w-10 h-8 rounded cursor-pointer"
+                      />
+                      <Input
+                        value={rule.backgroundColor}
+                        onChange={(e) => handleUpdateTimerRule(rule.id, 'backgroundColor', e.target.value)}
+                        placeholder="#ffebcc"
+                        className="text-sm flex-1"
+                      />
+                    </div>
+                  </td>
+                  <td className="p-2">
+                    <Input
+                      value={rule.description}
+                      onChange={(e) => handleUpdateTimerRule(rule.id, 'description', e.target.value)}
+                      placeholder="Order taking too long"
+                      className="text-sm"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteTimerRule(rule.id)}
+                      className="h-8 w-8"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <h4 className="font-semibold text-amber-900 mb-2">How Timer Alerts Work</h4>
+          <ul className="text-sm text-amber-800 space-y-1">
+            <li>• Set time thresholds for each Stage/Status combination</li>
+            <li>• When an order exceeds the time limit, the background color will change on the dashboard</li>
+            <li>• <strong>Days</strong> and <strong>Hours</strong> define how long before the alert triggers</li>
+            <li>• <strong>Background Color</strong> is the highlight color applied to overdue orders</li>
+            <li>• Use different colors for different urgency levels (yellow=warning, red=urgent)</li>
+            <li>• This helps you quickly identify orders that need immediate attention</li>
+          </ul>
+        </div>
+      </TabsContent>
+    </Tabs>
       </CardContent>
     </Card>
   );
