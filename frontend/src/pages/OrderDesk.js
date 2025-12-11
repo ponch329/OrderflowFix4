@@ -275,15 +275,12 @@ export default function OrderDesk() {
       col.id === resizingColumn ? { ...col, width: `${newWidth}px` } : col
     );
     setColumns(newColumns);
+    // Save immediately during drag for better persistence
+    localStorage.setItem('orderdesk_columns', JSON.stringify(newColumns));
   };
 
   const handleMouseUp = () => {
     if (resizingColumn) {
-      // Save the current columns state to localStorage
-      const columnsToSave = columns.map(col => 
-        col.id === resizingColumn ? { ...col, width: `${Math.max(50, startWidth + (document.body.clientX || 0) - startX)}px` } : col
-      );
-      localStorage.setItem('orderdesk_columns', JSON.stringify(columnsToSave));
       setResizingColumn(null);
     }
   };
