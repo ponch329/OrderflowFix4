@@ -493,4 +493,6 @@ frontend:
     status_history:
         - working: "NA"
           agent: "main"
+    - agent: "testing"
+      message: "Starting comprehensive testing of 2 new OrderDesk features: 1) Archive Functionality - Testing ARCHIVED folder visibility, count badges, archive/unarchive button functionality, order filtering between regular and archived folders, 2) Resizable Columns - Testing hover effects on column borders, drag-to-resize functionality, width persistence after page reload, minimum width enforcement. Both features are implemented and ready for thorough testing."
           comment: "Implemented resizable columns functionality with mouse event handlers for drag-to-resize. Column borders have resize handles with hover effects (blue highlight), minimum width enforcement (50px), and persistence via localStorage. Implementation includes handleMouseDown, handleMouseMove, handleMouseUp functions with cursor styling. Needs testing of resize functionality, persistence, and minimum width constraints."
