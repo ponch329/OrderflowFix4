@@ -27,10 +27,15 @@ export default function WorkflowTableEditor() {
       // Convert existing workflow config to table format
       const rules = convertWorkflowToRules(settings.workflow || {});
       setWorkflowRules(rules);
+      
+      // Load timer rules
+      const timers = settings.workflow?.timer_rules || getDefaultTimerRules();
+      setTimerRules(timers);
     } catch (error) {
       console.error("Failed to load workflow rules:", error);
       // Set default rules
       setWorkflowRules(getDefaultRules());
+      setTimerRules(getDefaultTimerRules());
     }
   };
 
