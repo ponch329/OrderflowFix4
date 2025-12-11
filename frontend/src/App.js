@@ -17,11 +17,53 @@ import { Toaster } from "@/components/ui/sonner";
 import { BrandingProvider } from "@/contexts/BrandingContext";
 import { toast } from "sonner";
 
+// Component to set up axios interceptors
+function AxiosInterceptor() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Add response interceptor to handle token expiration
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          // Token expired or invalid
+          const currentPath = window.location.pathname;
+          
+          // Don't redirect if already on login page or public pages
+          if (!currentPath.includes('/login') && 
+              !currentPath.includes('/customer') && 
+              !currentPath.includes('/order/') &&
+              currentPath !== '/') {
+            
+            localStorage.removeItem('admin_token');
+            toast.error('Your session has expired. Please login again.');
+            
+            // Redirect to appropriate login page
+            if (currentPath.includes('/admin') || currentPath.includes('/manufacturer')) {
+              navigate('/admin/login');
+            }
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Cleanup interceptor on unmount
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [navigate]);
+
+  return null;
+}
+
 function App() {
   return (
     <div className="App">
       <BrandingProvider>
         <BrowserRouter>
+          <AxiosInterceptor />
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/admin" element={<AdminDashboard />} />
