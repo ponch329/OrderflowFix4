@@ -628,7 +628,10 @@ export default function OrderDesk() {
                       <td key={column.id} className="p-3 text-sm">
                         {column.id === 'checkbox' && (
                           <div onClick={(e) => e.stopPropagation()}>
-                            <Checkbox />
+                            <Checkbox 
+                              checked={isOrderSelected(order.id)}
+                              onCheckedChange={(checked) => handleSelectOrder(order.id, checked)}
+                            />
                           </div>
                         )}
                         {column.id === 'order_id' && (
