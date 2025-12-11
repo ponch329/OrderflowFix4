@@ -359,7 +359,6 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Order Number Display Without Prefix"
     - "Stage Transition Clay to Paint with Painting Status"
   stuck_tasks: []
   test_all: false
