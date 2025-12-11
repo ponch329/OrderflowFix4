@@ -257,9 +257,9 @@ async def upload_proofs(
             uploaded_proofs.append(proof)
     
     # Get tenant settings for workflow configuration
-    from utils.workflow import get_workflow_engine
+    from utils.workflow_rules_engine import get_workflow_engine_from_tenant
     tenant = await db.tenants.find_one({"id": auth.tenant_id}, {"_id": 0})
-    workflow_engine = get_workflow_engine(tenant.get("settings", {}) if tenant else {})
+    workflow_engine = get_workflow_engine_from_tenant(tenant.get("settings", {}) if tenant else {})
     
     # Use workflow engine to determine status after upload
     new_status = workflow_engine.get_status_after_upload(stage)
