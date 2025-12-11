@@ -119,8 +119,8 @@ class WorkflowEngine:
             # Customer approved
             updates[f"{current_stage}_status"] = "approved"
             
-            # Check if should auto-advance
-            if self.should_auto_advance(current_stage, approval_status):
+            # Check if should auto-advance (but NOT from paint stage)
+            if current_stage != "paint" and self.should_auto_advance(current_stage, approval_status):
                 next_stage = self.get_next_stage(current_stage)
                 if next_stage:
                     updates["stage"] = next_stage
