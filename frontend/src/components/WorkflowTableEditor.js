@@ -3,8 +3,9 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
