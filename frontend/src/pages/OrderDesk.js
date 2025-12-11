@@ -435,18 +435,6 @@ export default function OrderDesk() {
       ]
     },
     {
-      id: 'shipped',
-      label: 'SHIPPED',
-      isCategory: true,
-      count: activeOrders.filter(o => o.stage === 'shipped').length
-    },
-    {
-      id: 'fulfilled',
-      label: 'FULFILLED',
-      isCategory: true,
-      count: activeOrders.filter(o => o.stage === 'fulfilled').length
-    },
-    {
       id: 'archived',
       label: 'ARCHIVED',
       isCategory: true,
