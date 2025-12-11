@@ -329,9 +329,24 @@ metadata:
   test_sequence: 1
   run_ui: false
 
+frontend:
+  - task: "OrderDesk New Features - Sortable Headers, Multi-Select, Full Export"
+    implemented: true
+    working: false
+    file: "frontend/src/pages/OrderDesk.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL ISSUES FOUND IN NEW ORDERDESK FEATURES: Comprehensive testing revealed major problems with 2 out of 3 new features. 1) **Sortable Headers**: ❌ NOT WORKING - Sort indicators (⇅, ▲, ▼) are visible but clicking headers does not change order of items. Order remains unchanged after clicking Order ID header. 2) **Multi-Select & Bulk Reminders**: ❌ COMPLETELY BROKEN - No checkboxes found anywhere on page (0 total checkboxes). Select all checkbox missing from header, individual order checkboxes missing from table rows. Send Reminder button not present. Multi-select functionality completely non-functional. 3) **Full Export**: ✅ WORKING CORRECTLY - Export All Data button functional, CSV downloads with correct filename format (orders-full-export-2025-12-11.csv), contains all required fields (Order ID, Order Number, Customer Name, Customer Email, Stage, Status, Order Date, Last Updated, Clay Status, Paint Status, Shipped Status, Product Details, Special Instructions, Tracking Number). **ROOT CAUSE**: HTML structure errors detected - DndContext (drag-and-drop) implementation is rendering <div> elements inside <thead>, causing invalid HTML and hydration errors. This breaks React component rendering for checkboxes and sorting functionality. **REQUIRES IMMEDIATE FIX**: The HTML structure issue needs to be resolved to make sortable headers and multi-select features functional."
+
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus:
+    - "OrderDesk New Features - Sortable Headers, Multi-Select, Full Export"
+  stuck_tasks:
+    - "OrderDesk New Features - Sortable Headers, Multi-Select, Full Export"
   test_all: false
   test_priority: "high_first"
 
