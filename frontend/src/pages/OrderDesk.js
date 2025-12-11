@@ -92,6 +92,39 @@ function FolderItem({ folder, onClick, count, selectedFolder }) {
   );
 }
 
+// Draggable Column Item Component - Extracted to follow React's Rules of Hooks
+function DraggableColumnItem({ column, toggleColumnVisibility }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: column.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded border"
+    >
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+        <GripVertical className="w-4 h-4 text-gray-400" />
+      </div>
+      <Checkbox
+        checked={column.visible}
+        onCheckedChange={() => toggleColumnVisibility(column.id)}
+      />
+      <span className="text-sm">{column.label}</span>
+    </div>
+  );
+}
+
 export default function OrderDesk() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
