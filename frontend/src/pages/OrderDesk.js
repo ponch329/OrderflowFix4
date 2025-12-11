@@ -242,10 +242,13 @@ export default function OrderDesk() {
     setFilteredOrders(filtered);
   };
 
-  const handleSort = (key) => {
+  const handleSort = (columnId) => {
+    const column = columns.find(c => c.id === columnId);
+    const sortKey = column?.sortKey || columnId;
+    
     setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+      key: sortKey,
+      direction: prev.key === sortKey && prev.direction === 'asc' ? 'desc' : 'asc'
     }));
   };
 
