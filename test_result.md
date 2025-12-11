@@ -359,7 +359,8 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Stage Transition Clay to Paint with Painting Status"
+    - "Archive Functionality - ARCHIVED Folder with Archive/Unarchive Orders"
+    - "Resizable Columns - Drag Column Borders to Adjust Widths"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
