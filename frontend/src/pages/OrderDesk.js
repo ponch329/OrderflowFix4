@@ -100,6 +100,7 @@ export default function OrderDesk() {
   const [searchQuery, setSearchQuery] = useState('');
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [sendingReminders, setSendingReminders] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
