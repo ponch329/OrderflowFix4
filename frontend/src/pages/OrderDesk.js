@@ -673,8 +673,7 @@ export default function OrderDesk() {
                           </div>
                         )}
                         {column.id === 'order_id' && (
-                          <span className="text-blue-700 font-semibold flex items-center gap-1 text-base">
-                            <span className="text-blue-500">#</span>
+                          <span className="text-blue-700 font-semibold text-base">
                             {order.order_number}
                           </span>
                         )}
