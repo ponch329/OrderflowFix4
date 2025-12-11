@@ -49,14 +49,14 @@ const API = `${BACKEND_URL}/api`;
 // Default columns configuration
 const DEFAULT_COLUMNS = [
   { id: 'checkbox', label: '', width: '40px', visible: true, sortable: false },
-  { id: 'order_id', label: 'Order ID', width: '120px', visible: true, sortable: true },
-  { id: 'order_date', label: 'Order Date', width: '180px', visible: true, sortable: true },
-  { id: 'email', label: 'Email', width: '200px', visible: true, sortable: true },
-  { id: 'folder', label: 'Folder', width: '150px', visible: true, sortable: false },
-  { id: 'name', label: 'Name', width: '150px', visible: true, sortable: true },
-  { id: 'stage', label: 'Stage', width: '120px', visible: true, sortable: true },
-  { id: 'status', label: 'Status', width: '150px', visible: true, sortable: true },
-  { id: 'last_updated', label: 'Last Updated', width: '180px', visible: true, sortable: true },
+  { id: 'order_id', label: 'Order ID', width: '120px', visible: true, sortable: true, sortKey: 'order_number' },
+  { id: 'order_date', label: 'Order Date', width: '180px', visible: true, sortable: true, sortKey: 'created_at' },
+  { id: 'email', label: 'Email', width: '200px', visible: true, sortable: true, sortKey: 'customer_email' },
+  { id: 'folder', label: 'Folder', width: '150px', visible: true, sortable: true, sortKey: 'stage' },
+  { id: 'name', label: 'Name', width: '150px', visible: true, sortable: true, sortKey: 'customer_name' },
+  { id: 'stage', label: 'Stage', width: '120px', visible: true, sortable: true, sortKey: 'stage' },
+  { id: 'status', label: 'Status', width: '150px', visible: true, sortable: true, sortKey: 'status' },
+  { id: 'last_updated', label: 'Last Updated', width: '180px', visible: true, sortable: true, sortKey: 'updated_at' },
 ];
 
 // Sortable Column Header Component
