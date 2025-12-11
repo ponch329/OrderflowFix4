@@ -632,3 +632,28 @@ agent_communication:
       message: "Starting comprehensive testing of 3 workflow fixes: 1) SHIPPED and FULFILLED folders removal from OrderDesk sidebar - verifying only All Orders, CLAY, PAINT, ARCHIVED folders remain, 2) Workflow Configuration saving bug fix - testing Add Stage functionality, persistence after save and page refresh, 3) Paint Approval Status logic check - verifying Paint orders can have Approved status and stay in Paint stage instead of auto-advancing to Shipped. All fixes are implemented and ready for thorough testing."
     - agent: "testing"
       message: "✅ COMPREHENSIVE WORKFLOW FIXES TESTING COMPLETED: Successfully tested all 3 requested workflow fixes with detailed results. **RESULTS SUMMARY**: 1) **SHIPPED and FULFILLED Folders Removal**: ✅ FULLY WORKING - Verified only 4 folder categories remain (All Orders, CLAY, PAINT, ARCHIVED), SHIPPED and FULFILLED folders successfully removed, all subfolders present and functional. 2) **Workflow Configuration Saving**: ❌ PARTIALLY WORKING - Add Stage functionality works, save button functional with success toast, but stage persistence issue remains (stages disappear from list after save despite success message). 3) **Paint Approval Status Logic**: ✅ FULLY WORKING - Paint - Approved subfolder exists and functional, Paint orders can have Approved status and remain in Paint stage without auto-advancing to Shipped. **SCREENSHOTS**: Captured comprehensive documentation of all test scenarios. **PRIORITY**: The workflow configuration persistence issue needs attention, but core functionality (add/save) is working."
+  - task: "React Hooks Error Fix in OrderDesk"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reported critical error: 'Rendered fewer hooks than expected. This may be caused by an accidental early return statement.' This breaks the entire OrderDesk page and makes the main dashboard unusable."
+        - working: "NA"
+          agent: "main"
+          comment: "Fixed React Hooks violation by extracting useSortable hook from inside .map() callback into a separate DraggableColumnItem component. The issue was that useSortable was being called inside the columns.filter().map() loop in the Customize Columns dialog, which violates React's Rules of Hooks. Created new DraggableColumnItem component that properly wraps the sortable functionality. Needs testing to verify the OrderDesk page loads without errors."
+
+agent_communication:
+    - agent: "main"
+      message: "Fixed critical React Hooks error in OrderDesk.js. The issue was useSortable hook being called inside a .map() callback in the Customize Columns dialog (lines 627-658). Created new DraggableColumnItem component to properly isolate the hook call. Testing agent should verify: 1) OrderDesk page loads without 'Rendered fewer hooks' error, 2) Customize Columns dialog opens correctly, 3) Column drag-and-drop reordering works in the dialog, 4) Column visibility toggles work, 5) All existing OrderDesk functionality still works (folder navigation, sorting, selection, etc.)"
+
+test_plan:
+  current_focus:
+    - "React Hooks Error Fix in OrderDesk"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "critical_first"
