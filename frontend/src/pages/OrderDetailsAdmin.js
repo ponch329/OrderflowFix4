@@ -92,7 +92,9 @@ const OrderDetailsAdminNew = () => {
         setEditedOrderInfo({
           customer_name: foundOrder.customer_name,
           customer_email: foundOrder.customer_email,
-          order_number: foundOrder.order_number
+          order_number: foundOrder.order_number,
+          tracking_number: foundOrder.tracking_number || '',
+          carrier: foundOrder.carrier || ''
         });
         
         // Set collapse state based on current stage
