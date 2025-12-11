@@ -60,6 +60,8 @@ const DEFAULT_COLUMNS = [
   { id: 'name', label: 'Name', width: '150px', visible: true, sortable: true, sortKey: 'customer_name' },
   { id: 'stage', label: 'Stage', width: '120px', visible: true, sortable: true, sortKey: 'stage' },
   { id: 'status', label: 'Status', width: '150px', visible: true, sortable: true, sortKey: 'status' },
+  { id: 'tracking_number', label: 'Tracking Number', width: '150px', visible: true, sortable: true, sortKey: 'tracking_number' },
+  { id: 'carrier', label: 'Carrier', width: '120px', visible: true, sortable: true, sortKey: 'carrier' },
   { id: 'last_updated', label: 'Last Updated', width: '180px', visible: true, sortable: true, sortKey: 'updated_at' },
 ];
 
