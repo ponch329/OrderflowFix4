@@ -358,7 +358,9 @@ frontend:
           comment: "✅ SYNC ORDERS BUTTON COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY: All 4 test scenarios passed with excellent results. **Test Scenario 1 - Button Exists**: ✅ 'Sync Orders' button found in header with proper green styling (border-green-200 text-green-600 hover:bg-green-50), ✅ Refresh icon (RefreshCw) present in button, ✅ Button positioned correctly near Users, Settings, and Logout buttons in header area. **Test Scenario 2 - Button Functionality**: ✅ Button click triggers sync operation, ✅ Proper error handling with informative toast message 'Shopify not configured. Please add your Shopify credentials in Settings > Integrations', ✅ Button returns to normal enabled state after operation, ✅ Order list maintains correct count (4 orders). **Test Scenario 3 - Fast Page Load**: ✅ OrderDesk page loads extremely fast (0.73 seconds), ✅ Orders display immediately from database (4 orders found), ✅ NO automatic sync triggered on page load - manual sync only as intended, ✅ Navigation performance excellent. **Test Scenario 4 - Error Handling**: ✅ Button handles clicks gracefully, ✅ Proper error messaging when Shopify not configured, ✅ Button resilience confirmed. **FIXED DURING TESTING**: Corrected API endpoint from '/api/orders/sync-shopify' to '/api/settings/shopify/sync' to match backend implementation. **PERFORMANCE IMPROVEMENT CONFIRMED**: Page loads are now significantly faster without auto-sync, achieving the primary goal of improving page load times while maintaining manual sync capability. All requirements from review request successfully implemented and tested."
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Order Number Display Without Prefix"
+    - "Stage Transition Clay to Paint with Painting Status"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
