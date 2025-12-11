@@ -196,7 +196,13 @@ const Settings = () => {
       toast.success("Company branding saved successfully!");
       console.log("Saved settings:", response.data);
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to save branding settings");
+      if (error.response?.status === 401) {
+        toast.error("Your session has expired. Please login again.");
+        localStorage.removeItem('admin_token');
+        setTimeout(() => navigate('/admin/login'), 2000);
+      } else {
+        toast.error(error.response?.data?.detail || "Failed to save branding settings");
+      }
       console.error("Save error:", error);
     } finally {
       setSaving(false);
