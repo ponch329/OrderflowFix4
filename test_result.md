@@ -438,3 +438,28 @@ agent_communication:
       message: "✅ SYNC ORDERS BUTTON TESTING COMPLETED: Comprehensive testing of the new manual 'Sync Orders' button in OrderDesk completed successfully. All 4 test scenarios passed: **Button Exists**: Green 'Sync Orders' button found in header with refresh icon, positioned correctly near Users/Settings/Logout buttons. **Button Functionality**: Click triggers sync operation with proper error handling (shows 'Shopify not configured' message when credentials missing), button returns to enabled state after operation. **Fast Page Load**: OrderDesk loads extremely fast (0.73 seconds) with NO automatic sync - manual sync only as intended, achieving the primary goal of improving page load times. **Error Handling**: Button handles clicks gracefully with informative error messaging. **FIXED DURING TESTING**: Corrected API endpoint from '/api/orders/sync-shopify' to '/api/settings/shopify/sync' to match backend implementation. The performance improvement goal has been achieved - page loads are now significantly faster without auto-sync while maintaining manual sync capability."
     - agent: "testing"
       message: "✅ IMPROVED ORDER NUMBER FONT LEGIBILITY TESTING COMPLETED: Comprehensive testing confirmed all 4 requested styling improvements are working perfectly. **Results**: Font changed from normal (400) to semibold (600), color changed from green to blue (text-blue-700), prefix changed from $ to #, font size increased to text-base (16px vs 14px regular text). **Legibility Analysis**: Order numbers now significantly more readable with heavier font weight and larger size compared to other table text. All 4 orders tested (#TEST-IMAGES-999, #TEST-IMG-001, #2088565, #TEST-888) have correct CSS classes applied. Screenshot captured showing improved readability. All requirements from review request successfully implemented and verified."
+
+frontend:
+  - task: "Order Number Display Without Prefix"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Updated order number display to remove all prefixes ($ and #). Order numbers should now display clean without any prefix symbols. Implementation in OrderDesk.js lines 675-680 needs testing to verify prefix removal."
+
+  - task: "Stage Transition Clay to Paint with Painting Status"
+    implemented: true
+    working: "NA"
+    file: "backend/utils/workflow.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Updated workflow logic so when an order advances from Clay (Approved) to Paint, it sets status to 'painting' instead of 'sculpting'. Implementation in workflow.py calculate_stage_transition method lines 132-136 needs testing to verify correct status assignment."
