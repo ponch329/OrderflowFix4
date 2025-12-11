@@ -488,11 +488,11 @@ frontend:
 
   - task: "Resizable Columns - Drag Column Borders to Adjust Widths"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/OrderDesk.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
