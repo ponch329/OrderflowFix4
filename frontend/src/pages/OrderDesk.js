@@ -334,6 +334,29 @@ export default function OrderDesk() {
     }
   };
 
+  const handleArchiveOrders = async () => {
+    if (selectedOrders.length === 0) {
+      toast.error("Please select at least one order");
+      return;
+    }
+
+    const isArchiving = selectedFolder !== 'archived';
+    
+    try {
+      await axios.post(`${API}/orders/bulk-archive`, {
+        order_ids: selectedOrders,
+        archived: isArchiving
+      });
+      
+      toast.success(`${selectedOrders.length} order(s) ${isArchiving ? 'archived' : 'unarchived'} successfully`);
+      setSelectedOrders([]);
+      await fetchOrders();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || `Failed to ${isArchiving ? 'archive' : 'unarchive'} orders`);
+      console.error(error);
+    }
+  };
+
   // Build folder structure with counts
   const activeOrders = orders.filter(o => !o.archived);
   const archivedOrders = orders.filter(o => o.archived);
