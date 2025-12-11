@@ -470,3 +470,26 @@ frontend:
         - working: "NA"
           agent: "testing"
           comment: "⚠️ STAGE TRANSITION TESTING INCONCLUSIVE: Analyzed current orders but cannot fully verify the workflow transition logic. **Current State**: Found 4 orders total - 3 Clay orders (all with 'changes_requested' or 'sculpting' status), 1 Paint order (2088565 with 'feedback_needed' status). **Issue**: No Clay orders with 'Approved' status found to test auto-advance to Paint stage. **Backend Code Verified**: Workflow.py lines 132-136 show correct logic - when Clay approved, should advance to Paint with 'painting' status instead of 'sculpting'. **Need**: To fully test this, need either: 1) An order in Clay stage with 'Approved' status to trigger workflow, 2) Manual testing of workflow transition, or 3) Create test scenario. The implementation appears correct in code but needs live workflow transition to verify."
+  - task: "Archive Functionality - ARCHIVED Folder with Archive/Unarchive Orders"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented ARCHIVED folder in sidebar with count badge, archive/unarchive functionality with Archive(X)/Unarchive(X) buttons that appear when orders are selected. Backend endpoint POST /api/orders/bulk-archive handles archiving/unarchiving multiple orders. Orders are filtered to show only non-archived in regular folders and only archived in ARCHIVED folder. Needs comprehensive testing of full archive workflow."
+
+  - task: "Resizable Columns - Drag Column Borders to Adjust Widths"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented resizable columns functionality with mouse event handlers for drag-to-resize. Column borders have resize handles with hover effects (blue highlight), minimum width enforcement (50px), and persistence via localStorage. Implementation includes handleMouseDown, handleMouseMove, handleMouseUp functions with cursor styling. Needs testing of resize functionality, persistence, and minimum width constraints."
