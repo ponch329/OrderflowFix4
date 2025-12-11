@@ -30,7 +30,8 @@ import {
   GripVertical,
   Search,
   User as UserIcon,
-  Settings
+  Settings,
+  Bell
 } from "lucide-react";
 import { toast } from "sonner";
 import {
