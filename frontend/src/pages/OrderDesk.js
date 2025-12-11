@@ -300,23 +300,68 @@ export default function OrderDesk() {
   const allSelected = filteredOrders.length > 0 && selectedOrders.length === filteredOrders.length;
 
   const handleExport = () => {
+    // Export ALL order data, not just visible columns
+    const headers = [
+      'Order ID', 'Order Number', 'Customer Name', 'Customer Email', 
+      'Stage', 'Status', 'Order Date', 'Last Updated',
+      'Clay Status', 'Paint Status', 'Shipped Status',
+      'Product Details', 'Special Instructions', 'Tracking Number'
+    ];
+    
     const csvContent = [
-      columns.filter(c => c.visible && c.id !== 'checkbox').map(c => c.label).join(','),
-      ...filteredOrders.map(order => 
-        columns.filter(c => c.visible && c.id !== 'checkbox').map(c => {
-          const value = order[c.id] || '';
-          return `"${value}"`;
-        }).join(',')
-      )
+      headers.join(','),
+      ...filteredOrders.map(order => {
+        const status = order[`${order.stage}_status`] || '';
+        const row = [
+          order.id || '',
+          order.order_number || '',
+          order.customer_name || '',
+          order.customer_email || '',
+          order.stage || '',
+          status,
+          order.created_at || '',
+          order.updated_at || '',
+          order.clay_status || '',
+          order.paint_status || '',
+          order.shipped_status || '',
+          order.product_details || '',
+          order.special_instructions || '',
+          order.tracking_number || ''
+        ];
+        return row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
+      })
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `orders-full-export-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
-    toast.success("Orders exported successfully");
+    toast.success("Full order data exported successfully");
+  };
+
+  const handleSendReminderEmails = async () => {
+    if (selectedOrders.length === 0) {
+      toast.error("Please select at least one order");
+      return;
+    }
+
+    setSendingReminders(true);
+    try {
+      const selectedOrdersData = filteredOrders.filter(o => selectedOrders.includes(o.id));
+      const response = await axios.post(`${API}/orders/bulk-reminder-emails`, {
+        order_ids: selectedOrders
+      });
+      
+      toast.success(`Reminder emails sent to ${selectedOrders.length} customer(s)`);
+      setSelectedOrders([]);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to send reminder emails");
+      console.error(error);
+    } finally {
+      setSendingReminders(false);
+    }
   };
 
   // Build folder structure with counts
