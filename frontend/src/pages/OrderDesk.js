@@ -314,7 +314,7 @@ export default function OrderDesk() {
   const handleSyncOrders = async () => {
     setSyncing(true);
     try {
-      const response = await axios.post(`${API}/orders/sync-shopify`);
+      const response = await axios.post(`${API}/settings/shopify/sync`);
       toast.success(`Synced ${response.data.new_orders || 0} new orders from Shopify`);
       // Refresh the orders after sync
       await fetchOrders();
