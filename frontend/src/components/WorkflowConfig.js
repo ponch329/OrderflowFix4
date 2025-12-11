@@ -163,34 +163,36 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
   const loadStagesFromSettings = () => {
     if (!initialSettings) return;
     
-    const stageList = initialSettings.stage_labels || [];
-    const stageTrans = {};
-    const stageApproval = {};
+    const stageList = initialSettings.stage_labels || {};
+    const stageTrans = initialSettings.stage_transitions || {};
+    const stageApproval = initialSettings.stage_requires_customer_approval || {};
+    const stageOrder = initialSettings.stages || [];
     
     // Convert to array format for editing
     const stagesArray = [];
-    const stageNames = ["clay", "paint", "shipped", "fulfilled", "canceled"];
     
-    stageNames.forEach((name, idx) => {
-      const label = Array.isArray(stageList) ? stageList[idx] : (stageList[name] || "");
-      if (label && label.trim()) {
-        stagesArray.push({
-          id: `stage-${idx}`,
-          name: name,
-          label: label,
-          nextStage: stageTrans[name] || "",
-          requiresApproval: stageApproval[name] ?? true,
-          order: idx
-        });
-      }
-    });
+    if (stageOrder.length > 0) {
+      // Use the stages array from settings
+      stageOrder.forEach((name, idx) => {
+        const label = stageList[name] || "";
+        if (label && label.trim()) {
+          stagesArray.push({
+            id: `stage-${idx}`,
+            name: name,
+            label: label,
+            nextStage: stageTrans[name] || "",
+            requiresApproval: stageApproval[name] ?? true,
+            order: idx
+          });
+        }
+      });
+    }
     
     // Default stages if none configured
     if (stagesArray.length === 0) {
       stagesArray.push(
         { id: 'stage-0', name: 'clay', label: 'Clay Stage', nextStage: 'paint', requiresApproval: true, order: 0 },
-        { id: 'stage-1', name: 'paint', label: 'Paint Stage', nextStage: 'shipped', requiresApproval: true, order: 1 },
-        { id: 'stage-2', name: 'shipped', label: 'Shipped', nextStage: '', requiresApproval: false, order: 2 }
+        { id: 'stage-1', name: 'paint', label: 'Paint Stage', nextStage: '', requiresApproval: true, order: 1 }
       );
     }
     
