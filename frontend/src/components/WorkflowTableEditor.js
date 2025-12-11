@@ -139,15 +139,57 @@ export default function WorkflowTableEditor() {
     };
   };
 
+  const getDefaultTimerRules = () => [
+    { id: 1, stage: 'Clay', status: 'In Progress', days: 2, hours: 0, backgroundColor: '#ffebcc', description: 'Clay stage taking longer than expected' },
+    { id: 2, stage: 'Clay', status: 'Feedback Needed', days: 1, hours: 0, backgroundColor: '#ffe0e0', description: 'Customer hasn\'t reviewed clay proofs' },
+    { id: 3, stage: 'Paint', status: 'In Progress', days: 2, hours: 0, backgroundColor: '#ffebcc', description: 'Paint stage taking longer than expected' },
+    { id: 4, stage: 'Paint', status: 'Feedback Needed', days: 1, hours: 0, backgroundColor: '#ffe0e0', description: 'Customer hasn\'t reviewed paint proofs' },
+  ];
+
+  const handleAddTimerRule = () => {
+    const newRule = {
+      id: Date.now(),
+      stage: '',
+      status: '',
+      days: 0,
+      hours: 0,
+      backgroundColor: '#ffebcc',
+      description: ''
+    };
+    setTimerRules([...timerRules, newRule]);
+  };
+
+  const handleUpdateTimerRule = (id, field, value) => {
+    setTimerRules(rules => 
+      rules.map(rule => 
+        rule.id === id ? { ...rule, [field]: value } : rule
+      )
+    );
+  };
+
+  const handleDeleteTimerRule = (id) => {
+    setTimerRules(rules => rules.filter(rule => rule.id !== id));
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Workflow Rules Editor</CardTitle>
+        <CardTitle>Workflow Configuration</CardTitle>
         <CardDescription>
-          Define your workflow as a series of rules. Each rule specifies what happens when a trigger occurs.
+          Manage workflow rules and timing alerts
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <Tabs defaultValue="rules" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="rules">Workflow Rules</TabsTrigger>
+            <TabsTrigger value="timers">
+              <Clock className="w-4 h-4 mr-2" />
+              Timer Alerts
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="rules" className="space-y-4 mt-4">
         <div className="mb-4 flex justify-between items-center">
           <Button onClick={handleAddRule} variant="outline" size="sm">
             <Plus className="w-4 h-4 mr-2" />
