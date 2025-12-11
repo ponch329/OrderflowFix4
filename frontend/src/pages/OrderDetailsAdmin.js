@@ -658,6 +658,32 @@ const OrderDetailsAdminNew = () => {
                     className="h-8 text-sm"
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs">Tracking Number</Label>
+                    <Input 
+                      value={editedOrderInfo.tracking_number || ''}
+                      onChange={(e) => setEditedOrderInfo({...editedOrderInfo, tracking_number: e.target.value})}
+                      className="h-8 text-sm"
+                      placeholder="Enter tracking number"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Carrier</Label>
+                    <select
+                      value={editedOrderInfo.carrier || ''}
+                      onChange={(e) => setEditedOrderInfo({...editedOrderInfo, carrier: e.target.value})}
+                      className="h-8 text-sm w-full border rounded-md px-2"
+                    >
+                      <option value="">Select carrier</option>
+                      <option value="USPS">USPS</option>
+                      <option value="FedEx">FedEx</option>
+                      <option value="UPS">UPS</option>
+                      <option value="DHL">DHL</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => setIsEditingInfo(false)}>
                     Cancel
