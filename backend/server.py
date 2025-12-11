@@ -837,7 +837,7 @@ async def approve_stage(
 ):
     """Customer approves or requests changes for a stage"""
     import base64
-    from utils.workflow import get_workflow_engine
+    from utils.workflow_rules_engine import get_workflow_engine_from_tenant
     
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
     if not order:
@@ -847,8 +847,8 @@ async def approve_stage(
     tenant_id = order.get("tenant_id")
     tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0}) if tenant_id else None
     
-    # Initialize workflow engine
-    workflow_engine = get_workflow_engine(tenant.get("settings", {}) if tenant else {})
+    # Initialize workflow engine with rules
+    workflow_engine = get_workflow_engine_from_tenant(tenant.get("settings", {}) if tenant else {})
     
     # Handle additional images if provided
     additional_images = []
