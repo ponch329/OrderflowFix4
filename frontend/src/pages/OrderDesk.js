@@ -108,6 +108,7 @@ export default function OrderDesk() {
   const [resizingColumn, setResizingColumn] = useState(null);
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
+  const [timerRules, setTimerRules] = useState([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
