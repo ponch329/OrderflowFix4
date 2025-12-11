@@ -12,6 +12,7 @@ const API = `${BACKEND_URL}/api`;
 
 export default function WorkflowTableEditor() {
   const [workflowRules, setWorkflowRules] = useState([]);
+  const [timerRules, setTimerRules] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
