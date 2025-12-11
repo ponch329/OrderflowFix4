@@ -33,7 +33,8 @@ import {
   User as UserIcon,
   Settings,
   Bell,
-  RefreshCw
+  RefreshCw,
+  Archive
 } from "lucide-react";
 import { toast } from "sonner";
 import {
