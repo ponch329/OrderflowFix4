@@ -620,16 +620,27 @@ export default function OrderDesk() {
             </div>
             <div className="flex items-center gap-2">
               {selectedOrders.length > 0 && (
-                <Button 
-                  onClick={handleSendReminderEmails} 
-                  disabled={sendingReminders}
-                  variant="default"
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Bell className="w-4 h-4 mr-2" />
-                  {sendingReminders ? 'Sending...' : `Send Reminder (${selectedOrders.length})`}
-                </Button>
+                <>
+                  <Button 
+                    onClick={handleArchiveOrders}
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-400 text-gray-700 hover:bg-gray-100"
+                  >
+                    <Archive className="w-4 h-4 mr-2" />
+                    {selectedFolder === 'archived' ? `Unarchive (${selectedOrders.length})` : `Archive (${selectedOrders.length})`}
+                  </Button>
+                  <Button 
+                    onClick={handleSendReminderEmails} 
+                    disabled={sendingReminders}
+                    variant="default"
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Bell className="w-4 h-4 mr-2" />
+                    {sendingReminders ? 'Sending...' : `Send Reminder (${selectedOrders.length})`}
+                  </Button>
+                </>
               )}
               <Button onClick={handleExport} variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
