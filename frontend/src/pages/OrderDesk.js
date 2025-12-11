@@ -258,6 +258,43 @@ export default function OrderDesk() {
   const isOrderSelected = (orderId) => selectedOrders.includes(orderId);
   const allSelected = filteredOrders.length > 0 && selectedOrders.length === filteredOrders.length;
 
+  const handleMouseDown = (e, columnId) => {
+    const column = columns.find(c => c.id === columnId);
+    setResizingColumn(columnId);
+    setStartX(e.pageX);
+    setStartWidth(parseInt(column.width));
+  };
+
+  const handleMouseMove = (e) => {
+    if (!resizingColumn) return;
+    
+    const diff = e.pageX - startX;
+    const newWidth = Math.max(50, startWidth + diff);
+    
+    const newColumns = columns.map(col => 
+      col.id === resizingColumn ? { ...col, width: `${newWidth}px` } : col
+    );
+    setColumns(newColumns);
+  };
+
+  const handleMouseUp = () => {
+    if (resizingColumn) {
+      localStorage.setItem('orderdesk_columns', JSON.stringify(columns));
+      setResizingColumn(null);
+    }
+  };
+
+  useEffect(() => {
+    if (resizingColumn) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [resizingColumn, startX, startWidth]);
+
   const handleExport = () => {
     // Export ALL order data, not just visible columns
     const headers = [
