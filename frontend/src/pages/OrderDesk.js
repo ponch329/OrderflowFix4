@@ -787,6 +787,9 @@ export default function OrderDesk() {
                     className={`border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer ${
                       idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                     }`}
+                    style={{
+                      backgroundColor: getOrderBackgroundColor(order) || undefined
+                    }}
                   >
                     {visibleColumns.map((column) => (
                       <td key={column.id} className="p-3 text-sm">
