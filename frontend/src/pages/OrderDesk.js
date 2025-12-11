@@ -603,29 +603,42 @@ export default function OrderDesk() {
           ) : (
             <table className="w-full">
               <thead className="sticky top-0 bg-gray-50 z-10">
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleColumnDragEnd}
-                >
-                  <SortableContext
-                    items={visibleColumns.map(c => c.id)}
-                    strategy={horizontalListSortingStrategy}
-                  >
-                    <tr>
-                      {visibleColumns.map((column) => (
-                        <SortableColumnHeader
-                          key={column.id}
-                          column={column}
-                          onSort={handleSort}
-                          sortConfig={sortConfig}
-                          allSelected={allSelected}
-                          onSelectAll={handleSelectAll}
-                        />
-                      ))}
-                    </tr>
-                  </SortableContext>
-                </DndContext>
+                <tr>
+                  {visibleColumns.map((column) => {
+                    if (column.id === 'checkbox') {
+                      return (
+                        <th key={column.id} style={{ width: column.width }} className="p-3 text-left bg-gray-50 border-b border-gray-200">
+                          <Checkbox checked={allSelected} onCheckedChange={handleSelectAll} />
+                        </th>
+                      );
+                    }
+
+                    const isSorted = sortConfig?.key === (column.sortKey || column.id);
+                    const sortDirection = isSorted ? sortConfig.direction : null;
+
+                    return (
+                      <th
+                        key={column.id}
+                        style={{ width: column.width }}
+                        className="p-3 text-left bg-gray-50 border-b border-gray-200"
+                      >
+                        <button
+                          onClick={() => column.sortable && handleSort(column.id)}
+                          className={`flex items-center gap-1 font-semibold text-sm ${
+                            column.sortable ? 'text-gray-700 hover:text-gray-900 cursor-pointer' : 'text-gray-500 cursor-default'
+                          }`}
+                        >
+                          {column.label}
+                          {column.sortable && (
+                            <span className="text-gray-400">
+                              {isSorted ? (sortDirection === 'asc' ? '▲' : '▼') : '⇅'}
+                            </span>
+                          )}
+                        </button>
+                      </th>
+                    );
+                  })}
+                </tr>
               </thead>
               <tbody>
                 {filteredOrders.map((order, idx) => (
