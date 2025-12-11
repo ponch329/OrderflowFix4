@@ -854,10 +854,7 @@ const Settings = () => {
 
           {/* Workflow Tab */}
           <TabsContent value="workflow" className="space-y-4">
-            <WorkflowConfig 
-              initialSettings={workflowSettings}
-              onSave={fetchSettings}
-            />
+            <WorkflowTableEditor />
           </TabsContent>
         </Tabs>
       </div>
