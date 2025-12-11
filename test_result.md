@@ -359,9 +359,8 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Workflow Fixes - SHIPPED and FULFILLED Folders Removed"
-    - "Workflow Configuration Saving Bug Fix"
-    - "Paint Approval Status Logic Check"
+    - "Table-Based Workflow Editor"
+    - "Tracking Number and Carrier Columns"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
