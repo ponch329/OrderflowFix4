@@ -896,3 +896,113 @@ async def edit_proof_note(
     
     return {"message": "Proof note updated successfully"}
 
+
+@router.post("/bulk-reminder-emails")
+async def send_bulk_reminder_emails(
+    request_data: dict,
+    auth: AuthContext = Depends(require_permissions(Permission.EDIT_ORDERS)),
+    db = Depends(get_db)
+):
+    """
+    Send reminder emails to customers for selected orders
+    Requires: EDIT_ORDERS permission
+    """
+    try:
+        order_ids = request_data.get("order_ids", [])
+        
+        if not order_ids:
+            raise HTTPException(status_code=400, detail="No orders selected")
+        
+        # Fetch selected orders
+        orders = await db.orders.find(
+            {"id": {"$in": order_ids}, "tenant_id": auth.tenant_id},
+            {"_id": 0}
+        ).to_list(100)
+        
+        if not orders:
+            raise HTTPException(status_code=404, detail="No orders found")
+        
+        # Get tenant settings for email configuration
+        tenant = await db.tenants.find_one({"id": auth.tenant_id}, {"_id": 0})
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant not found")
+        
+        # Import email helper
+        from utils.helpers import send_email
+        
+        sent_count = 0
+        failed_count = 0
+        
+        for order in orders:
+            try:
+                customer_email = order.get("customer_email")
+                if not customer_email:
+                    failed_count += 1
+                    continue
+                
+                # Get current stage and status
+                stage = order.get("stage", "clay")
+                status = order.get(f"{stage}_status", "pending")
+                
+                # Only send reminders for orders awaiting customer action
+                if status not in ["feedback_needed", "changes_requested"]:
+                    failed_count += 1
+                    continue
+                
+                # Build email content
+                subject = f"Reminder: Please Review Your Proof - Order {order.get('order_number')}"
+                
+                branding = tenant.get("settings", {}).get("branding", {})
+                company_name = tenant.get("name", "Our Company")
+                primary_color = branding.get("primary_color", "#2563eb")
+                
+                html_body = f"""
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: {primary_color};">{company_name}</h2>
+                        <h3>Reminder: Your Proof is Ready for Review</h3>
+                        <p>Hello {order.get('customer_name', 'Customer')},</p>
+                        <p>This is a friendly reminder that your proof for <strong>Order #{order.get('order_number')}</strong> is awaiting your review and approval.</p>
+                        <p><strong>Current Status:</strong> {status.replace('_', ' ').title()}</p>
+                        <p>Please take a moment to review and provide your feedback:</p>
+                        <p style="text-align: center; margin: 30px 0;">
+                            <a href="{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/order/{order.get('id')}" 
+                               style="background-color: {primary_color}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                View Your Proof
+                            </a>
+                        </p>
+                        <p>If you have any questions, please don't hesitate to reach out to us.</p>
+                        <p>Best regards,<br>{company_name}</p>
+                    </div>
+                </body>
+                </html>
+                """
+                
+                # Send email
+                await send_email(
+                    to_email=customer_email,
+                    subject=subject,
+                    body=html_body,
+                    tenant_id=auth.tenant_id
+                )
+                
+                sent_count += 1
+                
+            except Exception as e:
+                print(f"Failed to send email for order {order.get('id')}: {str(e)}")
+                failed_count += 1
+                continue
+        
+        return {
+            "message": f"Reminder emails sent to {sent_count} customer(s)",
+            "sent": sent_count,
+            "failed": failed_count,
+            "total": len(orders)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send reminder emails: {str(e)}")
+
