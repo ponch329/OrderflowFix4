@@ -1002,6 +1002,40 @@ async def send_bulk_reminder_emails(
         }
         
     except HTTPException:
+
+@router.post("/bulk-archive")
+async def bulk_archive_orders(
+    request_data: dict,
+    auth: AuthContext = Depends(require_permissions(Permission.EDIT_ORDERS)),
+    db = Depends(get_db)
+):
+    """
+    Archive or unarchive multiple orders
+    Requires: EDIT_ORDERS permission
+    """
+    try:
+        order_ids = request_data.get("order_ids", [])
+        archived = request_data.get("archived", True)
+        
+        if not order_ids:
+            raise HTTPException(status_code=400, detail="No orders selected")
+        
+        # Update orders
+        result = await db.orders.update_many(
+            {"id": {"$in": order_ids}, "tenant_id": auth.tenant_id},
+            {"$set": {"archived": archived, "updated_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {
+            "message": f"{'Archived' if archived else 'Unarchived'} {result.modified_count} order(s)",
+            "modified_count": result.modified_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to archive orders: {str(e)}")
+
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send reminder emails: {str(e)}")
