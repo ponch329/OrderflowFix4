@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Palette, Mail, Bell, Settings as SettingsIcon, Save, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import WorkflowConfig from "@/components/WorkflowConfig";
+import WorkflowTableEditor from "@/components/WorkflowTableEditor";
 
 const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
