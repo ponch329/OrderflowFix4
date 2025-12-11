@@ -1002,6 +1002,10 @@ async def send_bulk_reminder_emails(
         }
         
     except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error sending bulk reminder emails: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to send reminder emails")
 
 @router.post("/bulk-archive")
 async def bulk_archive_orders(
