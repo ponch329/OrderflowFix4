@@ -103,6 +103,9 @@ export default function OrderDesk() {
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [sendingReminders, setSendingReminders] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [resizingColumn, setResizingColumn] = useState(null);
+  const [startX, setStartX] = useState(0);
+  const [startWidth, setStartWidth] = useState(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
