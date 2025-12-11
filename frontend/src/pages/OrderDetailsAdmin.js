@@ -600,22 +600,34 @@ const OrderDetailsAdminNew = () => {
           </CardHeader>
           <CardContent className="pt-0">
             {!isEditingInfo ? (
-              <div className="grid grid-cols-4 gap-4">
-                <div>
-                  <Label className="text-xs text-gray-500">Order Number</Label>
-                  <p className="font-semibold text-sm">{order.order_number}</p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-4 gap-4">
+                  <div>
+                    <Label className="text-xs text-gray-500">Order Number</Label>
+                    <p className="font-semibold text-sm">{order.order_number}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500">Customer Name</Label>
+                    <p className="font-semibold text-sm">{order.customer_name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500">Customer Email</Label>
+                    <p className="font-semibold text-sm truncate">{order.customer_email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500">Vendor</Label>
+                    <p className="font-semibold text-sm">{order.item_vendor || 'N/A'}</p>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-xs text-gray-500">Customer Name</Label>
-                  <p className="font-semibold text-sm">{order.customer_name}</p>
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-500">Customer Email</Label>
-                  <p className="font-semibold text-sm truncate">{order.customer_email}</p>
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-500">Vendor</Label>
-                  <p className="font-semibold text-sm">{order.item_vendor || 'N/A'}</p>
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                  <div>
+                    <Label className="text-xs text-gray-500">Tracking Number</Label>
+                    <p className="font-semibold text-sm">{order.tracking_number || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500">Carrier</Label>
+                    <p className="font-semibold text-sm">{order.carrier || 'Not set'}</p>
+                  </div>
                 </div>
               </div>
             ) : (
