@@ -149,7 +149,12 @@ export default function OrderDesk() {
     let filtered = [...orders];
 
     // Filter by folder
-    if (selectedFolder !== 'all') {
+    if (selectedFolder === 'archived') {
+      // Show only archived orders
+      filtered = filtered.filter(order => order.archived);
+    } else if (selectedFolder !== 'all') {
+      // Show only non-archived orders for regular folders
+      filtered = filtered.filter(order => !order.archived);
       const [stage, status] = selectedFolder.split(':');
       filtered = filtered.filter(order => {
         if (status) {
@@ -158,6 +163,9 @@ export default function OrderDesk() {
           return order.stage === stage;
         }
       });
+    } else {
+      // 'all' shows only non-archived orders
+      filtered = filtered.filter(order => !order.archived);
     }
 
     // Filter by search query
