@@ -599,6 +599,8 @@ export default function OrderDesk() {
                           column={column}
                           onSort={handleSort}
                           sortConfig={sortConfig}
+                          allSelected={allSelected}
+                          onSelectAll={handleSelectAll}
                         />
                       ))}
                     </tr>
