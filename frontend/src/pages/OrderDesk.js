@@ -32,7 +32,8 @@ import {
   Search,
   User as UserIcon,
   Settings,
-  Bell
+  Bell,
+  RefreshCw
 } from "lucide-react";
 import { toast } from "sonner";
 import {
