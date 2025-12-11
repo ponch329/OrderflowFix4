@@ -128,7 +128,7 @@ export default function OrderDesk() {
 
   useEffect(() => {
     filterOrders();
-  }, [selectedFolder, orders, searchQuery]);
+  }, [selectedFolder, orders, searchQuery, sortConfig]);
 
   const fetchOrders = async () => {
     setLoading(true);
