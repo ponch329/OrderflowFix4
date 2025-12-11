@@ -359,8 +359,10 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Table-Based Workflow Editor"
-    - "Tracking Number and Carrier Columns"
+    - "Backend Refactoring - Workflow Rules as Source of Truth"
+    - "Tracking Information Upload"
+    - "Timer Alerts Tab"
+    - "Timer Color Application"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
