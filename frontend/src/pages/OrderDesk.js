@@ -310,6 +310,21 @@ export default function OrderDesk() {
     }
   };
 
+  const handleSyncOrders = async () => {
+    setSyncing(true);
+    try {
+      const response = await axios.post(`${API}/orders/sync-shopify`);
+      toast.success(`Synced ${response.data.new_orders || 0} new orders from Shopify`);
+      // Refresh the orders after sync
+      await fetchOrders();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to sync orders from Shopify");
+      console.error(error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   // Build folder structure with counts
   const folderStructure = [
     {
