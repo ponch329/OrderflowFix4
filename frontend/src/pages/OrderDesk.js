@@ -60,7 +60,7 @@ const DEFAULT_COLUMNS = [
 ];
 
 // Sortable Column Header Component
-function SortableColumnHeader({ column, onSort, sortConfig }) {
+function SortableColumnHeader({ column, onSort, sortConfig, allSelected, onSelectAll }) {
   const {
     attributes,
     listeners,
@@ -79,8 +79,8 @@ function SortableColumnHeader({ column, onSort, sortConfig }) {
 
   if (column.id === 'checkbox') {
     return (
-      <th style={{ width: column.width }} className="p-3 text-left">
-        <Checkbox />
+      <th style={{ width: column.width }} className="p-3 text-left bg-gray-50 border-b border-gray-200">
+        <Checkbox checked={allSelected} onCheckedChange={onSelectAll} />
       </th>
     );
   }
@@ -100,11 +100,15 @@ function SortableColumnHeader({ column, onSort, sortConfig }) {
         </div>
         <button
           onClick={() => column.sortable && onSort(column.id)}
-          className="flex items-center gap-1 font-semibold text-sm text-gray-700 hover:text-gray-900"
+          className={`flex items-center gap-1 font-semibold text-sm ${
+            column.sortable ? 'text-gray-700 hover:text-gray-900 cursor-pointer' : 'text-gray-500 cursor-default'
+          }`}
         >
           {column.label}
-          {column.sortable && isSorted && (
-            <span className="ml-1">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+          {column.sortable && (
+            <span className="text-gray-400">
+              {isSorted ? (sortDirection === 'asc' ? '▲' : '▼') : '⇅'}
+            </span>
           )}
         </button>
       </div>
