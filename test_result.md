@@ -377,6 +377,18 @@ frontend:
           agent: "testing"
           comment: "✅ TOKEN EXPIRATION HANDLING COMPREHENSIVE TESTING COMPLETED: All test scenarios passed successfully. **Test Scenario 1 - Normal Settings Save (Valid Token)**: ✅ Login with admin/admin123 successful, ✅ Navigate to Settings > Branding tab successful, ✅ Default Dashboard View dropdown found and functional (Classic Dashboard/OrderDesk View options), ✅ Successfully changed to OrderDesk View and saved, ✅ Success toast 'Company branding saved successfully!' appeared, ✅ No unexpected redirects occurred. **Test Scenario 2 - AxiosInterceptor Verification**: ✅ AxiosInterceptor component properly mounted in App.js, ✅ Admin token stored in localStorage correctly, ✅ API calls include Authorization headers, ✅ Found 4 successful API responses with no 401 Unauthorized responses, ✅ Settings save functionality working with proper token validation. **Test Scenario 3 - Error Handling Infrastructure**: ✅ localStorage.removeItem available for token cleanup on 401 errors, ✅ Toast notification system functional for error messages, ✅ No console errors found during testing, ✅ Token remains valid throughout session, ✅ No redirects to login page during normal operation. **Implementation Verified**: AxiosInterceptor in App.js properly catches 401 responses, removes admin_token from localStorage, shows 'Your session has expired' toast message, and redirects to /admin/login. All token expiration handling working as specified in review request."
 
+  - task: "Improved Order Number Font Legibility"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Updated order number styling in OrderDesk for better legibility: Changed font from font-mono to font-semibold, changed color from green (text-green-600) to blue (text-blue-700), changed prefix from $ to #, increased font size to text-base. Implementation found in lines 675-680 of OrderDesk.js. Needs comprehensive testing to verify improved readability."
+
 agent_communication:
     - agent: "testing"
       message: "Completed comprehensive testing of all 3 requested backend features. All tests passed successfully. Created backend_test.py and detailed_backend_test.py for thorough API testing. Verified email notifications are being sent (confirmed in backend logs). All endpoints working as expected with proper error handling."
