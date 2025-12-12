@@ -151,8 +151,18 @@ const AdminDashboard = () => {
     try {
       // Add limit parameter to reduce data transfer
       const response = await axios.get(`${API}/admin/orders?limit=200`);
+      const data = response.data;
+      
+      // Handle both new paginated response and legacy array response
+      let ordersData;
+      if (data.orders) {
+        ordersData = data.orders;
+      } else {
+        ordersData = data;
+      }
+      
       // Sort by created_at descending (newest first)
-      const sortedOrders = response.data.sort((a, b) => 
+      const sortedOrders = ordersData.sort((a, b) => 
         new Date(b.created_at) - new Date(a.created_at)
       );
       
