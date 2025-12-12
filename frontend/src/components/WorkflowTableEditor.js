@@ -583,7 +583,7 @@ export default function WorkflowTableEditor() {
 
             <Alert>
               <AlertDescription>
-                Workflow rules define what happens when certain triggers occur. Each rule moves an order from one stage/status to another.
+                Workflow rules define what happens when triggers occur. Each rule can move an order to a new stage/status AND optionally send an email notification.
               </AlertDescription>
             </Alert>
 
