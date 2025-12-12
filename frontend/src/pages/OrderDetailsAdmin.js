@@ -16,6 +16,7 @@ import { getStageLabel, getStatusLabel } from "@/utils/labelMapper";
 import OrderNotes from "@/components/OrderNotes";
 import OrderTimeline from "@/components/OrderTimeline";
 import { useBranding } from "@/contexts/BrandingContext";
+import TrackingWidget from "@/components/TrackingWidget";
 
 const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
