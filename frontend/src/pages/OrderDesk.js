@@ -144,6 +144,9 @@ export default function OrderDesk() {
   const [startWidth, setStartWidth] = useState(0);
   const [timerRules, setTimerRules] = useState([]);
   
+  // Authentication ready state
+  const [authReady, setAuthReady] = useState(false);
+  
   // Workflow config stages (dynamic folders)
   const [workflowStages, setWorkflowStages] = useState([]);
   
