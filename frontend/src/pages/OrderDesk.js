@@ -715,7 +715,7 @@ export default function OrderDesk() {
                 />
               </div>
               <span className="text-sm text-gray-600">
-                {filteredOrders.length} Orders Found
+                {totalCount} Orders Found {totalPages > 1 && `(Page ${currentPage} of ${totalPages})`}
               </span>
               {selectedOrders.length > 0 && (
                 <span className="text-sm text-blue-600 font-semibold">
