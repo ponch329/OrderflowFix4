@@ -780,3 +780,19 @@ agent_communication:
       message: "Redesigned workflow editor per user request. Now has 3 tabs: 1) Stages & Statuses - create/edit/delete stages and their statuses, 2) Workflow Rules - all dropdowns only, no free text, predefined triggers, 3) Timer Alerts - SLA highlighting with dropdowns. Pre-populated with Clay, Paint, Shipped, Archived. Testing agent should verify: Navigate to Settings, click Workflow Configuration section, test all 3 tabs - add/edit/delete stages and statuses, add workflow rules using dropdowns only, add timer rules, save all changes."
     - agent: "testing"
       message: "SUCCESS: WORKFLOW CONFIGURATION EDITOR TESTING COMPLETED: Comprehensive testing of the new 3-tab Workflow Configuration Editor completed successfully. All requested features working perfectly: **Navigation**: Login with admin/admin123 successful, Settings page accessible, Workflow Configuration found. **3-Tab Structure**: All tabs (Stages & Statuses, Workflow Rules, Timer Alerts) visible and functional. **Tab 1**: Pre-populated stages (Clay, Paint, Shipped, Archived) with their statuses, add/edit/delete functionality working. **Tab 2**: ALL fields are dropdowns (no free text), predefined triggers available (Proof Uploaded, Proof Approved, Changes Requested, etc.), stage/status dropdowns auto-populate, 10 default rules present. **Tab 3**: Stage/Status dropdowns functional, timer rules with Days/Hours inputs and color picker working, 4 default timer rules present. **Save Functionality**: Save All Changes button working across all tabs. **Cross-Tab Integration**: Stages from Tab 1 correctly populate dropdowns in Tab 2 and Tab 3. The implementation meets all requirements from the review request - dropdown-only interface, predefined triggers, and seamless stage/status management across tabs."
+
+  - task: "Dynamic Folders from Workflow Config + Email Actions"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDesk.js, frontend/src/components/WorkflowTableEditor.js, backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented two features: 1) Dynamic folders - OrderDesk sidebar now reads stages/statuses from workflow_config and builds folders dynamically. Backend counts API updated to return dynamic status_counts per stage. 2) Email Actions in Workflow Rules - Added emailAction field to workflow rules with dropdown of predefined email templates (Proof Ready, Approval Received, Changes Received, Stage Complete, Order Shipped, etc.). Each workflow rule can now trigger an email when fired."
+
+agent_communication:
+    - agent: "main"
+      message: "Implemented dynamic folders and email actions. Testing agent should verify: 1) Navigate to OrderDesk - folders should reflect stages from Workflow Config (Clay, Paint, Shipped, Archived by default), 2) Go to Settings > Workflow > Stages tab - add a new stage, save, return to OrderDesk - new stage should appear as a folder, 3) Go to Workflow Rules tab - verify new 'Email Action' column exists with dropdown of email templates, 4) Test adding a workflow rule with an email action selected."
