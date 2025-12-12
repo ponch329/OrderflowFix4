@@ -808,7 +808,7 @@ export default function OrderDesk() {
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.map((order, idx) => (
+                {sortedOrders.map((order, idx) => (
                   <tr
                     key={order.id}
                     onClick={(e) => {
