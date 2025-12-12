@@ -184,7 +184,7 @@ async def get_admin_orders_legacy(
 @api_router.get("/admin/orders/counts")
 async def get_orders_counts():
     """
-    Get order counts by stage/status for sidebar - lightweight endpoint
+    Get order counts by stage/status for sidebar - dynamically based on workflow config
     """
     tenant = await db.tenants.find_one({}, {"_id": 0})
     if not tenant:
@@ -192,43 +192,64 @@ async def get_orders_counts():
     
     tenant_id = tenant["id"]
     
-    # Get counts using aggregation for better performance
+    # Get workflow stages from config
+    settings = tenant.get("settings", {})
+    workflow_config = settings.get("workflow_config", {})
+    stages = workflow_config.get("stages", [
+        {"id": "clay", "statuses": [{"id": "sculpting"}, {"id": "feedback_needed"}, {"id": "changes_requested"}, {"id": "approved"}]},
+        {"id": "paint", "statuses": [{"id": "painting"}, {"id": "feedback_needed"}, {"id": "changes_requested"}, {"id": "approved"}]},
+        {"id": "shipped", "statuses": [{"id": "in_transit"}, {"id": "delivered"}]},
+    ])
+    
+    # Build dynamic aggregation pipeline
+    facet_stages = {
+        "total": [{"$count": "count"}],
+        "archived": [
+            {"$match": {"archived": True}},
+            {"$count": "count"}
+        ],
+        "by_stage": [
+            {"$match": {"$or": [{"archived": False}, {"archived": {"$exists": False}}]}},
+            {"$group": {"_id": "$stage", "count": {"$sum": 1}}}
+        ]
+    }
+    
+    # Add dynamic status counts for each stage
+    for stage in stages:
+        stage_id = stage.get("id", "")
+        if stage_id and stage_id != "archived":
+            status_field = f"{stage_id}_status"
+            facet_stages[f"{stage_id}_by_status"] = [
+                {"$match": {"stage": stage_id, "$or": [{"archived": False}, {"archived": {"$exists": False}}]}},
+                {"$group": {"_id": f"${status_field}", "count": {"$sum": 1}}}
+            ]
+    
     pipeline = [
         {"$match": {"tenant_id": tenant_id}},
-        {"$facet": {
-            "total": [{"$count": "count"}],
-            "archived": [
-                {"$match": {"archived": True}},
-                {"$count": "count"}
-            ],
-            "by_stage": [
-                {"$match": {"$or": [{"archived": False}, {"archived": {"$exists": False}}]}},
-                {"$group": {"_id": "$stage", "count": {"$sum": 1}}}
-            ],
-            "clay_by_status": [
-                {"$match": {"stage": "clay", "$or": [{"archived": False}, {"archived": {"$exists": False}}]}},
-                {"$group": {"_id": "$clay_status", "count": {"$sum": 1}}}
-            ],
-            "paint_by_status": [
-                {"$match": {"stage": "paint", "$or": [{"archived": False}, {"archived": {"$exists": False}}]}},
-                {"$group": {"_id": "$paint_status", "count": {"$sum": 1}}}
-            ]
-        }}
+        {"$facet": facet_stages}
     ]
     
     result = await db.orders.aggregate(pipeline).to_list(1)
     
     if not result:
-        return {"total": 0, "archived": 0, "by_stage": {}, "clay_by_status": {}, "paint_by_status": {}}
+        return {"total": 0, "archived": 0, "by_stage": {}, "status_counts": {}}
     
     data = result[0]
+    
+    # Build status counts object dynamically
+    status_counts = {}
+    for stage in stages:
+        stage_id = stage.get("id", "")
+        if stage_id and stage_id != "archived":
+            key = f"{stage_id}_by_status"
+            if key in data:
+                status_counts[stage_id] = {item["_id"]: item["count"] for item in data[key] if item["_id"]}
     
     return {
         "total": data["total"][0]["count"] if data["total"] else 0,
         "archived": data["archived"][0]["count"] if data["archived"] else 0,
         "by_stage": {item["_id"]: item["count"] for item in data["by_stage"] if item["_id"]},
-        "clay_by_status": {item["_id"]: item["count"] for item in data["clay_by_status"] if item["_id"]},
-        "paint_by_status": {item["_id"]: item["count"] for item in data["paint_by_status"] if item["_id"]}
+        "status_counts": status_counts
     }
 
 @api_router.get("/admin/orders/{order_id}")
