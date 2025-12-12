@@ -596,6 +596,7 @@ export default function WorkflowTableEditor() {
                     <th className="p-3 text-left text-sm font-semibold text-gray-700">When (Trigger)</th>
                     <th className="p-3 text-left text-sm font-semibold text-gray-700">To Stage</th>
                     <th className="p-3 text-left text-sm font-semibold text-gray-700">To Status</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">📧 Email Action</th>
                     <th className="p-3 text-left text-sm font-semibold text-gray-700 w-16"></th>
                   </tr>
                 </thead>
@@ -677,6 +678,23 @@ export default function WorkflowTableEditor() {
                           <SelectContent>
                             {getStatusesForStage(rule.toStage).map(status => (
                               <SelectItem key={status.id} value={status.id}>{status.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2">
+                        <Select 
+                          value={rule.emailAction || 'none'} 
+                          onValueChange={(v) => handleUpdateRule(rule.id, 'emailAction', v)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Email" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {EMAIL_TEMPLATES.map(template => (
+                              <SelectItem key={template.id} value={template.id}>
+                                {template.label}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
