@@ -46,6 +46,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { TrackingLink } from "@/components/TrackingWidget";
 
 const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
