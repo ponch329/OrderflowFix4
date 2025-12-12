@@ -449,7 +449,7 @@ export default function OrderDesk() {
 
     setSendingReminders(true);
     try {
-      const selectedOrdersData = filteredOrders.filter(o => selectedOrders.includes(o.id));
+      const selectedOrdersData = sortedOrders.filter(o => selectedOrders.includes(o.id));
       const response = await axios.post(`${API}/orders/bulk-reminder-emails`, {
         order_ids: selectedOrders
       });
