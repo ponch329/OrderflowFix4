@@ -588,7 +588,11 @@ export default function OrderDesk() {
                 <div key={folder.id}>
                   <FolderItem
                     folder={folder}
-                    onClick={(folderId) => setSelectedFolder(folderId)}
+                    onClick={(folderId) => {
+                      setSelectedFolder(folderId);
+                      setCurrentPage(1); // Reset to page 1 when changing folder
+                      setSelectedOrders([]); // Clear selection
+                    }}
                     count={folder.count}
                     selectedFolder={selectedFolder}
                   />
@@ -596,7 +600,11 @@ export default function OrderDesk() {
                     <FolderItem
                       key={child.id}
                       folder={child}
-                      onClick={(folderId) => setSelectedFolder(folderId)}
+                      onClick={(folderId) => {
+                        setSelectedFolder(folderId);
+                        setCurrentPage(1); // Reset to page 1 when changing folder
+                        setSelectedOrders([]); // Clear selection
+                      }}
                       count={child.count}
                       selectedFolder={selectedFolder}
                     />
