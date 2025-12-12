@@ -810,7 +810,7 @@ export default function WorkflowTableEditor() {
               </table>
               {timerRules.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  No timer rules defined. Click "Add Timer Rule" to create one.
+                  No timer rules defined. Click &quot;Add Timer Rule&quot; to create one.
                 </div>
               )}
             </div>
@@ -828,10 +828,10 @@ export default function WorkflowTableEditor() {
             </DialogTitle>
             <DialogDescription>
               {deleteDialog.type === 'stage' && (
-                <>The stage "{deleteDialog.item?.name}" is used in {deleteDialog.usedIn.length} rule(s)/timer(s).</>
+                <>The stage &quot;{deleteDialog.item?.name}&quot; is used in {deleteDialog.usedIn.length} rule(s)/timer(s).</>
               )}
               {deleteDialog.type === 'status' && (
-                <>The status "{deleteDialog.item?.name}" is used in {deleteDialog.usedIn.length} rule(s)/timer(s).</>
+                <>The status &quot;{deleteDialog.item?.name}&quot; is used in {deleteDialog.usedIn.length} rule(s)/timer(s).</>
               )}
             </DialogDescription>
           </DialogHeader>
