@@ -2,10 +2,14 @@
 Tracking Utilities - Fetch and update order tracking information from Shopify
 """
 import logging
+import asyncio
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
+
+# Timeout for Shopify API calls (in seconds)
+SHOPIFY_API_TIMEOUT = 5
 
 async def fetch_shopify_tracking(order_id: str, shopify_order_id: str, db, tenant_settings: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
@@ -27,55 +31,70 @@ async def fetch_shopify_tracking(order_id: str, shopify_order_id: str, db, tenan
         shopify_access_token = tenant_settings.get("shopify_access_token")
         
         if not shopify_shop_name or not shopify_access_token:
-            logger.warning(f"Shopify not configured for order {order_id}")
+            logger.debug(f"Shopify not configured for order {order_id} - skipping tracking fetch")
             return None
         
-        # Initialize Shopify session
-        shopify_api_version = "2024-10"
-        session = shopify.Session(
-            f"{shopify_shop_name}.myshopify.com",
-            shopify_api_version,
-            shopify_access_token
-        )
-        shopify.ShopifyResource.activate_session(session)
-        
-        # Fetch order from Shopify
-        shopify_order = shopify.Order.find(shopify_order_id)
-        
-        if not shopify_order:
-            logger.warning(f"Shopify order {shopify_order_id} not found")
-            return None
-        
-        # Extract tracking information from fulfillments
-        tracking_info = None
-        
-        if hasattr(shopify_order, 'fulfillments') and shopify_order.fulfillments:
-            # Get the most recent fulfillment
-            fulfillment = shopify_order.fulfillments[-1]
+        # Run Shopify API call with timeout to prevent blocking
+        async def _fetch_with_timeout():
+            # Initialize Shopify session
+            shopify_api_version = "2024-10"
+            session = shopify.Session(
+                f"{shopify_shop_name}.myshopify.com",
+                shopify_api_version,
+                shopify_access_token
+            )
+            shopify.ShopifyResource.activate_session(session)
             
-            if hasattr(fulfillment, 'tracking_number') and fulfillment.tracking_number:
-                tracking_info = {
-                    'tracking_number': fulfillment.tracking_number,
-                    'tracking_url': getattr(fulfillment, 'tracking_url', None) or getattr(fulfillment, 'tracking_urls', [None])[0],
-                    'tracking_company': getattr(fulfillment, 'tracking_company', 'Unknown'),
-                    'shipment_status': getattr(fulfillment, 'shipment_status', 'in_transit'),
-                    'shipped_at': datetime.now(timezone.utc).isoformat()
-                }
+            try:
+                # Fetch order from Shopify
+                shopify_order = shopify.Order.find(shopify_order_id)
                 
-                # Build tracking URL if not provided
-                if not tracking_info['tracking_url'] and tracking_info['tracking_number']:
-                    tracking_info['tracking_url'] = build_tracking_url(
-                        tracking_info['tracking_number'],
-                        tracking_info['tracking_company']
-                    )
+                if not shopify_order:
+                    logger.debug(f"Shopify order {shopify_order_id} not found")
+                    return None
                 
-                logger.info(f"Fetched tracking for order {order_id}: {tracking_info['tracking_number']}")
+                # Extract tracking information from fulfillments
+                tracking_info = None
+                
+                if hasattr(shopify_order, 'fulfillments') and shopify_order.fulfillments:
+                    # Get the most recent fulfillment
+                    fulfillment = shopify_order.fulfillments[-1]
+                    
+                    if hasattr(fulfillment, 'tracking_number') and fulfillment.tracking_number:
+                        tracking_info = {
+                            'tracking_number': fulfillment.tracking_number,
+                            'tracking_url': getattr(fulfillment, 'tracking_url', None) or getattr(fulfillment, 'tracking_urls', [None])[0],
+                            'tracking_company': getattr(fulfillment, 'tracking_company', 'Unknown'),
+                            'shipment_status': getattr(fulfillment, 'shipment_status', 'in_transit'),
+                            'shipped_at': datetime.now(timezone.utc).isoformat()
+                        }
+                        
+                        # Build tracking URL if not provided
+                        if not tracking_info['tracking_url'] and tracking_info['tracking_number']:
+                            tracking_info['tracking_url'] = build_tracking_url(
+                                tracking_info['tracking_number'],
+                                tracking_info['tracking_company']
+                            )
+                        
+                        logger.info(f"Fetched tracking for order {order_id}: {tracking_info['tracking_number']}")
+                
+                return tracking_info
+            finally:
+                shopify.ShopifyResource.clear_session()
         
-        shopify.ShopifyResource.clear_session()
-        return tracking_info
+        # Execute with timeout
+        try:
+            return await asyncio.wait_for(
+                asyncio.get_event_loop().run_in_executor(None, lambda: asyncio.run(_fetch_with_timeout())),
+                timeout=SHOPIFY_API_TIMEOUT
+            )
+        except asyncio.TimeoutError:
+            logger.warning(f"Shopify API timeout for order {order_id}")
+            return None
         
     except Exception as e:
-        logger.error(f"Failed to fetch Shopify tracking for order {order_id}: {e}")
+        # Log at debug level to avoid flooding logs with Shopify errors
+        logger.debug(f"Shopify tracking fetch failed for order {order_id}: {e}")
         return None
 
 
