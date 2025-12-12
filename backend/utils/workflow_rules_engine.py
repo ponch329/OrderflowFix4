@@ -265,7 +265,34 @@ def get_workflow_engine_from_tenant(tenant_settings: Dict) -> WorkflowRulesEngin
     Returns:
         WorkflowRulesEngine instance
     """
-    workflow_config = tenant_settings.get('workflow', {})
-    workflow_rules = workflow_config.get('workflow_rules', [])
+    # Support both new workflow_config format and legacy workflow format
+    workflow_config = tenant_settings.get('workflow_config') or tenant_settings.get('workflow', {})
     
-    return WorkflowRulesEngine(workflow_rules, workflow_config)
+    # New format uses 'rules' key, legacy uses 'workflow_rules'
+    workflow_rules = workflow_config.get('rules') or workflow_config.get('workflow_rules', [])
+    
+    # Convert new format rules to engine format if needed
+    converted_rules = []
+    for rule in workflow_rules:
+        # New format has fromStage/toStage, legacy has stage/nextStage
+        converted_rule = {
+            'stage': rule.get('fromStage') or rule.get('stage', ''),
+            'status': rule.get('fromStatus') or rule.get('status', ''),
+            'triggeredBy': rule.get('trigger') or rule.get('triggeredBy', ''),
+            'nextStage': rule.get('toStage') or rule.get('nextStage', ''),
+            'nextStatus': rule.get('toStatus') or rule.get('nextStatus', '')
+        }
+        converted_rules.append(converted_rule)
+    
+    # Build stage and status labels from new format if available
+    stages_config = workflow_config.get('stages', [])
+    if stages_config:
+        stage_labels = {s['id']: s['name'] for s in stages_config}
+        status_labels = {}
+        for stage in stages_config:
+            for status in stage.get('statuses', []):
+                status_labels[status['id']] = status['name']
+        workflow_config['stage_labels'] = stage_labels
+        workflow_config['status_labels'] = status_labels
+    
+    return WorkflowRulesEngine(converted_rules, workflow_config)
