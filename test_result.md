@@ -661,3 +661,19 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+  - task: "Tracking Widget and Performance Improvements"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/TrackingWidget.js, frontend/src/pages/OrderDesk.js, frontend/src/pages/OrderDetailsAdmin.js, backend/utils/tracking.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented comprehensive tracking solution: 1) Created TrackingWidget.js component with carrier-specific URLs (USPS, FedEx, UPS, DHL), copy-to-clipboard, and modal dialog for detailed tracking info. 2) Added TrackingLink component to OrderDesk for inline tracking display. 3) Added Track Package button to OrderDetailsAdmin page. 4) Made Shopify tracking calls non-blocking with timeout to prevent slow page loads. 5) Reduced logging level for Shopify errors to prevent log flooding. Ready for Ship24 API integration when user provides key."
+
+agent_communication:
+    - agent: "main"
+      message: "Implemented tracking fallback solution and performance improvements. Key changes: 1) New TrackingWidget component with carrier-specific tracking URLs, 2) TrackingLink component for OrderDesk table, 3) Track Package button in Order Details, 4) Non-blocking Shopify tracking fetch with 5 second timeout, 5) Graceful error handling for invalid Shopify credentials. Testing agent should verify: OrderDesk loads quickly, tracking links work correctly for orders with tracking numbers, Order Details page shows Track Package button when tracking exists."
