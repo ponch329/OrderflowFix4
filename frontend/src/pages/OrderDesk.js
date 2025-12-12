@@ -502,46 +502,43 @@ export default function OrderDesk() {
     }
   };
 
-  // Build folder structure with counts
-  const activeOrders = orders.filter(o => !o.archived);
-  const archivedOrders = orders.filter(o => o.archived);
-  
+  // Build folder structure with counts from API
   const folderStructure = [
     {
       id: 'all',
       label: 'All Orders',
-      count: activeOrders.length,
+      count: orderCounts.total - orderCounts.archived,
       isCategory: false
     },
     {
       id: 'clay',
       label: 'CLAY',
       isCategory: true,
-      count: activeOrders.filter(o => o.stage === 'clay').length,
+      count: orderCounts.by_stage?.clay || 0,
       children: [
-        { id: 'clay:sculpting', label: 'Clay - In Progress', count: activeOrders.filter(o => o.stage === 'clay' && o.clay_status === 'sculpting').length },
-        { id: 'clay:feedback_needed', label: 'Clay - Feedback Needed', count: activeOrders.filter(o => o.stage === 'clay' && o.clay_status === 'feedback_needed').length },
-        { id: 'clay:changes_requested', label: 'Clay - Changes Requested', count: activeOrders.filter(o => o.stage === 'clay' && o.clay_status === 'changes_requested').length },
-        { id: 'clay:approved', label: 'Clay - Approved', count: activeOrders.filter(o => o.stage === 'clay' && o.clay_status === 'approved').length },
+        { id: 'clay:sculpting', label: 'Clay - In Progress', count: orderCounts.clay_by_status?.sculpting || 0 },
+        { id: 'clay:feedback_needed', label: 'Clay - Feedback Needed', count: orderCounts.clay_by_status?.feedback_needed || 0 },
+        { id: 'clay:changes_requested', label: 'Clay - Changes Requested', count: orderCounts.clay_by_status?.changes_requested || 0 },
+        { id: 'clay:approved', label: 'Clay - Approved', count: orderCounts.clay_by_status?.approved || 0 },
       ]
     },
     {
       id: 'paint',
       label: 'PAINT',
       isCategory: true,
-      count: activeOrders.filter(o => o.stage === 'paint').length,
+      count: orderCounts.by_stage?.paint || 0,
       children: [
-        { id: 'paint:sculpting', label: 'Paint - In Progress', count: activeOrders.filter(o => o.stage === 'paint' && o.paint_status === 'sculpting').length },
-        { id: 'paint:feedback_needed', label: 'Paint - Feedback Needed', count: activeOrders.filter(o => o.stage === 'paint' && o.paint_status === 'feedback_needed').length },
-        { id: 'paint:changes_requested', label: 'Paint - Changes Requested', count: activeOrders.filter(o => o.stage === 'paint' && o.paint_status === 'changes_requested').length },
-        { id: 'paint:approved', label: 'Paint - Approved', count: activeOrders.filter(o => o.stage === 'paint' && o.paint_status === 'approved').length },
+        { id: 'paint:sculpting', label: 'Paint - In Progress', count: orderCounts.paint_by_status?.sculpting || orderCounts.paint_by_status?.painting || 0 },
+        { id: 'paint:feedback_needed', label: 'Paint - Feedback Needed', count: orderCounts.paint_by_status?.feedback_needed || 0 },
+        { id: 'paint:changes_requested', label: 'Paint - Changes Requested', count: orderCounts.paint_by_status?.changes_requested || 0 },
+        { id: 'paint:approved', label: 'Paint - Approved', count: orderCounts.paint_by_status?.approved || 0 },
       ]
     },
     {
       id: 'archived',
       label: 'ARCHIVED',
       isCategory: true,
-      count: archivedOrders.length
+      count: orderCounts.archived || 0
     }
   ];
 
