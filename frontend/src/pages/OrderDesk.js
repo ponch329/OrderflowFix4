@@ -129,13 +129,13 @@ function DraggableColumnItem({ column, toggleColumnVisibility }) {
 export default function OrderDesk() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFolder, setSelectedFolder] = useState('all');
   const [columns, setColumns] = useState(DEFAULT_COLUMNS);
-  const [sortConfig, setSortConfig] = useState({ key: 'order_date', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchDebounce, setSearchDebounce] = useState('');
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [sendingReminders, setSendingReminders] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -143,6 +143,19 @@ export default function OrderDesk() {
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
   const [timerRules, setTimerRules] = useState([]);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [orderCounts, setOrderCounts] = useState({
+    total: 0,
+    archived: 0,
+    by_stage: {},
+    clay_by_status: {},
+    paint_by_status: {}
+  });
+  const ORDERS_PER_PAGE = 40;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -166,9 +179,23 @@ export default function OrderDesk() {
       return;
     }
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    fetchOrders();
+    fetchOrderCounts();
     fetchTimerRules();
   }, [navigate]);
+
+  // Fetch orders when filters change
+  useEffect(() => {
+    fetchOrders();
+  }, [currentPage, selectedFolder, searchDebounce]);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchDebounce(searchQuery);
+      setCurrentPage(1); // Reset to page 1 on new search
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const fetchTimerRules = async () => {
     try {
@@ -177,6 +204,15 @@ export default function OrderDesk() {
       setTimerRules(settings.workflow?.timer_rules || []);
     } catch (error) {
       console.error("Failed to load timer rules:", error);
+    }
+  };
+
+  const fetchOrderCounts = async () => {
+    try {
+      const response = await axios.get(`${API}/admin/orders/counts`);
+      setOrderCounts(response.data);
+    } catch (error) {
+      console.error("Failed to load order counts:", error);
     }
   };
 
@@ -205,15 +241,45 @@ export default function OrderDesk() {
     return '';
   };
 
-  useEffect(() => {
-    filterOrders();
-  }, [selectedFolder, orders, searchQuery, sortConfig]);
-
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/admin/orders`);
-      setOrders(response.data || []);
+      // Build query params for server-side filtering
+      const params = new URLSearchParams();
+      params.append('page', currentPage);
+      params.append('limit', ORDERS_PER_PAGE);
+      
+      // Handle folder selection
+      if (selectedFolder === 'archived') {
+        params.append('archived', 'true');
+      } else if (selectedFolder !== 'all') {
+        params.append('archived', 'false');
+        const [stage, status] = selectedFolder.split(':');
+        if (stage) params.append('stage', stage);
+        if (status) params.append('status', status);
+      } else {
+        params.append('archived', 'false');
+      }
+      
+      // Handle search
+      if (searchDebounce) {
+        params.append('search', searchDebounce);
+      }
+      
+      const response = await axios.get(`${API}/admin/orders?${params.toString()}`);
+      const data = response.data;
+      
+      // Handle both new paginated response and legacy array response
+      if (data.orders) {
+        setOrders(data.orders);
+        setTotalPages(data.pagination.total_pages);
+        setTotalCount(data.pagination.total_count);
+      } else {
+        // Legacy response - array of orders
+        setOrders(data);
+        setTotalCount(data.length);
+        setTotalPages(Math.ceil(data.length / ORDERS_PER_PAGE));
+      }
     } catch (error) {
       toast.error("Failed to load orders");
       console.error(error);
@@ -222,58 +288,22 @@ export default function OrderDesk() {
     }
   };
 
-  const filterOrders = () => {
-    let filtered = [...orders];
+  // Client-side sorting (since we have paginated data)
+  const sortedOrders = [...orders].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    
+    let aVal = a[sortConfig.key];
+    let bVal = b[sortConfig.key];
 
-    // Filter by folder
-    if (selectedFolder === 'archived') {
-      // Show only archived orders
-      filtered = filtered.filter(order => order.archived);
-    } else if (selectedFolder !== 'all') {
-      // Show only non-archived orders for regular folders
-      filtered = filtered.filter(order => !order.archived);
-      const [stage, status] = selectedFolder.split(':');
-      filtered = filtered.filter(order => {
-        if (status) {
-          return order.stage === stage && order[`${stage}_status`] === status;
-        } else {
-          return order.stage === stage;
-        }
-      });
-    } else {
-      // 'all' shows only non-archived orders
-      filtered = filtered.filter(order => !order.archived);
+    if (sortConfig.key === 'created_at' || sortConfig.key === 'updated_at') {
+      aVal = new Date(aVal);
+      bVal = new Date(bVal);
     }
 
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(order =>
-        order.order_number?.toLowerCase().includes(query) ||
-        order.customer_email?.toLowerCase().includes(query) ||
-        order.customer_name?.toLowerCase().includes(query)
-      );
-    }
-
-    // Sort
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        let aVal = a[sortConfig.key];
-        let bVal = b[sortConfig.key];
-
-        if (sortConfig.key === 'order_date' || sortConfig.key === 'last_updated') {
-          aVal = new Date(aVal);
-          bVal = new Date(bVal);
-        }
-
-        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-
-    setFilteredOrders(filtered);
-  };
+    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   const handleSort = (columnId) => {
     const column = columns.find(c => c.id === columnId);
