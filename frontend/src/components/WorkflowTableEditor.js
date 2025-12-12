@@ -681,7 +681,7 @@ export default function WorkflowTableEditor() {
               </table>
               {workflowRules.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  No workflow rules defined. Click "Add Rule" to create one.
+                  No workflow rules defined. Click &quot;Add Rule&quot; to create one.
                 </div>
               )}
             </div>
