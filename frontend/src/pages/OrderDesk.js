@@ -495,7 +495,8 @@ export default function OrderDesk() {
       
       toast.success(`${selectedOrders.length} order(s) ${isArchiving ? 'archived' : 'unarchived'} successfully`);
       setSelectedOrders([]);
-      await fetchOrders();
+      // Refresh both orders and counts
+      await Promise.all([fetchOrders(), fetchOrderCounts()]);
     } catch (error) {
       toast.error(error.response?.data?.detail || `Failed to ${isArchiving ? 'archive' : 'unarchive'} orders`);
       console.error(error);
