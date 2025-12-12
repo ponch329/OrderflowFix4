@@ -759,3 +759,19 @@ agent_communication:
 agent_communication:
     - agent: "main"
       message: "Implemented server-side pagination to fix slow 16.5s page load. Backend changes: new /admin/orders endpoint with page/limit/stage/status/archived/search params, new /admin/orders/counts endpoint for sidebar counts. Frontend changes: loads only 40 orders per page, pagination controls added, folder selection resets page. Testing agent should verify: 1) OrderDesk loads fast (<2 seconds), 2) Pagination controls work (First/Prev/Next/Last), 3) Folder selection filters work and reset page, 4) Search works and resets page, 5) Sidebar counts are accurate."
+
+  - task: "New Workflow Configuration Editor (3 Tabs)"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/WorkflowTableEditor.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Completely redesigned workflow editor with 3 tabs: Tab 1 - Stages & Statuses (define building blocks, CRUD operations), Tab 2 - Workflow Rules (dropdown selections only for Stage/Status/Trigger/Action), Tab 3 - Timers (SLA alerts with dropdown selections). Key features: 1) Pre-populated with Clay, Paint, Shipped, Archived stages, 2) Predefined triggers dropdown (Proof Uploaded, Proof Approved, Changes Requested, etc.), 3) Stage/Status dropdowns auto-populate from Tab 1, 4) Delete warning if stage/status used in rules, 5) Cascade delete option available."
+
+agent_communication:
+    - agent: "main"
+      message: "Redesigned workflow editor per user request. Now has 3 tabs: 1) Stages & Statuses - create/edit/delete stages and their statuses, 2) Workflow Rules - all dropdowns only, no free text, predefined triggers, 3) Timer Alerts - SLA highlighting with dropdowns. Pre-populated with Clay, Paint, Shipped, Archived. Testing agent should verify: Navigate to Settings, click Workflow Configuration section, test all 3 tabs - add/edit/delete stages and statuses, add workflow rules using dropdowns only, add timer rules, save all changes."
