@@ -344,7 +344,7 @@ export default function OrderDesk() {
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedOrders(filteredOrders.map(o => o.id));
+      setSelectedOrders(sortedOrders.map(o => o.id));
     } else {
       setSelectedOrders([]);
     }
