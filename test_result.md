@@ -726,3 +726,22 @@ test_plan:
 agent_communication:
     - agent: "main"
       message: "Implemented tracking fallback solution and performance improvements. Key changes: 1) New TrackingWidget component with carrier-specific tracking URLs, 2) TrackingLink component for OrderDesk table, 3) Track Package button in Order Details, 4) Non-blocking Shopify tracking fetch with 5 second timeout, 5) Graceful error handling for invalid Shopify credentials. Testing agent should verify: OrderDesk loads quickly, tracking links work correctly for orders with tracking numbers, Order Details page shows Track Package button when tracking exists."
+
+  - task: "Server-side Pagination for OrderDesk"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDesk.js, backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reported dashboard takes 16.5 seconds to load with 343 orders. All orders were being loaded at once."
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented server-side pagination: 1) Backend now accepts page/limit/stage/status/archived/search params and returns paginated results with total_count/total_pages. 2) Added new /admin/orders/counts endpoint for folder counts (lightweight aggregation). 3) Frontend only loads 40 orders per page. 4) Added pagination controls (First/Prev/Next/Last buttons) at bottom of table. 5) Folder clicks reset to page 1. 6) Search is debounced and resets to page 1."
+
+agent_communication:
+    - agent: "main"
+      message: "Implemented server-side pagination to fix slow 16.5s page load. Backend changes: new /admin/orders endpoint with page/limit/stage/status/archived/search params, new /admin/orders/counts endpoint for sidebar counts. Frontend changes: loads only 40 orders per page, pagination controls added, folder selection resets page. Testing agent should verify: 1) OrderDesk loads fast (<2 seconds), 2) Pagination controls work (First/Prev/Next/Last), 3) Folder selection filters work and reset page, 4) Search works and resets page, 5) Sidebar counts are accurate."
