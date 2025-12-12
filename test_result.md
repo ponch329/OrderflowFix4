@@ -532,7 +532,43 @@ frontend:
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "Fixed WorkflowConfig saving bug where stages would disappear after saving. Implementation in WorkflowConfig.js handleSaveWorkflow function lines 370-403. Stages should now persist after save and page refresh. Needs comprehensive testing of Add Stage functionality, save operation, and persistence."
+          comment: "Fixed WorkflowConfig saving bug where stages would disappear after saving. Implementation in WorkflowConfig.js handleSaveWorkflow function lines 370-403. Stages should now persist after save"
+
+  - task: "Tracking Widget Performance Improvements"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/TrackingWidget.js, frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented fallback tracking solution with carrier-specific URLs and made Shopify calls non-blocking to prevent slow page loads. TrackingWidget component provides carrier icons and clickable tracking links. Needs comprehensive testing of page load speed and tracking functionality."
+
+  - task: "OrderDesk Tracking Column Display"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDesk.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added Tracking Number and Carrier columns to OrderDesk table. TrackingLink component displays clickable links with carrier icons for orders with tracking numbers, shows '-' placeholder for orders without tracking. Needs testing to verify column display and link functionality."
+
+  - task: "Order Details Track Package Button"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/OrderDetailsAdmin.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Integrated TrackingWidget component in Order Details page. For orders with tracking numbers, displays 'Track Package' button that opens modal with tracking number (copy button), carrier name, and link to carrier website. Needs testing to verify modal functionality and carrier website links." and page refresh. Needs comprehensive testing of Add Stage functionality, save operation, and persistence."
         - working: false
           agent: "testing"
           comment: "❌ WORKFLOW CONFIGURATION SAVING BUG PARTIALLY FIXED: Comprehensive testing revealed mixed results. **WORKING FEATURES**: ✅ Settings page accessible with 5 tabs (Branding, Email, Integrations, Permissions, Workflow), ✅ Workflow tab clickable and functional, ✅ 'Add Stage' button working correctly, ✅ New stage can be added (count increased from 2 to 3 stages), ✅ Stage fields can be filled (Stage Name: test_stage, Display Label: Test Stage), ✅ 'Save Workflow Configuration' button accessible and clickable, ✅ Success toast appears: 'Workflow configuration saved successfully!', ✅ New stage appears in Visual Workflow Flow diagram. **REMAINING ISSUE**: ❌ Stage persistence problem - new stage disappears from the stage list immediately after save, despite success message. **ROOT CAUSE**: The save operation appears to work (success message shows) but the stage data is not properly persisting in the UI state or there's a reload/refresh issue. **IMPACT**: Users can add stages and see success confirmation, but stages don't remain in the configuration list for further editing."
