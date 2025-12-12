@@ -410,7 +410,7 @@ export default function OrderDesk() {
     
     const csvContent = [
       headers.join(','),
-      ...filteredOrders.map(order => {
+      ...sortedOrders.map(order => {
         const status = order[`${order.stage}_status`] || '';
         const row = [
           order.id || '',
