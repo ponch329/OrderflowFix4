@@ -144,6 +144,9 @@ export default function OrderDesk() {
   const [startWidth, setStartWidth] = useState(0);
   const [timerRules, setTimerRules] = useState([]);
   
+  // Workflow config stages (dynamic folders)
+  const [workflowStages, setWorkflowStages] = useState([]);
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -152,8 +155,7 @@ export default function OrderDesk() {
     total: 0,
     archived: 0,
     by_stage: {},
-    clay_by_status: {},
-    paint_by_status: {}
+    status_counts: {} // Dynamic status counts per stage
   });
   const ORDERS_PER_PAGE = 40;
 
