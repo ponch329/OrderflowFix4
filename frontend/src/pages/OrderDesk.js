@@ -359,7 +359,7 @@ export default function OrderDesk() {
   };
 
   const isOrderSelected = (orderId) => selectedOrders.includes(orderId);
-  const allSelected = filteredOrders.length > 0 && selectedOrders.length === filteredOrders.length;
+  const allSelected = sortedOrders.length > 0 && selectedOrders.length === sortedOrders.length;
 
   const handleMouseDown = (e, columnId) => {
     const column = columns.find(c => c.id === columnId);
