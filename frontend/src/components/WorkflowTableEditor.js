@@ -94,16 +94,16 @@ const DEFAULT_STAGES = [
 ];
 
 const DEFAULT_WORKFLOW_RULES = [
-  { id: 1, fromStage: 'clay', fromStatus: 'sculpting', trigger: 'proof_uploaded', toStage: 'clay', toStatus: 'feedback_needed' },
-  { id: 2, fromStage: 'clay', fromStatus: 'feedback_needed', trigger: 'proof_approved', toStage: 'clay', toStatus: 'approved' },
-  { id: 3, fromStage: 'clay', fromStatus: 'feedback_needed', trigger: 'changes_requested', toStage: 'clay', toStatus: 'changes_requested' },
-  { id: 4, fromStage: 'clay', fromStatus: 'changes_requested', trigger: 'proof_uploaded', toStage: 'clay', toStatus: 'feedback_needed' },
-  { id: 5, fromStage: 'clay', fromStatus: 'approved', trigger: 'manual_change', toStage: 'paint', toStatus: 'painting' },
-  { id: 6, fromStage: 'paint', fromStatus: 'painting', trigger: 'proof_uploaded', toStage: 'paint', toStatus: 'feedback_needed' },
-  { id: 7, fromStage: 'paint', fromStatus: 'feedback_needed', trigger: 'proof_approved', toStage: 'paint', toStatus: 'approved' },
-  { id: 8, fromStage: 'paint', fromStatus: 'feedback_needed', trigger: 'changes_requested', toStage: 'paint', toStatus: 'changes_requested' },
-  { id: 9, fromStage: 'paint', fromStatus: 'changes_requested', trigger: 'proof_uploaded', toStage: 'paint', toStatus: 'feedback_needed' },
-  { id: 10, fromStage: 'paint', fromStatus: 'approved', trigger: 'tracking_added', toStage: 'shipped', toStatus: 'in_transit' },
+  { id: 1, fromStage: 'clay', fromStatus: 'sculpting', trigger: 'proof_uploaded', toStage: 'clay', toStatus: 'feedback_needed', emailAction: 'proof_ready' },
+  { id: 2, fromStage: 'clay', fromStatus: 'feedback_needed', trigger: 'proof_approved', toStage: 'clay', toStatus: 'approved', emailAction: 'approval_received' },
+  { id: 3, fromStage: 'clay', fromStatus: 'feedback_needed', trigger: 'changes_requested', toStage: 'clay', toStatus: 'changes_requested', emailAction: 'changes_received' },
+  { id: 4, fromStage: 'clay', fromStatus: 'changes_requested', trigger: 'proof_uploaded', toStage: 'clay', toStatus: 'feedback_needed', emailAction: 'proof_ready' },
+  { id: 5, fromStage: 'clay', fromStatus: 'approved', trigger: 'manual_change', toStage: 'paint', toStatus: 'painting', emailAction: 'stage_complete' },
+  { id: 6, fromStage: 'paint', fromStatus: 'painting', trigger: 'proof_uploaded', toStage: 'paint', toStatus: 'feedback_needed', emailAction: 'proof_ready' },
+  { id: 7, fromStage: 'paint', fromStatus: 'feedback_needed', trigger: 'proof_approved', toStage: 'paint', toStatus: 'approved', emailAction: 'approval_received' },
+  { id: 8, fromStage: 'paint', fromStatus: 'feedback_needed', trigger: 'changes_requested', toStage: 'paint', toStatus: 'changes_requested', emailAction: 'changes_received' },
+  { id: 9, fromStage: 'paint', fromStatus: 'changes_requested', trigger: 'proof_uploaded', toStage: 'paint', toStatus: 'feedback_needed', emailAction: 'proof_ready' },
+  { id: 10, fromStage: 'paint', fromStatus: 'approved', trigger: 'tracking_added', toStage: 'shipped', toStatus: 'in_transit', emailAction: 'order_shipped' },
 ];
 
 const DEFAULT_TIMER_RULES = [
