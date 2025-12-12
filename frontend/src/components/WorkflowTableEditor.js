@@ -3,75 +3,348 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save, Clock } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Plus, Trash2, Save, Clock, Layers, GitBranch, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
 
+// Predefined triggers that users can select from
+const PREDEFINED_TRIGGERS = [
+  { id: 'order_created', label: 'Order Created', description: 'When a new order enters the system' },
+  { id: 'proof_uploaded', label: 'Proof Uploaded', description: 'When admin uploads proofs for review' },
+  { id: 'proof_approved', label: 'Proof Approved', description: 'When customer approves their proofs' },
+  { id: 'changes_requested', label: 'Changes Requested', description: 'When customer requests changes to proofs' },
+  { id: 'all_proofs_approved', label: 'All Proofs Approved in Stage', description: 'When all proofs in a stage are approved' },
+  { id: 'tracking_added', label: 'Tracking Number Added', description: 'When tracking information is added to order' },
+  { id: 'order_shipped', label: 'Order Shipped', description: 'When order is marked as shipped' },
+  { id: 'manual_change', label: 'Manual Status Change', description: 'When admin manually changes status' },
+  { id: 'timer_expired', label: 'Timer Expired', description: 'When SLA timer expires for a status' },
+];
+
+// Default stages and statuses
+const DEFAULT_STAGES = [
+  {
+    id: 'clay',
+    name: 'Clay',
+    order: 1,
+    statuses: [
+      { id: 'sculpting', name: 'In Progress' },
+      { id: 'feedback_needed', name: 'Feedback Needed' },
+      { id: 'changes_requested', name: 'Changes Requested' },
+      { id: 'approved', name: 'Approved' },
+    ]
+  },
+  {
+    id: 'paint',
+    name: 'Paint',
+    order: 2,
+    statuses: [
+      { id: 'painting', name: 'In Progress' },
+      { id: 'feedback_needed', name: 'Feedback Needed' },
+      { id: 'changes_requested', name: 'Changes Requested' },
+      { id: 'approved', name: 'Approved' },
+    ]
+  },
+  {
+    id: 'shipped',
+    name: 'Shipped',
+    order: 3,
+    statuses: [
+      { id: 'in_transit', name: 'In Transit' },
+      { id: 'delivered', name: 'Delivered' },
+    ]
+  },
+  {
+    id: 'archived',
+    name: 'Archived',
+    order: 4,
+    statuses: [
+      { id: 'completed', name: 'Completed' },
+      { id: 'canceled', name: 'Canceled' },
+    ]
+  }
+];
+
+const DEFAULT_WORKFLOW_RULES = [
+  { id: 1, fromStage: 'clay', fromStatus: 'sculpting', trigger: 'proof_uploaded', toStage: 'clay', toStatus: 'feedback_needed' },
+  { id: 2, fromStage: 'clay', fromStatus: 'feedback_needed', trigger: 'proof_approved', toStage: 'clay', toStatus: 'approved' },
+  { id: 3, fromStage: 'clay', fromStatus: 'feedback_needed', trigger: 'changes_requested', toStage: 'clay', toStatus: 'changes_requested' },
+  { id: 4, fromStage: 'clay', fromStatus: 'changes_requested', trigger: 'proof_uploaded', toStage: 'clay', toStatus: 'feedback_needed' },
+  { id: 5, fromStage: 'clay', fromStatus: 'approved', trigger: 'manual_change', toStage: 'paint', toStatus: 'painting' },
+  { id: 6, fromStage: 'paint', fromStatus: 'painting', trigger: 'proof_uploaded', toStage: 'paint', toStatus: 'feedback_needed' },
+  { id: 7, fromStage: 'paint', fromStatus: 'feedback_needed', trigger: 'proof_approved', toStage: 'paint', toStatus: 'approved' },
+  { id: 8, fromStage: 'paint', fromStatus: 'feedback_needed', trigger: 'changes_requested', toStage: 'paint', toStatus: 'changes_requested' },
+  { id: 9, fromStage: 'paint', fromStatus: 'changes_requested', trigger: 'proof_uploaded', toStage: 'paint', toStatus: 'feedback_needed' },
+  { id: 10, fromStage: 'paint', fromStatus: 'approved', trigger: 'tracking_added', toStage: 'shipped', toStatus: 'in_transit' },
+];
+
+const DEFAULT_TIMER_RULES = [
+  { id: 1, stage: 'clay', status: 'sculpting', days: 2, hours: 0, backgroundColor: '#ffebcc', description: 'Clay stage taking longer than expected' },
+  { id: 2, stage: 'clay', status: 'feedback_needed', days: 1, hours: 0, backgroundColor: '#ffe0e0', description: 'Customer hasn\'t reviewed clay proofs' },
+  { id: 3, stage: 'paint', status: 'painting', days: 2, hours: 0, backgroundColor: '#ffebcc', description: 'Paint stage taking longer than expected' },
+  { id: 4, stage: 'paint', status: 'feedback_needed', days: 1, hours: 0, backgroundColor: '#ffe0e0', description: 'Customer hasn\'t reviewed paint proofs' },
+];
+
 export default function WorkflowTableEditor() {
+  const [stages, setStages] = useState([]);
   const [workflowRules, setWorkflowRules] = useState([]);
   const [timerRules, setTimerRules] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, type: null, item: null, usedIn: [] });
+  
+  // New stage/status form
+  const [newStageName, setNewStageName] = useState('');
+  const [newStatusName, setNewStatusName] = useState('');
+  const [selectedStageForStatus, setSelectedStageForStatus] = useState('');
 
   useEffect(() => {
-    loadWorkflowRules();
+    loadWorkflowConfig();
   }, []);
 
-  const loadWorkflowRules = async () => {
+  const loadWorkflowConfig = async () => {
     try {
       const response = await axios.get(`${API}/settings/tenant`);
       const settings = response.data.settings || {};
+      const workflowConfig = settings.workflow_config || {};
       
-      // Convert existing workflow config to table format
-      const rules = convertWorkflowToRules(settings.workflow || {});
-      setWorkflowRules(rules);
-      
-      // Load timer rules
-      const timers = settings.workflow?.timer_rules || getDefaultTimerRules();
-      setTimerRules(timers);
+      // Load stages or use defaults
+      setStages(workflowConfig.stages || DEFAULT_STAGES);
+      setWorkflowRules(workflowConfig.rules || DEFAULT_WORKFLOW_RULES);
+      setTimerRules(workflowConfig.timers || DEFAULT_TIMER_RULES);
     } catch (error) {
-      console.error("Failed to load workflow rules:", error);
-      // Set default rules
-      setWorkflowRules(getDefaultRules());
-      setTimerRules(getDefaultTimerRules());
+      console.error("Failed to load workflow config:", error);
+      // Use defaults
+      setStages(DEFAULT_STAGES);
+      setWorkflowRules(DEFAULT_WORKFLOW_RULES);
+      setTimerRules(DEFAULT_TIMER_RULES);
     }
   };
 
-  const getDefaultRules = () => [
-    { id: 1, stage: 'Clay', status: 'In Progress', triggeredBy: 'A new order enters the system', nextStage: 'Clay', nextStatus: 'Feedback Needed' },
-    { id: 2, stage: 'Clay', status: 'Feedback Needed', triggeredBy: 'Admin uploads Clay proofs', nextStage: 'Clay', nextStatus: 'Either Changes Requested or Approved' },
-    { id: 3, stage: 'Clay', status: 'Changes Requested', triggeredBy: 'Customer Requests Changes to their Clay proofs', nextStage: 'Clay', nextStatus: 'Feedback Needed' },
-    { id: 4, stage: 'Clay', status: 'Approved', triggeredBy: 'Customer Approves their Clay proofs', nextStage: 'Paint', nextStatus: 'In Progress' },
-    { id: 5, stage: 'Paint', status: 'In Progress', triggeredBy: 'An order has been in Clay Approved for 24 hours', nextStage: 'Paint', nextStatus: 'Feedback Needed' },
-    { id: 6, stage: 'Paint', status: 'Feedback Needed', triggeredBy: 'Admin uploads Paint proofs', nextStage: 'Paint', nextStatus: 'Either Changes Requested or Approved' },
-    { id: 7, stage: 'Paint', status: 'Changes Requested', triggeredBy: 'Customer Requests Changes to their Paint proofs', nextStage: 'Paint', nextStatus: 'Feedback Needed' },
-    { id: 8, stage: 'Paint', status: 'Approved', triggeredBy: 'Customer Approves their Paint Proofs', nextStage: 'Paint', nextStatus: 'Approved' },
-  ];
-
-  const convertWorkflowToRules = (workflow) => {
-    // For now, return default rules - this can be enhanced to parse existing config
-    return getDefaultRules();
+  // Get all statuses for a specific stage
+  const getStatusesForStage = (stageId) => {
+    const stage = stages.find(s => s.id === stageId);
+    return stage?.statuses || [];
   };
 
+  // Get stage name by ID
+  const getStageName = (stageId) => {
+    const stage = stages.find(s => s.id === stageId);
+    return stage?.name || stageId;
+  };
+
+  // Get status name by ID within a stage
+  const getStatusName = (stageId, statusId) => {
+    const stage = stages.find(s => s.id === stageId);
+    const status = stage?.statuses?.find(st => st.id === statusId);
+    return status?.name || statusId;
+  };
+
+  // Get trigger label
+  const getTriggerLabel = (triggerId) => {
+    const trigger = PREDEFINED_TRIGGERS.find(t => t.id === triggerId);
+    return trigger?.label || triggerId;
+  };
+
+  // Check if stage is used in rules
+  const isStageUsedInRules = (stageId) => {
+    const rulesUsing = workflowRules.filter(r => r.fromStage === stageId || r.toStage === stageId);
+    const timersUsing = timerRules.filter(t => t.stage === stageId);
+    return [...rulesUsing.map(r => ({ type: 'rule', item: r })), ...timersUsing.map(t => ({ type: 'timer', item: t }))];
+  };
+
+  // Check if status is used in rules
+  const isStatusUsedInRules = (stageId, statusId) => {
+    const rulesUsing = workflowRules.filter(r => 
+      (r.fromStage === stageId && r.fromStatus === statusId) ||
+      (r.toStage === stageId && r.toStatus === statusId)
+    );
+    const timersUsing = timerRules.filter(t => t.stage === stageId && t.status === statusId);
+    return [...rulesUsing.map(r => ({ type: 'rule', item: r })), ...timersUsing.map(t => ({ type: 'timer', item: t }))];
+  };
+
+  // ==================== STAGE MANAGEMENT ====================
+  const handleAddStage = () => {
+    if (!newStageName.trim()) {
+      toast.error("Please enter a stage name");
+      return;
+    }
+    
+    const stageId = newStageName.toLowerCase().replace(/\s+/g, '_');
+    if (stages.find(s => s.id === stageId)) {
+      toast.error("A stage with this name already exists");
+      return;
+    }
+
+    const newStage = {
+      id: stageId,
+      name: newStageName.trim(),
+      order: stages.length + 1,
+      statuses: [
+        { id: 'in_progress', name: 'In Progress' },
+        { id: 'completed', name: 'Completed' },
+      ]
+    };
+    
+    setStages([...stages, newStage]);
+    setNewStageName('');
+    toast.success(`Stage "${newStageName}" added`);
+  };
+
+  const handleDeleteStage = (stageId) => {
+    const usedIn = isStageUsedInRules(stageId);
+    if (usedIn.length > 0) {
+      setDeleteDialog({
+        open: true,
+        type: 'stage',
+        item: stages.find(s => s.id === stageId),
+        usedIn
+      });
+      return;
+    }
+    
+    setStages(stages.filter(s => s.id !== stageId));
+    toast.success("Stage deleted");
+  };
+
+  const confirmDelete = () => {
+    if (deleteDialog.type === 'stage') {
+      // Remove stage and all rules/timers using it
+      const stageId = deleteDialog.item.id;
+      setStages(stages.filter(s => s.id !== stageId));
+      setWorkflowRules(workflowRules.filter(r => r.fromStage !== stageId && r.toStage !== stageId));
+      setTimerRules(timerRules.filter(t => t.stage !== stageId));
+      toast.success("Stage and related rules deleted");
+    } else if (deleteDialog.type === 'status') {
+      // Remove status and all rules/timers using it
+      const { stageId, statusId } = deleteDialog.item;
+      setStages(stages.map(s => 
+        s.id === stageId 
+          ? { ...s, statuses: s.statuses.filter(st => st.id !== statusId) }
+          : s
+      ));
+      setWorkflowRules(workflowRules.filter(r => 
+        !((r.fromStage === stageId && r.fromStatus === statusId) ||
+          (r.toStage === stageId && r.toStatus === statusId))
+      ));
+      setTimerRules(timerRules.filter(t => !(t.stage === stageId && t.status === statusId)));
+      toast.success("Status and related rules deleted");
+    }
+    setDeleteDialog({ open: false, type: null, item: null, usedIn: [] });
+  };
+
+  const handleUpdateStageName = (stageId, newName) => {
+    setStages(stages.map(s => 
+      s.id === stageId ? { ...s, name: newName } : s
+    ));
+  };
+
+  // ==================== STATUS MANAGEMENT ====================
+  const handleAddStatus = () => {
+    if (!selectedStageForStatus) {
+      toast.error("Please select a stage first");
+      return;
+    }
+    if (!newStatusName.trim()) {
+      toast.error("Please enter a status name");
+      return;
+    }
+
+    const statusId = newStatusName.toLowerCase().replace(/\s+/g, '_');
+    const stage = stages.find(s => s.id === selectedStageForStatus);
+    
+    if (stage?.statuses?.find(st => st.id === statusId)) {
+      toast.error("This status already exists in the selected stage");
+      return;
+    }
+
+    setStages(stages.map(s => 
+      s.id === selectedStageForStatus
+        ? { ...s, statuses: [...(s.statuses || []), { id: statusId, name: newStatusName.trim() }] }
+        : s
+    ));
+    
+    setNewStatusName('');
+    toast.success(`Status "${newStatusName}" added to ${stage?.name}`);
+  };
+
+  const handleDeleteStatus = (stageId, statusId) => {
+    const usedIn = isStatusUsedInRules(stageId, statusId);
+    if (usedIn.length > 0) {
+      setDeleteDialog({
+        open: true,
+        type: 'status',
+        item: { stageId, statusId, name: getStatusName(stageId, statusId) },
+        usedIn
+      });
+      return;
+    }
+
+    setStages(stages.map(s => 
+      s.id === stageId 
+        ? { ...s, statuses: s.statuses.filter(st => st.id !== statusId) }
+        : s
+    ));
+    toast.success("Status deleted");
+  };
+
+  const handleUpdateStatusName = (stageId, statusId, newName) => {
+    setStages(stages.map(s => 
+      s.id === stageId 
+        ? { 
+            ...s, 
+            statuses: s.statuses.map(st => 
+              st.id === statusId ? { ...st, name: newName } : st
+            ) 
+          }
+        : s
+    ));
+  };
+
+  // ==================== WORKFLOW RULES ====================
   const handleAddRule = () => {
     const newRule = {
       id: Date.now(),
-      stage: '',
-      status: '',
-      triggeredBy: '',
-      nextStage: '',
-      nextStatus: ''
+      fromStage: stages[0]?.id || '',
+      fromStatus: stages[0]?.statuses?.[0]?.id || '',
+      trigger: 'manual_change',
+      toStage: stages[0]?.id || '',
+      toStatus: stages[0]?.statuses?.[0]?.id || '',
     };
     setWorkflowRules([...workflowRules, newRule]);
   };
 
   const handleUpdateRule = (id, field, value) => {
     setWorkflowRules(rules => 
-      rules.map(rule => 
-        rule.id === id ? { ...rule, [field]: value } : rule
-      )
+      rules.map(rule => {
+        if (rule.id !== id) return rule;
+        
+        const updated = { ...rule, [field]: value };
+        
+        // Auto-update status when stage changes
+        if (field === 'fromStage') {
+          const stageStatuses = getStatusesForStage(value);
+          updated.fromStatus = stageStatuses[0]?.id || '';
+        }
+        if (field === 'toStage') {
+          const stageStatuses = getStatusesForStage(value);
+          updated.toStatus = stageStatuses[0]?.id || '';
+        }
+        
+        return updated;
+      })
     );
   };
 
@@ -79,85 +352,13 @@ export default function WorkflowTableEditor() {
     setWorkflowRules(rules => rules.filter(rule => rule.id !== id));
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      // Convert rules back to workflow config format
-      const workflowConfig = convertRulesToWorkflow(workflowRules);
-      
-      await axios.patch(`${API}/settings/tenant`, {
-        settings: { workflow: workflowConfig }
-      });
-
-      toast.success("Workflow rules saved successfully!");
-    } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to save workflow rules");
-      console.error(error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const convertRulesToWorkflow = (rules) => {
-    // Extract unique stages
-    const stages = [...new Set(rules.map(r => r.stage?.toLowerCase()).filter(Boolean))];
-    
-    // Build stage labels, transitions, etc.
-    const stageLabels = {};
-    const stageTransitions = {};
-    const stageRequiresApproval = {};
-    
-    stages.forEach(stage => {
-      stageLabels[stage] = stage.charAt(0).toUpperCase() + stage.slice(1);
-      stageRequiresApproval[stage] = true;
-      
-      // Find transition rules for this stage
-      const approvalRule = rules.find(r => 
-        r.stage?.toLowerCase() === stage && 
-        r.status?.toLowerCase().includes('approved') &&
-        r.nextStage?.toLowerCase() !== stage
-      );
-      
-      if (approvalRule && approvalRule.nextStage) {
-        stageTransitions[stage] = approvalRule.nextStage.toLowerCase();
-      }
-    });
-
-    return {
-      stages,
-      stage_labels: stageLabels,
-      stage_transitions: stageTransitions,
-      stage_requires_customer_approval: stageRequiresApproval,
-      status_labels: {
-        pending: 'Pending',
-        sculpting: 'In Progress',
-        painting: 'Painting',
-        feedback_needed: 'Feedback Needed',
-        changes_requested: 'Changes Requested',
-        approved: 'Approved'
-      },
-      auto_advance_on_approval: true,
-      status_after_upload: 'feedback_needed',
-      notify_customer_on_upload: true,
-      notify_admin_on_customer_response: true,
-      workflow_rules: rules, // Store the raw rules for future editing
-      timer_rules: timerRules // Store timer configuration
-    };
-  };
-
-  const getDefaultTimerRules = () => [
-    { id: 1, stage: 'Clay', status: 'In Progress', days: 2, hours: 0, backgroundColor: '#ffebcc', description: 'Clay stage taking longer than expected' },
-    { id: 2, stage: 'Clay', status: 'Feedback Needed', days: 1, hours: 0, backgroundColor: '#ffe0e0', description: 'Customer hasn\'t reviewed clay proofs' },
-    { id: 3, stage: 'Paint', status: 'In Progress', days: 2, hours: 0, backgroundColor: '#ffebcc', description: 'Paint stage taking longer than expected' },
-    { id: 4, stage: 'Paint', status: 'Feedback Needed', days: 1, hours: 0, backgroundColor: '#ffe0e0', description: 'Customer hasn\'t reviewed paint proofs' },
-  ];
-
+  // ==================== TIMER RULES ====================
   const handleAddTimerRule = () => {
     const newRule = {
       id: Date.now(),
-      stage: '',
-      status: '',
-      days: 0,
+      stage: stages[0]?.id || '',
+      status: stages[0]?.statuses?.[0]?.id || '',
+      days: 1,
       hours: 0,
       backgroundColor: '#ffebcc',
       description: ''
@@ -167,9 +368,19 @@ export default function WorkflowTableEditor() {
 
   const handleUpdateTimerRule = (id, field, value) => {
     setTimerRules(rules => 
-      rules.map(rule => 
-        rule.id === id ? { ...rule, [field]: value } : rule
-      )
+      rules.map(rule => {
+        if (rule.id !== id) return rule;
+        
+        const updated = { ...rule, [field]: value };
+        
+        // Auto-update status when stage changes
+        if (field === 'stage') {
+          const stageStatuses = getStatusesForStage(value);
+          updated.status = stageStatuses[0]?.id || '';
+        }
+        
+        return updated;
+      })
     );
   };
 
@@ -177,243 +388,473 @@ export default function WorkflowTableEditor() {
     setTimerRules(rules => rules.filter(rule => rule.id !== id));
   };
 
+  // ==================== SAVE ====================
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const workflowConfig = {
+        stages,
+        rules: workflowRules,
+        timers: timerRules,
+        // Legacy format for backwards compatibility
+        stage_labels: Object.fromEntries(stages.map(s => [s.id, s.name])),
+        status_labels: Object.fromEntries(
+          stages.flatMap(s => s.statuses.map(st => [st.id, st.name]))
+        ),
+      };
+      
+      await axios.patch(`${API}/settings/tenant`, {
+        settings: { workflow_config: workflowConfig }
+      });
+
+      toast.success("Workflow configuration saved successfully!");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to save workflow configuration");
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Workflow Configuration</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <GitBranch className="w-5 h-5" />
+          Workflow Configuration
+        </CardTitle>
         <CardDescription>
-          Manage workflow rules and timing alerts
+          Define your workflow stages, statuses, and automation rules
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="rules" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="rules">Workflow Rules</TabsTrigger>
-            <TabsTrigger value="timers">
-              <Clock className="w-4 h-4 mr-2" />
+        <Tabs defaultValue="stages" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="stages" className="flex items-center gap-2">
+              <Layers className="w-4 h-4" />
+              Stages & Statuses
+            </TabsTrigger>
+            <TabsTrigger value="rules" className="flex items-center gap-2">
+              <GitBranch className="w-4 h-4" />
+              Workflow Rules
+            </TabsTrigger>
+            <TabsTrigger value="timers" className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
               Timer Alerts
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="rules" className="space-y-4 mt-4">
-        <div className="mb-4 flex justify-between items-center">
-          <Button onClick={handleAddRule} variant="outline" size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Rule
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Workflow'}
-          </Button>
-        </div>
+          {/* ==================== TAB 1: STAGES & STATUSES ==================== */}
+          <TabsContent value="stages" className="space-y-6 mt-4">
+            <div className="flex justify-end">
+              <Button onClick={handleSave} disabled={saving}>
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? 'Saving...' : 'Save All Changes'}
+              </Button>
+            </div>
 
-        <div className="border rounded-lg overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-32">Stage</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-40">Status</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 flex-1">Triggered by</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-32">Next Stage</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-40">Next Status</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-16"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {workflowRules.map((rule, idx) => (
-                <tr key={rule.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="p-2">
-                    <Input
-                      value={rule.stage}
-                      onChange={(e) => handleUpdateRule(rule.id, 'stage', e.target.value)}
-                      placeholder="Clay"
-                      className="text-sm"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <Input
-                      value={rule.status}
-                      onChange={(e) => handleUpdateRule(rule.id, 'status', e.target.value)}
-                      placeholder="In Progress"
-                      className="text-sm"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <Input
-                      value={rule.triggeredBy}
-                      onChange={(e) => handleUpdateRule(rule.id, 'triggeredBy', e.target.value)}
-                      placeholder="Admin uploads proofs"
-                      className="text-sm"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <Input
-                      value={rule.nextStage}
-                      onChange={(e) => handleUpdateRule(rule.id, 'nextStage', e.target.value)}
-                      placeholder="Clay"
-                      className="text-sm"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <Input
-                      value={rule.nextStatus}
-                      onChange={(e) => handleUpdateRule(rule.id, 'nextStatus', e.target.value)}
-                      placeholder="Feedback Needed"
-                      className="text-sm"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteRule(rule.id)}
-                      className="h-8 w-8"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            {/* Add New Stage */}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <h3 className="font-semibold mb-3">Add New Stage</h3>
+              <div className="flex gap-2">
+                <Input
+                  value={newStageName}
+                  onChange={(e) => setNewStageName(e.target.value)}
+                  placeholder="Enter stage name (e.g., Quality Check)"
+                  className="flex-1"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddStage()}
+                />
+                <Button onClick={handleAddStage}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Stage
+                </Button>
+              </div>
+            </div>
 
-        {workflowRules.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <p>No workflow rules defined. Click "Add Rule" to get started.</p>
-          </div>
-        )}
-
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="font-semibold text-blue-900 mb-2">How to Use</h4>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Each row represents a transition rule in your workflow</li>
-            <li>• <strong>Stage</strong> and <strong>Status</strong> define the current state of an order</li>
-            <li>• <strong>Triggered by</strong> describes what action causes the transition</li>
-            <li>• <strong>Next Stage</strong> and <strong>Next Status</strong> define where the order moves to</li>
-            <li>• Click "Add Rule" to create new workflow transitions</li>
-            <li>• Click the trash icon to delete a rule</li>
-          </ul>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="timers" className="space-y-4 mt-4">
-        <div className="mb-4 flex justify-between items-center">
-          <Button onClick={handleAddTimerRule} variant="outline" size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Timer Rule
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Timers'}
-          </Button>
-        </div>
-
-        <div className="border rounded-lg overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-32">Stage</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-40">Status</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-24">Days</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-24">Hours</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-40">Background Color</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 flex-1">Description</th>
-                <th className="p-3 text-left text-sm font-semibold text-gray-700 w-16"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {(timerRules.length > 0 ? timerRules : getDefaultTimerRules()).map((rule, idx) => (
-                <tr key={rule.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="p-2">
-                    <Input
-                      value={rule.stage}
-                      onChange={(e) => handleUpdateTimerRule(rule.id, 'stage', e.target.value)}
-                      placeholder="Clay"
-                      className="text-sm"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <Input
-                      value={rule.status}
-                      onChange={(e) => handleUpdateTimerRule(rule.id, 'status', e.target.value)}
-                      placeholder="In Progress"
-                      className="text-sm"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      value={rule.days}
-                      onChange={(e) => handleUpdateTimerRule(rule.id, 'days', parseInt(e.target.value) || 0)}
-                      className="text-sm"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="23"
-                      value={rule.hours}
-                      onChange={(e) => handleUpdateTimerRule(rule.id, 'hours', parseInt(e.target.value) || 0)}
-                      className="text-sm"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={rule.backgroundColor}
-                        onChange={(e) => handleUpdateTimerRule(rule.id, 'backgroundColor', e.target.value)}
-                        className="w-10 h-8 rounded cursor-pointer"
-                      />
+            {/* Stages List */}
+            <div className="space-y-4">
+              {stages.map((stage, stageIdx) => (
+                <div key={stage.id} className="border rounded-lg overflow-hidden">
+                  <div className="bg-gray-100 p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-gray-500">#{stageIdx + 1}</span>
                       <Input
-                        value={rule.backgroundColor}
-                        onChange={(e) => handleUpdateTimerRule(rule.id, 'backgroundColor', e.target.value)}
-                        placeholder="#ffebcc"
-                        className="text-sm flex-1"
+                        value={stage.name}
+                        onChange={(e) => handleUpdateStageName(stage.id, e.target.value)}
+                        className="font-semibold w-48 bg-white"
                       />
+                      <span className="text-xs text-gray-400">ID: {stage.id}</span>
                     </div>
-                  </td>
-                  <td className="p-2">
-                    <Input
-                      value={rule.description}
-                      onChange={(e) => handleUpdateTimerRule(rule.id, 'description', e.target.value)}
-                      placeholder="Order taking too long"
-                      className="text-sm"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTimerRule(rule.id)}
-                      className="h-8 w-8"
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleDeleteStage(stage.id)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
-                      <Trash2 className="w-4 h-4 text-red-500" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
-                  </td>
-                </tr>
+                  </div>
+                  
+                  <div className="p-4">
+                    <h4 className="text-sm font-medium text-gray-600 mb-2">Statuses in {stage.name}:</h4>
+                    <div className="space-y-2">
+                      {stage.statuses?.map((status) => (
+                        <div key={status.id} className="flex items-center gap-2 pl-4">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <Input
+                            value={status.name}
+                            onChange={(e) => handleUpdateStatusName(stage.id, status.id, e.target.value)}
+                            className="flex-1 max-w-xs"
+                          />
+                          <span className="text-xs text-gray-400">ID: {status.id}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDeleteStatus(stage.id, status.id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
 
-        <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <h4 className="font-semibold text-amber-900 mb-2">How Timer Alerts Work</h4>
-          <ul className="text-sm text-amber-800 space-y-1">
-            <li>• Set time thresholds for each Stage/Status combination</li>
-            <li>• When an order exceeds the time limit, the background color will change on the dashboard</li>
-            <li>• <strong>Days</strong> and <strong>Hours</strong> define how long before the alert triggers</li>
-            <li>• <strong>Background Color</strong> is the highlight color applied to overdue orders</li>
-            <li>• Use different colors for different urgency levels (yellow=warning, red=urgent)</li>
-            <li>• This helps you quickly identify orders that need immediate attention</li>
-          </ul>
-        </div>
-      </TabsContent>
-    </Tabs>
+            {/* Add New Status */}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <h3 className="font-semibold mb-3">Add New Status</h3>
+              <div className="flex gap-2">
+                <Select value={selectedStageForStatus} onValueChange={setSelectedStageForStatus}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select Stage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stages.map(stage => (
+                      <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  value={newStatusName}
+                  onChange={(e) => setNewStatusName(e.target.value)}
+                  placeholder="Enter status name"
+                  className="flex-1"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddStatus()}
+                />
+                <Button onClick={handleAddStatus}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Status
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ==================== TAB 2: WORKFLOW RULES ==================== */}
+          <TabsContent value="rules" className="space-y-4 mt-4">
+            <div className="flex justify-between items-center">
+              <Button onClick={handleAddRule} variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Rule
+              </Button>
+              <Button onClick={handleSave} disabled={saving}>
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? 'Saving...' : 'Save All Changes'}
+              </Button>
+            </div>
+
+            <Alert>
+              <AlertDescription>
+                Workflow rules define what happens when certain triggers occur. Each rule moves an order from one stage/status to another.
+              </AlertDescription>
+            </Alert>
+
+            <div className="border rounded-lg overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">From Stage</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">From Status</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">When (Trigger)</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">To Stage</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">To Status</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700 w-16"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {workflowRules.map((rule, idx) => (
+                    <tr key={rule.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="p-2">
+                        <Select 
+                          value={rule.fromStage} 
+                          onValueChange={(v) => handleUpdateRule(rule.id, 'fromStage', v)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Stage" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {stages.map(stage => (
+                              <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2">
+                        <Select 
+                          value={rule.fromStatus} 
+                          onValueChange={(v) => handleUpdateRule(rule.id, 'fromStatus', v)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getStatusesForStage(rule.fromStage).map(status => (
+                              <SelectItem key={status.id} value={status.id}>{status.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2">
+                        <Select 
+                          value={rule.trigger} 
+                          onValueChange={(v) => handleUpdateRule(rule.id, 'trigger', v)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Trigger" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PREDEFINED_TRIGGERS.map(trigger => (
+                              <SelectItem key={trigger.id} value={trigger.id}>
+                                <div className="flex flex-col">
+                                  <span>{trigger.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2">
+                        <Select 
+                          value={rule.toStage} 
+                          onValueChange={(v) => handleUpdateRule(rule.id, 'toStage', v)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Stage" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {stages.map(stage => (
+                              <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2">
+                        <Select 
+                          value={rule.toStatus} 
+                          onValueChange={(v) => handleUpdateRule(rule.id, 'toStatus', v)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getStatusesForStage(rule.toStage).map(status => (
+                              <SelectItem key={status.id} value={status.id}>{status.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDeleteRule(rule.id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {workflowRules.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No workflow rules defined. Click "Add Rule" to create one.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* ==================== TAB 3: TIMER ALERTS ==================== */}
+          <TabsContent value="timers" className="space-y-4 mt-4">
+            <div className="flex justify-between items-center">
+              <Button onClick={handleAddTimerRule} variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Timer Rule
+              </Button>
+              <Button onClick={handleSave} disabled={saving}>
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? 'Saving...' : 'Save All Changes'}
+              </Button>
+            </div>
+
+            <Alert>
+              <AlertDescription>
+                Timer rules highlight orders that have been in a specific status for too long. The background color will appear on the OrderDesk dashboard.
+              </AlertDescription>
+            </Alert>
+
+            <div className="border rounded-lg overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Stage</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700 w-24">Days</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700 w-24">Hours</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700 w-32">Highlight Color</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">Description</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700 w-16"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {timerRules.map((rule, idx) => (
+                    <tr key={rule.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="p-2">
+                        <Select 
+                          value={rule.stage} 
+                          onValueChange={(v) => handleUpdateTimerRule(rule.id, 'stage', v)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Stage" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {stages.map(stage => (
+                              <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2">
+                        <Select 
+                          value={rule.status} 
+                          onValueChange={(v) => handleUpdateTimerRule(rule.id, 'status', v)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getStatusesForStage(rule.stage).map(status => (
+                              <SelectItem key={status.id} value={status.id}>{status.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          type="number"
+                          min="0"
+                          value={rule.days}
+                          onChange={(e) => handleUpdateTimerRule(rule.id, 'days', parseInt(e.target.value) || 0)}
+                          className="w-full"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="23"
+                          value={rule.hours}
+                          onChange={(e) => handleUpdateTimerRule(rule.id, 'hours', parseInt(e.target.value) || 0)}
+                          className="w-full"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={rule.backgroundColor}
+                            onChange={(e) => handleUpdateTimerRule(rule.id, 'backgroundColor', e.target.value)}
+                            className="w-10 h-8 cursor-pointer border rounded"
+                          />
+                          <Input
+                            value={rule.backgroundColor}
+                            onChange={(e) => handleUpdateTimerRule(rule.id, 'backgroundColor', e.target.value)}
+                            className="w-24 text-xs"
+                          />
+                        </div>
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          value={rule.description}
+                          onChange={(e) => handleUpdateTimerRule(rule.id, 'description', e.target.value)}
+                          placeholder="Optional description"
+                          className="w-full"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDeleteTimerRule(rule.id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {timerRules.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No timer rules defined. Click "Add Timer Rule" to create one.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => !open && setDeleteDialog({ ...deleteDialog, open: false })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-orange-600">
+              <AlertTriangle className="w-5 h-5" />
+              Warning: Item In Use
+            </DialogTitle>
+            <DialogDescription>
+              {deleteDialog.type === 'stage' && (
+                <>The stage "{deleteDialog.item?.name}" is used in {deleteDialog.usedIn.length} rule(s)/timer(s).</>
+              )}
+              {deleteDialog.type === 'status' && (
+                <>The status "{deleteDialog.item?.name}" is used in {deleteDialog.usedIn.length} rule(s)/timer(s).</>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-600 mb-2">Deleting this will also remove:</p>
+            <ul className="text-sm list-disc pl-5 space-y-1">
+              {deleteDialog.usedIn.map((usage, idx) => (
+                <li key={idx} className="text-gray-500">
+                  {usage.type === 'rule' ? 'Workflow Rule' : 'Timer Rule'}: {getStageName(usage.item.fromStage || usage.item.stage)} → {getStatusName(usage.item.fromStage || usage.item.stage, usage.item.fromStatus || usage.item.status)}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialog({ ...deleteDialog, open: false })}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete Anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
