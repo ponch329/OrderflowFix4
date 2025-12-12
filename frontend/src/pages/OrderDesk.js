@@ -469,8 +469,8 @@ export default function OrderDesk() {
     try {
       const response = await axios.post(`${API}/settings/shopify/sync`);
       toast.success(`Synced ${response.data.new_orders || 0} new orders from Shopify`);
-      // Refresh the orders after sync
-      await fetchOrders();
+      // Refresh the orders and counts after sync
+      await Promise.all([fetchOrders(), fetchOrderCounts()]);
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to sync orders from Shopify");
       console.error(error);
