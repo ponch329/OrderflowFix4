@@ -359,10 +359,9 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Tracking Widget Performance Improvements"
-    - "OrderDesk Tracking Column Display"
-    - "Order Details Track Package Button"
+    - "Server-side Pagination Implementation"
     - "Page Load Speed Optimization"
+    - "Pagination Controls Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
