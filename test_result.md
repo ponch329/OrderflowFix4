@@ -359,10 +359,10 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Backend Refactoring - Workflow Rules as Source of Truth"
-    - "Tracking Information Upload"
-    - "Timer Alerts Tab"
-    - "Timer Color Application"
+    - "Tracking Widget Performance Improvements"
+    - "OrderDesk Tracking Column Display"
+    - "Order Details Track Package Button"
+    - "Page Load Speed Optimization"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
