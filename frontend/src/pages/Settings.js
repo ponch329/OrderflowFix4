@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import WorkflowConfig from "@/components/WorkflowConfig";
 import WorkflowTableEditor from "@/components/WorkflowTableEditor";
 
-const BACKEND_URL = window.location.origin;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
 const Settings = () => {
