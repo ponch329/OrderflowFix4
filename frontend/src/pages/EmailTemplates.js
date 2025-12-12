@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Mail, Edit, Eye, Send, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
-const BACKEND_URL = window.location.origin;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
 // Email template definitions - these match the actual HTML emails being sent

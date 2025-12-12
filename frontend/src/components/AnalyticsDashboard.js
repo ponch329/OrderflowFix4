@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = window.location.origin;
+const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 export default function AnalyticsDashboard() {
   const [analytics, setAnalytics] = useState(null);
