@@ -407,6 +407,30 @@ frontend:
           agent: "testing"
           comment: "✅ SERVER-SIDE PAGINATION COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY: All 5 test scenarios passed with excellent results. **CRITICAL SUCCESS - Page Load Speed**: OrderDesk loads in 0.93s (target <3s, ideal <2s) - MASSIVE improvement from reported 16.5s. **Server-side Pagination Working**: Only 1 order displayed (≤40 per page limit), pagination controls correctly hidden when not needed. **Folder Selection**: All folders (All Orders, CLAY, PAINT, ARCHIVED) functional with proper filtering - page resets correctly when switching folders. **Search Functionality**: Search input found and working correctly with debounced search (300ms), filters results properly, page resets on new search. **Order Count Display**: '1 Orders Found' indicator present and accurate. **Performance Analysis**: Server-side pagination successfully implemented with ORDERS_PER_PAGE=40, no pagination controls shown with only 1 order (correct behavior), no visible errors detected. **CONCLUSION**: The original performance issue (16.5s load time due to loading all 343 orders) has been completely resolved. Server-side pagination is working perfectly, loading only 40 orders per page with proper pagination controls that appear when needed. All requested functionality from review request successfully implemented and tested."
 
+  - task: "Dynamic Folders from Workflow Configuration"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/OrderDesk.js, frontend/src/components/WorkflowTableEditor.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ DYNAMIC FOLDERS COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY: OrderDesk sidebar now reads stages from Workflow Configuration and builds folders dynamically. **Test Results**: 1) ✅ Initial state verified - All Orders, CLAY, PAINT, SHIPPED, ARCHIVED folders present with proper sub-statuses (Clay - In Progress, Clay - Feedback Needed, Clay - Changes Requested, Clay - Approved), 2) ✅ Successfully added new 'Quality Check' stage in Settings > Workflow Configuration > Stages & Statuses tab, 3) ✅ New QUALITY CHECK folder automatically appeared in OrderDesk sidebar after saving changes, 4) ✅ Folder filtering working correctly - CLAY shows 1 order, QUALITY CHECK shows 0 orders (expected for new stage), 5) ✅ Dynamic folder creation from workflow config confirmed working. **Implementation Verified**: OrderDesk.js fetchWorkflowConfig() function loads stages from workflow configuration, folderStructure array built dynamically from workflowStages, new stages create corresponding folders automatically. All functionality working as specified in review request."
+
+  - task: "Email Actions Column in Workflow Rules"
+    implemented: true
+    working: true
+    file: "frontend/src/components/WorkflowTableEditor.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ EMAIL ACTIONS COLUMN COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY: Workflow Rules tab now has Email Action column allowing selection of email templates to send when rules fire. **Test Results**: 1) ✅ Found '📧 Email Action' column header in Workflow Rules tab, 2) ✅ Found 10 existing email action dropdowns in workflow rules, 3) ✅ All 11 expected email options present: No Email, Proof Ready for Review, Approval Confirmation, Changes Request Received, Stage Complete, Order Shipped, Tracking Update, Reminder Email, Order Complete, SLA Warning, Custom Email, 4) ✅ Successfully added new rule with email action selection, 5) ✅ Email action selection persists after save and page refresh. **Implementation Verified**: WorkflowTableEditor.js contains EMAIL_TEMPLATES array with all expected options, email action dropdown in 6th column of workflow rules table, handleUpdateRule function properly handles emailAction field updates. All functionality working as specified in review request."
+
 agent_communication:
     - agent: "testing"
       message: "✅ SERVER-SIDE PAGINATION TESTING COMPLETED SUCCESSFULLY: Comprehensive testing of the new server-side pagination implementation completed with outstanding results. **CRITICAL SUCCESS**: Page load time improved from 16.5s to 0.93s (93% improvement) - the main user complaint has been resolved. **Key Findings**: 1) Server-side pagination working perfectly (≤40 orders per page), 2) Pagination controls correctly hidden when not needed (only 1 order in system), 3) All folder navigation working with proper page resets, 4) Search functionality working with debounced search and page reset, 5) Order count display accurate, 6) No console errors or loading issues detected. **Implementation Verified**: ORDERS_PER_PAGE=40 constant, pagination controls at bottom (.sticky.bottom-0), server-side filtering with page/limit parameters, proper folder selection page reset (setCurrentPage(1)), debounced search with 300ms delay. The performance optimization has successfully addressed the user's original complaint about slow dashboard loading."
