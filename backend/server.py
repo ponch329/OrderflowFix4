@@ -107,10 +107,17 @@ async def admin_login_legacy(login_data: dict):
     return await login(user_login, db)
 
 @api_router.get("/admin/orders")
-async def get_admin_orders_legacy():
+async def get_admin_orders_legacy(
+    page: int = 1,
+    limit: int = 40,
+    stage: str = None,
+    status: str = None,
+    archived: bool = None,
+    search: str = None
+):
     """
-    Legacy admin orders endpoint - returns all orders without pagination
-    For backwards compatibility during transition
+    Admin orders endpoint with server-side pagination
+    Returns paginated orders for better performance
     """
     # Get first tenant
     tenant = await db.tenants.find_one({}, {"_id": 0})
@@ -119,7 +126,42 @@ async def get_admin_orders_legacy():
     
     tenant_id = tenant["id"]
     
-    orders = await db.orders.find({"tenant_id": tenant_id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    # Build query filter
+    query = {"tenant_id": tenant_id}
+    
+    # Filter by archived status
+    if archived is not None:
+        query["archived"] = archived
+    elif archived is None:
+        # Default: show non-archived orders
+        query["$or"] = [{"archived": False}, {"archived": {"$exists": False}}]
+    
+    # Filter by stage
+    if stage:
+        query["stage"] = stage
+    
+    # Filter by status (stage-specific status)
+    if status and stage:
+        query[f"{stage}_status"] = status
+    
+    # Search filter
+    if search:
+        search_regex = {"$regex": search, "$options": "i"}
+        query["$or"] = [
+            {"order_number": search_regex},
+            {"customer_email": search_regex},
+            {"customer_name": search_regex}
+        ]
+    
+    # Get total count for pagination
+    total_count = await db.orders.count_documents(query)
+    total_pages = (total_count + limit - 1) // limit  # Ceiling division
+    
+    # Calculate skip for pagination
+    skip = (page - 1) * limit
+    
+    # Fetch paginated orders
+    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
     for order in orders:
         # Convert datetime strings to datetime objects
@@ -127,7 +169,67 @@ async def get_admin_orders_legacy():
             if field in order and isinstance(order[field], str):
                 order[field] = datetime.fromisoformat(order[field])
     
-    return orders
+    return {
+        "orders": orders,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1
+        }
+    }
+
+@api_router.get("/admin/orders/counts")
+async def get_orders_counts():
+    """
+    Get order counts by stage/status for sidebar - lightweight endpoint
+    """
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    tenant_id = tenant["id"]
+    
+    # Get counts using aggregation for better performance
+    pipeline = [
+        {"$match": {"tenant_id": tenant_id}},
+        {"$facet": {
+            "total": [{"$count": "count"}],
+            "archived": [
+                {"$match": {"archived": True}},
+                {"$count": "count"}
+            ],
+            "by_stage": [
+                {"$match": {"$or": [{"archived": False}, {"archived": {"$exists": False}}]}},
+                {"$group": {"_id": "$stage", "count": {"$sum": 1}}}
+            ],
+            "clay_by_status": [
+                {"$match": {"stage": "clay", "$or": [{"archived": False}, {"archived": {"$exists": False}}]}},
+                {"$group": {"_id": "$clay_status", "count": {"$sum": 1}}}
+            ],
+            "paint_by_status": [
+                {"$match": {"stage": "paint", "$or": [{"archived": False}, {"archived": {"$exists": False}}]}},
+                {"$group": {"_id": "$paint_status", "count": {"$sum": 1}}}
+            ]
+        }}
+    ]
+    
+    result = await db.orders.aggregate(pipeline).to_list(1)
+    
+    if not result:
+        return {"total": 0, "archived": 0, "by_stage": {}, "clay_by_status": {}, "paint_by_status": {}}
+    
+    data = result[0]
+    
+    return {
+        "total": data["total"][0]["count"] if data["total"] else 0,
+        "archived": data["archived"][0]["count"] if data["archived"] else 0,
+        "by_stage": {item["_id"]: item["count"] for item in data["by_stage"] if item["_id"]},
+        "clay_by_status": {item["_id"]: item["count"] for item in data["clay_by_status"] if item["_id"]},
+        "paint_by_status": {item["_id"]: item["count"] for item in data["paint_by_status"] if item["_id"]}
+    }
 
 @api_router.get("/admin/orders/{order_id}")
 async def get_admin_order_details(order_id: str):
