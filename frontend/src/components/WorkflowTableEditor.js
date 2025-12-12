@@ -337,6 +337,7 @@ export default function WorkflowTableEditor() {
       trigger: 'manual_change',
       toStage: stages[0]?.id || '',
       toStatus: stages[0]?.statuses?.[0]?.id || '',
+      emailAction: 'none',
     };
     setWorkflowRules([...workflowRules, newRule]);
   };
