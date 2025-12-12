@@ -184,14 +184,17 @@ export default function OrderDesk() {
       return;
     }
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setAuthReady(true);
     fetchWorkflowConfig();
     fetchOrderCounts();
   }, [navigate]);
 
-  // Fetch orders when filters change
+  // Fetch orders when filters change - only after auth is ready
   useEffect(() => {
-    fetchOrders();
-  }, [currentPage, selectedFolder, searchDebounce]);
+    if (authReady) {
+      fetchOrders();
+    }
+  }, [currentPage, selectedFolder, searchDebounce, authReady]);
 
   // Debounce search input
   useEffect(() => {
