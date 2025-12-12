@@ -629,9 +629,20 @@ const OrderDetailsAdminNew = () => {
                   </div>
                   <div>
                     <Label className="text-xs text-gray-500">Carrier</Label>
-                    <p className="font-semibold text-sm">{order.carrier || 'Not set'}</p>
+                    <p className="font-semibold text-sm">{order.carrier || order.tracking_company || 'Not set'}</p>
                   </div>
                 </div>
+                {order.tracking_number && (
+                  <div className="pt-2">
+                    <TrackingWidget 
+                      trackingNumber={order.tracking_number}
+                      carrier={order.carrier || order.tracking_company}
+                      trackingUrl={order.tracking_url}
+                      shipmentStatus={order.shipment_status}
+                      shippedAt={order.shipped_at}
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
