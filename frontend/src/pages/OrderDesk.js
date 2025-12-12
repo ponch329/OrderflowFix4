@@ -549,7 +549,7 @@ export default function OrderDesk() {
     }
   };
 
-  // Build folder structure with counts from API
+  // Build folder structure dynamically from workflow stages
   const folderStructure = [
     {
       id: 'all',
@@ -557,30 +557,21 @@ export default function OrderDesk() {
       count: orderCounts.total - orderCounts.archived,
       isCategory: false
     },
-    {
-      id: 'clay',
-      label: 'CLAY',
-      isCategory: true,
-      count: orderCounts.by_stage?.clay || 0,
-      children: [
-        { id: 'clay:sculpting', label: 'Clay - In Progress', count: orderCounts.clay_by_status?.sculpting || 0 },
-        { id: 'clay:feedback_needed', label: 'Clay - Feedback Needed', count: orderCounts.clay_by_status?.feedback_needed || 0 },
-        { id: 'clay:changes_requested', label: 'Clay - Changes Requested', count: orderCounts.clay_by_status?.changes_requested || 0 },
-        { id: 'clay:approved', label: 'Clay - Approved', count: orderCounts.clay_by_status?.approved || 0 },
-      ]
-    },
-    {
-      id: 'paint',
-      label: 'PAINT',
-      isCategory: true,
-      count: orderCounts.by_stage?.paint || 0,
-      children: [
-        { id: 'paint:sculpting', label: 'Paint - In Progress', count: orderCounts.paint_by_status?.sculpting || orderCounts.paint_by_status?.painting || 0 },
-        { id: 'paint:feedback_needed', label: 'Paint - Feedback Needed', count: orderCounts.paint_by_status?.feedback_needed || 0 },
-        { id: 'paint:changes_requested', label: 'Paint - Changes Requested', count: orderCounts.paint_by_status?.changes_requested || 0 },
-        { id: 'paint:approved', label: 'Paint - Approved', count: orderCounts.paint_by_status?.approved || 0 },
-      ]
-    },
+    // Dynamic stages from workflow config (exclude archived)
+    ...workflowStages
+      .filter(stage => stage.id !== 'archived')
+      .map(stage => ({
+        id: stage.id,
+        label: stage.name.toUpperCase(),
+        isCategory: true,
+        count: orderCounts.by_stage?.[stage.id] || 0,
+        children: (stage.statuses || []).map(status => ({
+          id: `${stage.id}:${status.id}`,
+          label: `${stage.name} - ${status.name}`,
+          count: orderCounts.status_counts?.[stage.id]?.[status.id] || 0
+        }))
+      })),
+    // Archived folder always at the end
     {
       id: 'archived',
       label: 'ARCHIVED',
