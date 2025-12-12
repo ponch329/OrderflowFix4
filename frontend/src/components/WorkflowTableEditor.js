@@ -34,6 +34,21 @@ const PREDEFINED_TRIGGERS = [
   { id: 'timer_expired', label: 'Timer Expired', description: 'When SLA timer expires for a status' },
 ];
 
+// Email templates that can be sent as actions
+const EMAIL_TEMPLATES = [
+  { id: 'none', label: 'No Email', description: 'Do not send any email' },
+  { id: 'proof_ready', label: 'Proof Ready for Review', description: 'Notify customer that proofs are ready' },
+  { id: 'approval_received', label: 'Approval Confirmation', description: 'Confirm to admin that approval was received' },
+  { id: 'changes_received', label: 'Changes Request Received', description: 'Confirm changes request was received' },
+  { id: 'stage_complete', label: 'Stage Complete', description: 'Notify that a stage has been completed' },
+  { id: 'order_shipped', label: 'Order Shipped', description: 'Notify customer their order has shipped' },
+  { id: 'tracking_update', label: 'Tracking Update', description: 'Send tracking information to customer' },
+  { id: 'reminder', label: 'Reminder Email', description: 'Remind customer to review proofs' },
+  { id: 'order_complete', label: 'Order Complete', description: 'Notify customer their order is complete' },
+  { id: 'sla_warning', label: 'SLA Warning', description: 'Internal alert for overdue orders' },
+  { id: 'custom', label: 'Custom Email', description: 'Use custom email template' },
+];
+
 // Default stages and statuses
 const DEFAULT_STAGES = [
   {
