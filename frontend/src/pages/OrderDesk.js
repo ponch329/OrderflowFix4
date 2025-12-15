@@ -539,13 +539,17 @@ export default function OrderDesk() {
   const handleSyncOrders = async () => {
     setSyncing(true);
     try {
-      const response = await axios.post(`${API}/settings/shopify/sync`);
-      toast.success(`Synced ${response.data.new_orders || 0} new orders from Shopify`);
+      const token = localStorage.getItem('admin_token');
+      const response = await axios.post(`${API}/admin/sync-orders`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(response.data.message || `Synced ${response.data.synced || 0} new orders from Shopify`);
       // Refresh the orders and counts after sync
       await Promise.all([fetchOrders(), fetchOrderCounts()]);
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to sync orders from Shopify");
-      console.error(error);
+      const errorDetail = error.response?.data?.detail || "Failed to sync orders from Shopify";
+      toast.error(errorDetail);
+      console.error("Shopify sync error:", error);
     } finally {
       setSyncing(false);
     }
