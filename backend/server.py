@@ -846,7 +846,7 @@ async def sync_orders():
     shopify_access_token = tenant.get("shopify_access_token")
     
     if not shopify_shop_name or not shopify_access_token:
-        raise HTTPException(status_code=400, detail="Shopify not configured for this tenant")
+        raise HTTPException(status_code=400, detail="Shopify not configured. Please add your Shopify credentials in Settings → Integrations.")
     
     # Initialize Shopify session
     shopify_api_version = "2024-10"
@@ -854,6 +854,8 @@ async def sync_orders():
     shopify.ShopifyResource.activate_session(session)
     
     try:
+        # Fetch orders - get recent orders first (sorted by created_at desc by default)
+        # Use since_id to get orders newer than what we have, or fetch all recent ones
         orders = shopify.Order.find(status='any', limit=250)
         synced_count = 0
         split_count = 0
