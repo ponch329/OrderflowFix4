@@ -65,7 +65,13 @@ const OrderDetails = () => {
   };
 
   const handleApprove = async (stage) => {
+    // Optimistic UI update - immediately show the status change
+    setOrder(prev => ({
+      ...prev,
+      [`${stage}_status`]: 'approved'
+    }));
     setLoading(true);
+    
     try {
       const formData = new FormData();
       formData.append("status", "approved");
@@ -74,9 +80,11 @@ const OrderDetails = () => {
         headers: { "Content-Type": "multipart/form-data" }
       });
       toast.success(`${stage.charAt(0).toUpperCase() + stage.slice(1)} stage approved!`);
-      fetchOrder();
+      fetchOrder(); // Refresh to get server state
     } catch (error) {
-      toast.error("Failed to approve");
+      // Revert optimistic update on error
+      toast.error("Failed to approve - please try again");
+      fetchOrder(); // Refresh to get correct state
       console.error(error);
     } finally {
       setLoading(false);
@@ -89,7 +97,13 @@ const OrderDetails = () => {
       return;
     }
 
+    // Optimistic UI update - immediately show the status change
+    setOrder(prev => ({
+      ...prev,
+      [`${stage}_status`]: 'changes_requested'
+    }));
     setLoading(true);
+    
     try {
       const formData = new FormData();
       formData.append("status", "changes_requested");
@@ -107,9 +121,11 @@ const OrderDetails = () => {
       setChangeMessage("");
       setChangeImages([]);
       setCurrentStage(null);
-      fetchOrder();
+      fetchOrder(); // Refresh to get server state
     } catch (error) {
-      toast.error("Failed to submit changes");
+      // Revert optimistic update on error
+      toast.error("Failed to submit changes - please try again");
+      fetchOrder(); // Refresh to get correct state
       console.error(error);
     } finally {
       setLoading(false);
