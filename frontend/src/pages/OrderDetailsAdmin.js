@@ -220,7 +220,7 @@ const OrderDetailsAdminNew = () => {
     
     try {
       const token = localStorage.getItem('admin_token');
-      await axios.delete(`${API}/orders/${orderId}/proofs/${proofId}?stage=${stage}`, {
+      await axios.delete(`${API}/admin/orders/${orderId}/proofs/${proofId}?stage=${stage}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
