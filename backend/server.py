@@ -130,11 +130,13 @@ async def get_admin_orders_legacy(
     query = {"tenant_id": tenant_id}
     
     # Filter by archived status
-    if archived is not None:
-        query["archived"] = archived
-    elif archived is None:
-        # Default: show non-archived orders
-        query["$or"] = [{"archived": False}, {"archived": {"$exists": False}}]
+    if archived is True:
+        # Show only archived orders
+        query["archived"] = True
+    elif archived is False:
+        # Show non-archived orders (including those without archived field)
+        query["$or"] = [{"archived": False}, {"archived": {"$exists": False}}, {"archived": None}]
+    # If archived is None, show all orders (no filter)
     
     # Filter by stage
     if stage:
@@ -144,14 +146,23 @@ async def get_admin_orders_legacy(
     if status and stage:
         query[f"{stage}_status"] = status
     
-    # Search filter
+    # Search filter - need to handle $or conflict
     if search:
         search_regex = {"$regex": search, "$options": "i"}
-        query["$or"] = [
+        search_conditions = [
             {"order_number": search_regex},
             {"customer_email": search_regex},
             {"customer_name": search_regex}
         ]
+        # If we already have $or from archived filter, use $and to combine
+        if "$or" in query:
+            archived_filter = query.pop("$or")
+            query["$and"] = [
+                {"$or": archived_filter},
+                {"$or": search_conditions}
+            ]
+        else:
+            query["$or"] = search_conditions
     
     # Get total count for pagination
     total_count = await db.orders.count_documents(query)
