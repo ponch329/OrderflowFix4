@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import List
 import os
+import re
 import logging
 from pathlib import Path
 
