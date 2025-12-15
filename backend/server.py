@@ -982,28 +982,34 @@ async def sync_orders():
 @api_router.get("/customer/lookup")
 async def lookup_order(email: str, order_number: str):
     """Customer lookup by email and order number"""
-    # Find order across all tenants - case-insensitive email match
-    # Try exact match first, then case-insensitive
-    order = await db.orders.find_one(
-        {"customer_email": {"$regex": f"^{email}$", "$options": "i"}, "order_number": order_number},
-        {"_id": 0}
-    )
+    import re
     
-    # If not found, also try with "20" prefix since Shopify orders get prefixed
-    if not order and not order_number.startswith("20"):
+    # Normalize order number - remove any spaces or special characters
+    order_number = order_number.strip()
+    
+    # Build list of order number variations to try
+    order_variations = [
+        order_number,                    # Exact as entered
+        f"20{order_number}",             # With "20" prefix added
+    ]
+    
+    # If it starts with "20", also try without it
+    if order_number.startswith("20") and len(order_number) > 2:
+        order_variations.append(order_number[2:])
+    
+    # Try each variation
+    order = None
+    for variation in order_variations:
         order = await db.orders.find_one(
-            {"customer_email": {"$regex": f"^{email}$", "$options": "i"}, "order_number": f"20{order_number}"},
+            {"customer_email": {"$regex": f"^{re.escape(email)}$", "$options": "i"}, "order_number": variation},
             {"_id": 0}
         )
-    
-    # Also try without "20" prefix if they included it but order doesn't have it
-    if not order and order_number.startswith("20"):
-        order = await db.orders.find_one(
-            {"customer_email": {"$regex": f"^{email}$", "$options": "i"}, "order_number": order_number[2:]},
-            {"_id": 0}
-        )
+        if order:
+            break
     
     if not order:
+        # Log for debugging
+        logging.info(f"Customer lookup failed - email: {email}, order_number: {order_number}, tried: {order_variations}")
         raise HTTPException(status_code=404, detail="Order not found. Please check your email and order number.")
     
     for field in ['created_at', 'updated_at']:
