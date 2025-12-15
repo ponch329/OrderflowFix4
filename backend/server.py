@@ -982,14 +982,29 @@ async def sync_orders():
 @api_router.get("/customer/lookup")
 async def lookup_order(email: str, order_number: str):
     """Customer lookup by email and order number"""
-    # Find order across all tenants
+    # Find order across all tenants - case-insensitive email match
+    # Try exact match first, then case-insensitive
     order = await db.orders.find_one(
-        {"customer_email": email.lower(), "order_number": order_number},
+        {"customer_email": {"$regex": f"^{email}$", "$options": "i"}, "order_number": order_number},
         {"_id": 0}
     )
     
+    # If not found, also try with "20" prefix since Shopify orders get prefixed
+    if not order and not order_number.startswith("20"):
+        order = await db.orders.find_one(
+            {"customer_email": {"$regex": f"^{email}$", "$options": "i"}, "order_number": f"20{order_number}"},
+            {"_id": 0}
+        )
+    
+    # Also try without "20" prefix if they included it but order doesn't have it
+    if not order and order_number.startswith("20"):
+        order = await db.orders.find_one(
+            {"customer_email": {"$regex": f"^{email}$", "$options": "i"}, "order_number": order_number[2:]},
+            {"_id": 0}
+        )
+    
     if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(status_code=404, detail="Order not found. Please check your email and order number.")
     
     for field in ['created_at', 'updated_at']:
         if isinstance(order.get(field), str):
