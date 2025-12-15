@@ -278,6 +278,9 @@ def get_workflow_engine_from_tenant(tenant_settings: Dict) -> WorkflowRulesEngin
     # Convert new format rules to engine format if needed
     converted_rules = []
     for rule in workflow_rules:
+        # Ensure rule is a dictionary
+        if not isinstance(rule, dict):
+            continue
         # New format has fromStage/toStage, legacy has stage/nextStage
         converted_rule = {
             'stage': rule.get('fromStage') or rule.get('stage', ''),
