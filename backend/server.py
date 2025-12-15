@@ -983,8 +983,6 @@ async def sync_orders():
 @api_router.get("/customer/lookup")
 async def lookup_order(email: str, order_number: str):
     """Customer lookup by email and order number"""
-    import re
-    
     # Normalize order number - remove any spaces or special characters
     order_number = order_number.strip()
     
