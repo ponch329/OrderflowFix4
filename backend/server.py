@@ -956,7 +956,27 @@ async def sync_orders():
             "split": split_count
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        logging.error(f"Shopify sync error: {error_msg}")
+        
+        # Check for common Shopify errors
+        if "401" in error_msg or "Unauthorized" in error_msg or "Invalid API key" in error_msg:
+            raise HTTPException(
+                status_code=401, 
+                detail="Shopify authentication failed. Your API credentials may be invalid or expired. Please update them in Settings → Integrations."
+            )
+        elif "403" in error_msg or "Forbidden" in error_msg:
+            raise HTTPException(
+                status_code=403,
+                detail="Shopify access denied. Your API token may not have the required permissions (read_orders)."
+            )
+        elif "404" in error_msg:
+            raise HTTPException(
+                status_code=404,
+                detail="Shopify store not found. Please check your shop name in Settings → Integrations."
+            )
+        else:
+            raise HTTPException(status_code=500, detail=f"Shopify sync failed: {error_msg}")
 
 # Customer routes (public - no auth required)
 @api_router.get("/customer/lookup")
