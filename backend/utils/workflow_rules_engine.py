@@ -286,12 +286,23 @@ def get_workflow_engine_from_tenant(tenant_settings: Dict) -> WorkflowRulesEngin
     
     # Build stage and status labels from new format if available
     stages_config = workflow_config.get('stages', [])
-    if stages_config:
-        stage_labels = {s['id']: s['name'] for s in stages_config}
+    if stages_config and isinstance(stages_config, list):
+        stage_labels = {}
         status_labels = {}
         for stage in stages_config:
-            for status in stage.get('statuses', []):
-                status_labels[status['id']] = status['name']
+            # Ensure stage is a dictionary
+            if isinstance(stage, dict):
+                stage_id = stage.get('id', '')
+                stage_name = stage.get('name', stage_id)
+                if stage_id:
+                    stage_labels[stage_id] = stage_name
+                for status in stage.get('statuses', []):
+                    # Ensure status is a dictionary
+                    if isinstance(status, dict):
+                        status_id = status.get('id', '')
+                        status_name = status.get('name', status_id)
+                        if status_id:
+                            status_labels[status_id] = status_name
         workflow_config['stage_labels'] = stage_labels
         workflow_config['status_labels'] = status_labels
     
