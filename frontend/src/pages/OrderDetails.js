@@ -51,8 +51,11 @@ const OrderDetails = () => {
 
   const fetchOrder = async () => {
     try {
-      const response = await axios.get(`${API}/admin/orders`);
-      const foundOrder = response.data.find(o => o.id === orderId);
+      const response = await axios.get(`${API}/admin/orders?limit=500`);
+      const data = response.data;
+      // Handle both paginated response and legacy array response
+      const ordersArray = data.orders || data;
+      const foundOrder = ordersArray.find(o => o.id === orderId);
       if (foundOrder) {
         setOrder(foundOrder);
       }
