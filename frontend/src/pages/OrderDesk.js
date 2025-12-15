@@ -451,46 +451,66 @@ export default function OrderDesk() {
     }
   }, [resizingColumn, startX, startWidth]);
 
-  const handleExport = () => {
-    // Export ALL order data, not just visible columns
-    const headers = [
-      'Order ID', 'Order Number', 'Customer Name', 'Customer Email', 
-      'Stage', 'Status', 'Order Date', 'Last Updated',
-      'Clay Status', 'Paint Status', 'Shipped Status',
-      'Product Details', 'Special Instructions', 'Tracking Number'
-    ];
+  const handleExport = async () => {
+    // Fetch ALL orders from API (not just paginated ones)
+    toast.info("Fetching all orders for export...");
     
-    const csvContent = [
-      headers.join(','),
-      ...sortedOrders.map(order => {
-        const status = order[`${order.stage}_status`] || '';
-        const row = [
-          order.id || '',
-          order.order_number || '',
-          order.customer_name || '',
-          order.customer_email || '',
-          order.stage || '',
-          status,
-          order.created_at || '',
-          order.updated_at || '',
-          order.clay_status || '',
-          order.paint_status || '',
-          order.shipped_status || '',
-          order.product_details || '',
-          order.special_instructions || '',
-          order.tracking_number || ''
-        ];
-        return row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
-      })
-    ].join('\n');
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await axios.get(`${API}/admin/orders?limit=10000`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const allOrders = response.data.orders || response.data || [];
+      
+      if (allOrders.length === 0) {
+        toast.error("No orders to export");
+        return;
+      }
+      
+      // Export ALL order data
+      const headers = [
+        'Order ID', 'Order Number', 'Customer Name', 'Customer Email', 
+        'Stage', 'Status', 'Order Date', 'Last Updated',
+        'Clay Status', 'Paint Status', 'Shipped Status',
+        'Product Details', 'Special Instructions', 'Tracking Number'
+      ];
+      
+      const csvContent = [
+        headers.join(','),
+        ...allOrders.map(order => {
+          const status = order[`${order.stage}_status`] || '';
+          const row = [
+            order.id || '',
+            order.order_number || '',
+            order.customer_name || '',
+            order.customer_email || '',
+            order.stage || '',
+            status,
+            order.created_at || '',
+            order.updated_at || '',
+            order.clay_status || '',
+            order.paint_status || '',
+            order.shipped_status || '',
+            order.product_details || '',
+            order.special_instructions || '',
+            order.tracking_number || ''
+          ];
+          return row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
+        })
+      ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `orders-full-export-${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    toast.success("Full order data exported successfully");
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `orders-full-export-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      toast.success(`Exported ${allOrders.length} orders successfully`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export orders");
+    }
   };
 
   const handleSendReminderEmails = async () => {
