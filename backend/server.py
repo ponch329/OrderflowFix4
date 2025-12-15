@@ -129,13 +129,16 @@ async def get_admin_orders_legacy(
     # Build query filter
     query = {"tenant_id": tenant_id}
     
-    # Filter by archived status
+    # Filter by archived status - check BOTH 'archived' and 'is_archived' fields for compatibility
     if archived is True:
-        # Show only archived orders
-        query["archived"] = True
+        # Show only archived orders (check both field names)
+        query["$or"] = [{"archived": True}, {"is_archived": True}]
     elif archived is False:
-        # Show non-archived orders (including those without archived field)
-        query["$or"] = [{"archived": False}, {"archived": {"$exists": False}}, {"archived": None}]
+        # Show non-archived orders - exclude orders where archived=True OR is_archived=True
+        query["$and"] = [
+            {"$or": [{"archived": False}, {"archived": {"$exists": False}}, {"archived": None}]},
+            {"$or": [{"is_archived": False}, {"is_archived": {"$exists": False}}, {"is_archived": None}]}
+        ]
     # If archived is None, show all orders (no filter)
     
     # Filter by stage
@@ -146,7 +149,7 @@ async def get_admin_orders_legacy(
     if status and stage:
         query[f"{stage}_status"] = status
     
-    # Search filter - need to handle $or conflict
+    # Search filter - need to handle $and/$or conflict
     if search:
         search_regex = {"$regex": search, "$options": "i"}
         search_conditions = [
@@ -154,13 +157,9 @@ async def get_admin_orders_legacy(
             {"customer_email": search_regex},
             {"customer_name": search_regex}
         ]
-        # If we already have $or from archived filter, use $and to combine
-        if "$or" in query:
-            archived_filter = query.pop("$or")
-            query["$and"] = [
-                {"$or": archived_filter},
-                {"$or": search_conditions}
-            ]
+        # Add search to existing $and or create new one
+        if "$and" in query:
+            query["$and"].append({"$or": search_conditions})
         else:
             query["$or"] = search_conditions
     
