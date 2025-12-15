@@ -31,6 +31,10 @@ class WorkflowRulesEngine:
         self.transitions = {}  # (stage, status) -> (next_stage, next_status)
         
         for rule in self.rules:
+            # Ensure rule is a dictionary
+            if not isinstance(rule, dict):
+                continue
+                
             stage = rule.get('stage', '').lower() if rule.get('stage') else ''
             status = rule.get('status', '').lower().replace(' ', '_') if rule.get('status') else ''
             next_stage = rule.get('nextStage', '').lower() if rule.get('nextStage') else ''
