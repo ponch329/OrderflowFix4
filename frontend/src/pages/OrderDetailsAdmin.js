@@ -159,7 +159,7 @@ const OrderDetailsAdminNew = () => {
       });
 
       const token = localStorage.getItem('admin_token');
-      await axios.post(`${API}/orders/${orderId}/proofs`, formData, {
+      await axios.post(`${API}/admin/orders/${orderId}/proofs`, formData, {
         headers: { 
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
