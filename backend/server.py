@@ -211,15 +211,26 @@ async def get_orders_counts():
         {"id": "shipped", "statuses": [{"id": "in_transit"}, {"id": "delivered"}]},
     ])
     
+    # Non-archived filter - check both 'archived' and 'is_archived' fields
+    non_archived_filter = {
+        "$and": [
+            {"$or": [{"archived": False}, {"archived": {"$exists": False}}, {"archived": None}]},
+            {"$or": [{"is_archived": False}, {"is_archived": {"$exists": False}}, {"is_archived": None}]}
+        ]
+    }
+    
+    # Archived filter - check both fields
+    archived_filter = {"$or": [{"archived": True}, {"is_archived": True}]}
+    
     # Build dynamic aggregation pipeline
     facet_stages = {
         "total": [{"$count": "count"}],
         "archived": [
-            {"$match": {"archived": True}},
+            {"$match": archived_filter},
             {"$count": "count"}
         ],
         "by_stage": [
-            {"$match": {"$or": [{"archived": False}, {"archived": {"$exists": False}}]}},
+            {"$match": non_archived_filter},
             {"$group": {"_id": "$stage", "count": {"$sum": 1}}}
         ]
     }
@@ -230,7 +241,7 @@ async def get_orders_counts():
         if stage_id and stage_id != "archived":
             status_field = f"{stage_id}_status"
             facet_stages[f"{stage_id}_by_status"] = [
-                {"$match": {"stage": stage_id, "$or": [{"archived": False}, {"archived": {"$exists": False}}]}},
+                {"$match": {"stage": stage_id, **non_archived_filter}},
                 {"$group": {"_id": f"${status_field}", "count": {"$sum": 1}}}
             ]
     
