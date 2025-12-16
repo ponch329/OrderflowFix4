@@ -434,3 +434,188 @@ def get_customer_proofs_ready_email(order_number, customer_name, stage, num_imag
     """
     
     return subject, html_content
+
+
+def get_admin_reply_email(order_number, customer_name, message, portal_url, logo_url=None, company_name="AllBobbleheads"):
+    """
+    Template for when admin replies to customer's change request
+    """
+    subject = f"Order #{order_number} - Response from {company_name}"
+    
+    logo_html = f'<img src="{logo_url}" alt="{company_name}" style="max-width: 200px; max-height: 80px; margin-bottom: 15px;" />' if logo_url else ''
+    
+    html_content = f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                margin: 0;
+                padding: 0;
+            }}
+            .container {{
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+            }}
+            .header {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px 20px;
+                text-align: center;
+                border-radius: 8px 8px 0 0;
+            }}
+            .header h1 {{
+                margin: 0;
+                font-size: 24px;
+            }}
+            .content {{
+                background: #ffffff;
+                padding: 30px 20px;
+                border: 1px solid #e0e0e0;
+                border-top: none;
+            }}
+            .message-box {{
+                background: #f8f9fa;
+                border-left: 4px solid #667eea;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 0 8px 8px 0;
+            }}
+            .cta-button {{
+                display: inline-block;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white !important;
+                padding: 15px 30px;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: bold;
+                margin: 20px 0;
+            }}
+            .footer {{
+                background: #f5f5f5;
+                padding: 20px;
+                text-align: center;
+                font-size: 12px;
+                color: #666;
+                border-radius: 0 0 8px 8px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                {logo_html}
+                <h1>📬 New Message About Your Order</h1>
+            </div>
+            
+            <div class="content">
+                <p>Hi {customer_name},</p>
+                
+                <p>We have a response regarding your order <strong>#{order_number}</strong>:</p>
+                
+                <div class="message-box">
+                    {message.replace(chr(10), '<br>')}
+                </div>
+                
+                <p style="text-align: center;">
+                    <a href="{portal_url}" class="cta-button">
+                        View Order & Reply
+                    </a>
+                </p>
+                
+                <p>If you have any further questions, you can reply directly through the customer portal or respond to this email.</p>
+                
+                <p>Thank you!<br>
+                <strong>The {company_name} Team</strong></p>
+            </div>
+            
+            <div class="footer">
+                <p>This email was sent regarding Order #{order_number}</p>
+                <p><strong>{company_name}</strong></p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return subject, html_content
+
+
+def get_customer_reply_email(order_number, customer_name, message, logo_url=None, company_name="AllBobbleheads"):
+    """
+    Template for when customer sends a reply message (notification to admin)
+    """
+    subject = f"Order #{order_number} - Customer Reply from {customer_name}"
+    
+    html_content = f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+            }}
+            .container {{
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+            }}
+            .header {{
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                color: white;
+                padding: 20px;
+                text-align: center;
+                border-radius: 8px 8px 0 0;
+            }}
+            .content {{
+                background: #ffffff;
+                padding: 20px;
+                border: 1px solid #e0e0e0;
+            }}
+            .message-box {{
+                background: #fff3cd;
+                border-left: 4px solid #f5576c;
+                padding: 15px;
+                margin: 15px 0;
+                border-radius: 0 8px 8px 0;
+            }}
+            .footer {{
+                background: #f5f5f5;
+                padding: 15px;
+                text-align: center;
+                font-size: 12px;
+                color: #666;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h2>💬 Customer Reply - Order #{order_number}</h2>
+            </div>
+            
+            <div class="content">
+                <p><strong>Customer:</strong> {customer_name}</p>
+                <p><strong>Order:</strong> #{order_number}</p>
+                
+                <div class="message-box">
+                    <strong>Message:</strong><br>
+                    {message.replace(chr(10), '<br>')}
+                </div>
+                
+                <p>Please log into the admin dashboard to respond.</p>
+            </div>
+            
+            <div class="footer">
+                <p>This is an automated notification from {company_name}</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return subject, html_content
