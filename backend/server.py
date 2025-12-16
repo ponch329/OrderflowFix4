@@ -148,7 +148,12 @@ async def get_admin_orders_legacy(
     
     # Filter by status (stage-specific status)
     if status and stage:
-        query[f"{stage}_status"] = status
+        # Handle backward compatibility: "painting" and "sculpting" are both "in progress" states
+        # Some older orders may have "sculpting" for paint stage instead of "painting"
+        if stage == "paint" and status == "painting":
+            query[f"{stage}_status"] = {"$in": ["painting", "sculpting"]}
+        else:
+            query[f"{stage}_status"] = status
     
     # Search filter - need to handle $and/$or conflict
     if search:
