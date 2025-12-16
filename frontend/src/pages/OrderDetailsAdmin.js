@@ -278,6 +278,32 @@ const OrderDetailsAdminNew = () => {
     }
   };
 
+  const handleSendReply = async () => {
+    if (!replyMessage.trim()) {
+      toast.error("Please enter a message");
+      return;
+    }
+    
+    setSendingReply(true);
+    try {
+      const token = localStorage.getItem('admin_token');
+      await axios.post(`${API}/admin/orders/${orderId}/messages`, {
+        message: replyMessage
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      toast.success("Reply sent to customer");
+      setReplyMessage("");
+      setReplyDialogOpen(false);
+      fetchOrder();
+    } catch (error) {
+      toast.error("Failed to send reply");
+      console.error(error);
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
   const getStageColor = (stage) => {
     const colors = {
       clay: "bg-yellow-500",
