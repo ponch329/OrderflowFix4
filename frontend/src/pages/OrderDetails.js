@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { ArrowLeft, CheckCircle, XCircle, Image as ImageIcon, Upload, Bell, ChevronDown, ChevronUp, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Image as ImageIcon, Upload, Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { getStatusInfo, shouldShowPingButton } from "@/utils/orderHelpers";
 import { useBranding } from "@/contexts/BrandingContext";
@@ -32,11 +32,6 @@ const OrderDetails = () => {
   const [paintExpanded, setPaintExpanded] = useState(true);
   const [expandedRounds, setExpandedRounds] = useState({}); // Track which rounds are expanded
   const isAdmin = location.state?.isAdmin || false;
-  
-  // Customer reply messaging
-  const [replyDialogOpen, setReplyDialogOpen] = useState(false);
-  const [replyMessage, setReplyMessage] = useState("");
-  const [sendingReply, setSendingReply] = useState(false);
 
   useEffect(() => {
     if (!order) {
