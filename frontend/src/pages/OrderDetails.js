@@ -64,30 +64,6 @@ const OrderDetails = () => {
     }
   };
 
-  const handleSendReply = async () => {
-    if (!replyMessage.trim()) {
-      toast.error("Please enter a message");
-      return;
-    }
-    
-    setSendingReply(true);
-    try {
-      await axios.post(`${API}/customer/orders/${orderId}/messages`, {
-        message: replyMessage,
-        email: order?.customer_email || location.state?.email
-      });
-      toast.success("Message sent successfully");
-      setReplyMessage("");
-      setReplyDialogOpen(false);
-      fetchOrder();
-    } catch (error) {
-      toast.error("Failed to send message");
-      console.error(error);
-    } finally {
-      setSendingReply(false);
-    }
-  };
-
   const handleApprove = async (stage) => {
     // Optimistic UI update - immediately show the status change
     setOrder(prev => ({
