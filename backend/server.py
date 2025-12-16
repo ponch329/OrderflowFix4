@@ -507,8 +507,14 @@ async def update_admin_order_status(order_id: str, update_data: dict):
             
         if stage == "clay":
             update_fields["clay_entered_at"] = now.isoformat()
+            # Set initial clay status if not already set
+            if not order.get("clay_status") or order.get("clay_status") == "pending":
+                update_fields["clay_status"] = "sculpting"
         elif stage == "paint":
             update_fields["paint_entered_at"] = now.isoformat()
+            # Set initial paint status to "painting" when entering paint stage
+            if not order.get("paint_status") or order.get("paint_status") == "pending":
+                update_fields["paint_status"] = "painting"
         elif stage == "fulfilled" or stage == "shipped":
             update_fields["fulfilled_at"] = now.isoformat()
             
