@@ -270,7 +270,16 @@ async def get_orders_counts():
         if stage_id and stage_id != "archived":
             key = f"{stage_id}_by_status"
             if key in data:
-                status_counts[stage_id] = {item["_id"]: item["count"] for item in data[key] if item["_id"]}
+                stage_counts = {item["_id"]: item["count"] for item in data[key] if item["_id"]}
+                
+                # For paint stage: combine "sculpting" counts into "painting" for backward compatibility
+                # Some older orders may have "sculpting" status instead of "painting"
+                if stage_id == "paint" and "sculpting" in stage_counts:
+                    painting_count = stage_counts.get("painting", 0) + stage_counts.get("sculpting", 0)
+                    stage_counts["painting"] = painting_count
+                    del stage_counts["sculpting"]  # Remove sculpting from display
+                
+                status_counts[stage_id] = stage_counts
     
     return {
         "total": data["total"][0]["count"] if data["total"] else 0,
