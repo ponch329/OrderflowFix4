@@ -693,6 +693,55 @@ const OrderDetails = () => {
             </CardContent>
           </DialogContent>
         </Dialog>
+
+        {/* Customer Reply Dialog */}
+        <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <CardHeader className="px-0 pt-0">
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-purple-600" />
+                Send a Message
+              </CardTitle>
+              <CardDescription>
+                Your message will be sent to the team working on your order
+              </CardDescription>
+            </CardHeader>
+            <div className="space-y-4">
+              <Textarea
+                placeholder="Type your message here..."
+                value={replyMessage}
+                onChange={(e) => setReplyMessage(e.target.value)}
+                className="min-h-[120px]"
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setReplyDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSendReply}
+                  disabled={sendingReply || !replyMessage.trim()}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {sendingReply ? "Sending..." : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Message
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Floating Message Button */}
+        <Button
+          onClick={() => setReplyDialogOpen(true)}
+          className="fixed bottom-6 right-6 rounded-full w-14 h-14 bg-purple-600 hover:bg-purple-700 shadow-lg z-50"
+          title="Send a message"
+        >
+          <MessageCircle className="w-6 h-6" />
+        </Button>
       </div>
     </div>
   );
