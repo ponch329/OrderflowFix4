@@ -514,13 +514,24 @@ const OrderDetailsAdminNew = () => {
                           <h4 className="font-semibold text-orange-800 flex items-center gap-2">
                             Customer Requested Changes
                           </h4>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditApproval(stage)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => setReplyDialogOpen(true)}
+                              className="bg-purple-600 hover:bg-purple-700 text-white"
+                            >
+                              <MessageCircle className="w-4 h-4 mr-1" />
+                              Reply
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditApproval(stage)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                         <p className="text-gray-700 whitespace-pre-wrap">{group.items.find(i => i.type === 'customer_changes')?.data.message}</p>
                         {group.items.find(i => i.type === 'customer_changes')?.data.images?.length > 0 && (
