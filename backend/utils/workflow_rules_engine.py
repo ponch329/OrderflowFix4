@@ -213,7 +213,7 @@ class WorkflowRulesEngine:
         # Fallback to common statuses
         if stage.lower() == 'paint':
             return 'painting'
-        return 'sculpting'
+        return 'scultpting'
     
     def get_stage_label(self, stage: str) -> str:
         """Get display label for a stage"""

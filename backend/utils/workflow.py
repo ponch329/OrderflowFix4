@@ -182,7 +182,7 @@ class WorkflowEngine:
         if stage == "paint":
             return ["painting", "feedback_needed", "changes_requested", "approved", "pending"]
         else:
-            return ["sculpting", "feedback_needed", "changes_requested", "approved", "pending"]
+            return ["painting", "feedback_needed", "changes_requested", "approved", "pending"]
 
 
 def get_workflow_engine(tenant_settings: Dict[str, Any]) -> WorkflowEngine:
