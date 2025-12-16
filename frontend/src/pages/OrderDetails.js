@@ -32,6 +32,11 @@ const OrderDetails = () => {
   const [paintExpanded, setPaintExpanded] = useState(true);
   const [expandedRounds, setExpandedRounds] = useState({}); // Track which rounds are expanded
   const isAdmin = location.state?.isAdmin || false;
+  
+  // Customer reply messaging
+  const [replyDialogOpen, setReplyDialogOpen] = useState(false);
+  const [replyMessage, setReplyMessage] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
 
   useEffect(() => {
     if (!order) {
