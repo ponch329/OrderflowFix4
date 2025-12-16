@@ -995,6 +995,48 @@ const OrderDetailsAdminNew = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Reply Message Dialog */}
+        <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-purple-600" />
+                Reply to Customer
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-gray-600">
+                Your message will be sent to <strong>{order?.customer_email}</strong> and logged in the order timeline.
+              </p>
+              <Textarea
+                placeholder="Type your message to the customer..."
+                value={replyMessage}
+                onChange={(e) => setReplyMessage(e.target.value)}
+                className="min-h-[150px]"
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setReplyDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSendReply}
+                  disabled={sendingReply || !replyMessage.trim()}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {sendingReply ? (
+                    "Sending..."
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Reply
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
