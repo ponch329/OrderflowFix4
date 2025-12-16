@@ -939,7 +939,10 @@ export default function OrderDesk() {
                         )}
                         {column.id === 'status' && (
                           <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeColor(order[`${order.stage}_status`])}`}>
-                            {order[`${order.stage}_status`]?.replace(/_/g, ' ')}
+                            {/* Display "painting" for paint stage orders with "sculpting" status (backward compatibility) */}
+                            {order.stage === 'paint' && order.paint_status === 'sculpting' 
+                              ? 'painting' 
+                              : order[`${order.stage}_status`]?.replace(/_/g, ' ')}
                           </span>
                         )}
                         {column.id === 'tracking_number' && (
