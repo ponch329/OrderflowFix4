@@ -813,6 +813,94 @@ async def admin_upload_proofs_legacy(
         logger.error(f"=== PROOF UPLOAD FAILED === order_id={order_id}, error={str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to upload proofs: {str(e)}")
 
+@api_router.delete("/admin/orders/{order_id}/proofs/{proof_id}")
+async def admin_delete_proof(order_id: str, proof_id: str, stage: str):
+    """
+    Delete a proof from an order
+    """
+    logger.info(f"=== PROOF DELETE START === order_id={order_id}, proof_id={proof_id}, stage={stage}")
+    
+    try:
+        # Get tenant
+        tenant = await db.tenants.find_one({}, {"_id": 0})
+        if not tenant:
+            raise HTTPException(status_code=500, detail="No tenant found")
+        
+        tenant_id = tenant["id"]
+        
+        # Get order
+        order = await db.orders.find_one({
+            "id": order_id,
+            "tenant_id": tenant_id
+        }, {"_id": 0})
+        
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        # Find and remove the proof from the specified stage
+        field = f"{stage}_proofs"
+        existing_proofs = order.get(field, [])
+        
+        # Find the proof to delete
+        proof_to_delete = None
+        for proof in existing_proofs:
+            if proof.get("id") == proof_id:
+                proof_to_delete = proof
+                break
+        
+        if not proof_to_delete:
+            raise HTTPException(status_code=404, detail="Proof not found")
+        
+        # Create timeline event
+        from utils.timeline import create_timeline_event
+        timeline_event = create_timeline_event(
+            event_type="proof_deleted",
+            user_name="Admin",
+            user_role="admin",
+            description=f"Deleted proof '{proof_to_delete.get('filename', 'unknown')}' from {stage} stage",
+            metadata={"stage": stage, "proof_id": proof_id, "filename": proof_to_delete.get('filename')}
+        )
+        
+        # Remove proof from order
+        await db.orders.update_one(
+            {"id": order_id, "tenant_id": tenant_id},
+            {
+                "$pull": {field: {"id": proof_id}},
+                "$push": {"timeline": timeline_event},
+                "$set": {
+                    "last_updated_by": "admin",
+                    "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        
+        # Log to sheets
+        try:
+            from utils.helpers import log_to_sheets
+            await log_to_sheets(
+                db,
+                tenant_id,
+                order['order_number'],
+                f"Proof Deleted - {stage.capitalize()}",
+                f"Deleted: {proof_to_delete.get('filename', 'unknown')}",
+                stage=order.get('stage', ''),
+                status=order.get(f'{stage}_status', ''),
+                emailed_customer="No"
+            )
+        except Exception as sheets_err:
+            logger.warning(f"Sheets logging failed: {sheets_err}")
+        
+        logger.info(f"=== PROOF DELETE COMPLETE === order_id={order_id}, proof_id={proof_id}")
+        
+        return {"message": "Proof deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"=== PROOF DELETE FAILED === order_id={order_id}, error={str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to delete proof: {str(e)}")
+
 # Analytics endpoint
 @api_router.get("/admin/analytics")
 async def get_analytics(days: int = 7, compare_days: int = 7):
