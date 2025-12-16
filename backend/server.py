@@ -635,123 +635,183 @@ async def admin_upload_proofs_legacy(
     import base64
     import zipfile
     import io
+    import uuid
     
-    tenant = await db.tenants.find_one({}, {"_id": 0})
-    if not tenant:
-        raise HTTPException(status_code=500, detail="No tenant found")
+    logger.info(f"=== PROOF UPLOAD START === order_id={order_id}, stage={stage}, files_count={len(files)}")
     
-    tenant_id = tenant["id"]
-    
-    order = await db.orders.find_one({
-        "id": order_id,
-        "tenant_id": tenant_id
-    }, {"_id": 0})
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    
-    # Determine the current round number
-    existing_proofs = order.get(f"{stage}_proofs", [])
-    current_round = 1
-    if existing_proofs:
-        current_round = max([p.get('round', 1) for p in existing_proofs]) + 1
-    
-    uploaded_proofs = []
-    
-    for file in files:
-        if file.filename.endswith('.zip'):
-            # Handle zip file
-            content = await file.read()
-            with zipfile.ZipFile(io.BytesIO(content)) as zf:
-                for name in zf.namelist():
-                    if name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                        image_data = zf.read(name)
-                        image_base64 = base64.b64encode(image_data).decode('utf-8')
-                        proof = {
-                            "id": str(__import__('uuid').uuid4()),
-                            "url": f"data:image/jpeg;base64,{image_base64}",
-                            "filename": name,
-                            "uploaded_at": datetime.now(timezone.utc).isoformat(),
-                            "round": current_round,
-                            "revision_note": revision_note
-                        }
-                        uploaded_proofs.append(proof)
-        else:
-            # Handle individual image file
-            content = await file.read()
-            image_base64 = base64.b64encode(content).decode('utf-8')
-            proof = {
-                "id": str(__import__('uuid').uuid4()),
-                "url": f"data:image/jpeg;base64,{image_base64}",
-                "filename": file.filename,
-                "uploaded_at": datetime.now(timezone.utc).isoformat(),
-                "round": current_round,
-                "revision_note": revision_note
-            }
-            uploaded_proofs.append(proof)
-    
-    # Update order with proofs and change status to feedback_needed
-    field = f"{stage}_proofs"
-    status_field = f"{stage}_status"
-    
-    # Create timeline event
-    from utils.timeline import create_timeline_event
-    timeline_event = create_timeline_event(
-        event_type="proof_upload",
-        user_name="Admin",
-        user_role="admin",
-        description=f"Uploaded {len(uploaded_proofs)} proof(s) for {stage} stage",
-        metadata={"stage": stage, "count": len(uploaded_proofs)}
-    )
-    
-    await db.orders.update_one(
-        {"id": order_id, "tenant_id": tenant_id},
-        {
-            "$push": {
-                field: {"$each": uploaded_proofs},
-                "timeline": timeline_event
-            },
-            "$set": {
-                status_field: "feedback_needed",
-                "last_updated_by": "admin",
-                "last_updated_at": datetime.now(timezone.utc).isoformat(),
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }
-        }
-    )
-    
-    # Send automated email notification to customer
-    emailed_customer = "No"
-    if order.get('customer_email'):
-        from utils.helpers import send_customer_proof_notification
-        email_sent = await send_customer_proof_notification(
-            db,
-            tenant_id,
-            order,
-            stage,
-            len(uploaded_proofs)
+    try:
+        # Step 1: Fetch tenant
+        logger.info("Step 1: Fetching tenant...")
+        tenant = await db.tenants.find_one({}, {"_id": 0})
+        if not tenant:
+            logger.error("Step 1 FAILED: No tenant found")
+            raise HTTPException(status_code=500, detail="No tenant found")
+        
+        tenant_id = tenant["id"]
+        logger.info(f"Step 1 SUCCESS: tenant_id={tenant_id}")
+        
+        # Step 2: Fetch order
+        logger.info(f"Step 2: Fetching order {order_id}...")
+        order = await db.orders.find_one({
+            "id": order_id,
+            "tenant_id": tenant_id
+        }, {"_id": 0})
+        
+        if not order:
+            logger.error(f"Step 2 FAILED: Order {order_id} not found")
+            raise HTTPException(status_code=404, detail="Order not found")
+        logger.info(f"Step 2 SUCCESS: Found order {order.get('order_number', 'N/A')}")
+        
+        # Step 3: Determine round number
+        logger.info("Step 3: Determining round number...")
+        existing_proofs = order.get(f"{stage}_proofs", [])
+        current_round = 1
+        if existing_proofs:
+            # Safe handling of round values
+            rounds = []
+            for p in existing_proofs:
+                r = p.get('round', 1)
+                if isinstance(r, (int, float)):
+                    rounds.append(int(r))
+                else:
+                    rounds.append(1)
+            current_round = max(rounds) + 1 if rounds else 1
+        logger.info(f"Step 3 SUCCESS: current_round={current_round}")
+        
+        # Step 4: Process uploaded files
+        logger.info(f"Step 4: Processing {len(files)} file(s)...")
+        uploaded_proofs = []
+        
+        for idx, file in enumerate(files):
+            try:
+                logger.info(f"Step 4.{idx}: Processing file '{file.filename}'...")
+                if file.filename and file.filename.lower().endswith('.zip'):
+                    # Handle zip file
+                    logger.info(f"Step 4.{idx}: File is a ZIP, extracting...")
+                    content = await file.read()
+                    with zipfile.ZipFile(io.BytesIO(content)) as zf:
+                        for name in zf.namelist():
+                            if name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                                image_data = zf.read(name)
+                                image_base64 = base64.b64encode(image_data).decode('utf-8')
+                                proof = {
+                                    "id": str(uuid.uuid4()),
+                                    "url": f"data:image/jpeg;base64,{image_base64}",
+                                    "filename": name,
+                                    "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                                    "round": current_round,
+                                    "revision_note": revision_note
+                                }
+                                uploaded_proofs.append(proof)
+                    logger.info(f"Step 4.{idx}: ZIP processed, extracted {len(uploaded_proofs)} images")
+                else:
+                    # Handle individual image file
+                    content = await file.read()
+                    image_base64 = base64.b64encode(content).decode('utf-8')
+                    proof = {
+                        "id": str(uuid.uuid4()),
+                        "url": f"data:image/jpeg;base64,{image_base64}",
+                        "filename": file.filename or f"proof_{idx}.jpg",
+                        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                        "round": current_round,
+                        "revision_note": revision_note
+                    }
+                    uploaded_proofs.append(proof)
+                    logger.info(f"Step 4.{idx}: Image file processed successfully")
+            except Exception as file_err:
+                logger.error(f"Step 4.{idx} FAILED: Error processing file '{file.filename}': {file_err}", exc_info=True)
+                raise
+        
+        logger.info(f"Step 4 SUCCESS: Processed {len(uploaded_proofs)} proof(s)")
+        
+        # Step 5: Create timeline event
+        logger.info("Step 5: Creating timeline event...")
+        from utils.timeline import create_timeline_event
+        timeline_event = create_timeline_event(
+            event_type="proof_upload",
+            user_name="Admin",
+            user_role="admin",
+            description=f"Uploaded {len(uploaded_proofs)} proof(s) for {stage} stage",
+            metadata={"stage": stage, "count": len(uploaded_proofs)}
         )
-        emailed_customer = "Yes" if email_sent else "No"
-    
-    # Log to sheets with email status
-    from utils.helpers import log_to_sheets
-    note_text = f" - {revision_note}" if revision_note else ""
-    await log_to_sheets(
-        db,
-        tenant_id,
-        order['order_number'],
-        f"Proofs Uploaded - {stage.capitalize()} (Round {current_round})",
-        f"{len(uploaded_proofs)} images{note_text}",
-        stage=order.get('stage', ''),
-        status='feedback_needed',
-        emailed_customer=emailed_customer
-    )
-    
-    return {
-        "message": f"Uploaded {len(uploaded_proofs)} proofs (Round {current_round})",
-        "proofs": uploaded_proofs,
-        "round": current_round
-    }
+        logger.info("Step 5 SUCCESS: Timeline event created")
+        
+        # Step 6: Update order in database
+        logger.info("Step 6: Updating order in database...")
+        field = f"{stage}_proofs"
+        status_field = f"{stage}_status"
+        
+        update_result = await db.orders.update_one(
+            {"id": order_id, "tenant_id": tenant_id},
+            {
+                "$push": {
+                    field: {"$each": uploaded_proofs},
+                    "timeline": timeline_event
+                },
+                "$set": {
+                    status_field: "feedback_needed",
+                    "last_updated_by": "admin",
+                    "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        logger.info(f"Step 6 SUCCESS: matched={update_result.matched_count}, modified={update_result.modified_count}")
+        
+        # Step 7: Send email notification (non-blocking)
+        logger.info("Step 7: Sending email notification...")
+        emailed_customer = "No"
+        if order.get('customer_email'):
+            try:
+                from utils.helpers import send_customer_proof_notification
+                email_sent = await send_customer_proof_notification(
+                    db,
+                    tenant_id,
+                    order,
+                    stage,
+                    len(uploaded_proofs)
+                )
+                emailed_customer = "Yes" if email_sent else "No"
+                logger.info(f"Step 7 SUCCESS: Email sent={email_sent}")
+            except Exception as email_err:
+                logger.warning(f"Step 7 WARNING: Email failed but continuing: {email_err}")
+                emailed_customer = "No"
+        else:
+            logger.info("Step 7 SKIPPED: No customer email on order")
+        
+        # Step 8: Log to Google Sheets (non-blocking)
+        logger.info("Step 8: Logging to Google Sheets...")
+        try:
+            from utils.helpers import log_to_sheets
+            note_text = f" - {revision_note}" if revision_note else ""
+            await log_to_sheets(
+                db,
+                tenant_id,
+                order['order_number'],
+                f"Proofs Uploaded - {stage.capitalize()} (Round {current_round})",
+                f"{len(uploaded_proofs)} images{note_text}",
+                stage=order.get('stage', ''),
+                status='feedback_needed',
+                emailed_customer=emailed_customer
+            )
+            logger.info("Step 8 SUCCESS: Logged to sheets")
+        except Exception as sheets_err:
+            logger.warning(f"Step 8 WARNING: Sheets logging failed but continuing: {sheets_err}")
+        
+        logger.info(f"=== PROOF UPLOAD COMPLETE === order_id={order_id}, proofs_uploaded={len(uploaded_proofs)}")
+        
+        return {
+            "message": f"Uploaded {len(uploaded_proofs)} proofs (Round {current_round})",
+            "proofs": uploaded_proofs,
+            "round": current_round
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"=== PROOF UPLOAD FAILED === order_id={order_id}, error={str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to upload proofs: {str(e)}")
 
 # Analytics endpoint
 @api_router.get("/admin/analytics")
