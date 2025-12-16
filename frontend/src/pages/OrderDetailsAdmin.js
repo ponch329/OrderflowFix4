@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Package, Upload, Edit, Save, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Package, Upload, Edit, Save, Trash2, ChevronDown, ChevronUp, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import DragDropUpload from "@/components/DragDropUpload";
 import { getStageLabel, getStatusLabel } from "@/utils/labelMapper";
