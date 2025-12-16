@@ -66,6 +66,11 @@ const OrderDetailsAdminNew = () => {
   const [editApprovalStage, setEditApprovalStage] = useState("");
   const [editApprovalMessage, setEditApprovalMessage] = useState("");
   const [editApprovalImages, setEditApprovalImages] = useState([]);
+  
+  // Reply message dialog
+  const [replyDialogOpen, setReplyDialogOpen] = useState(false);
+  const [replyMessage, setReplyMessage] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
 
   useEffect(() => {
     // Set up authentication
