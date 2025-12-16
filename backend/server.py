@@ -1414,6 +1414,261 @@ async def ping_customer(order_id: str, stage: str):
         logging.error(f"Failed to send reminder email: {e}")
         raise HTTPException(status_code=500, detail="Failed to send reminder email")
 
+# ============== ORDER MESSAGING SYSTEM ==============
+
+@api_router.post("/admin/orders/{order_id}/messages")
+async def admin_send_message(order_id: str, message_data: dict):
+    """
+    Admin sends a reply message to customer
+    This creates a conversation thread on the order
+    """
+    message = message_data.get("message", "").strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    tenant_id = tenant["id"]
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": tenant_id
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Create message entry
+    import uuid
+    message_entry = {
+        "id": str(uuid.uuid4()),
+        "sender": "admin",
+        "sender_name": "Admin",
+        "message": message,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "read": False
+    }
+    
+    # Create timeline event
+    from utils.timeline import create_timeline_event
+    timeline_event = create_timeline_event(
+        event_type="admin_message",
+        user_name="Admin",
+        user_role="admin",
+        description=f"Sent message to customer",
+        metadata={"message": message}
+    )
+    
+    # Update order with message
+    await db.orders.update_one(
+        {"id": order_id, "tenant_id": tenant_id},
+        {
+            "$push": {
+                "messages": message_entry,
+                "timeline": timeline_event
+            },
+            "$set": {
+                "last_updated_by": "admin",
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Send email to customer
+    emailed_customer = "No"
+    if order.get('customer_email'):
+        try:
+            from email_templates import get_admin_reply_email
+            from utils.helpers import send_email
+            
+            logo_url = tenant.get("settings", {}).get("logo_url")
+            company_name = tenant.get("name", "AllBobbleheads")
+            frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+            portal_url = tenant.get("settings", {}).get("customer_portal_url", f"{frontend_url}/customer")
+            
+            subject, html_content = get_admin_reply_email(
+                order['order_number'],
+                order.get('customer_name', 'Valued Customer'),
+                message,
+                portal_url=portal_url,
+                logo_url=logo_url,
+                company_name=company_name
+            )
+            
+            await send_email(tenant, order['customer_email'], subject, html_content)
+            emailed_customer = "Yes"
+            logger.info(f"Admin reply email sent for order {order['order_number']}")
+        except Exception as e:
+            logger.error(f"Failed to send admin reply email: {e}")
+    
+    # Log to sheets
+    try:
+        from utils.helpers import log_to_sheets
+        await log_to_sheets(
+            db,
+            tenant_id,
+            order['order_number'],
+            "Admin Message Sent",
+            message[:100] + "..." if len(message) > 100 else message,
+            stage=order.get('stage', ''),
+            status=order.get(f"{order.get('stage', 'clay')}_status", ''),
+            emailed_customer=emailed_customer
+        )
+    except Exception as e:
+        logger.warning(f"Failed to log to sheets: {e}")
+    
+    return {
+        "message": "Message sent successfully",
+        "email_sent": emailed_customer == "Yes",
+        "message_entry": message_entry
+    }
+
+@api_router.post("/customer/orders/{order_id}/messages")
+async def customer_send_message(order_id: str, message_data: dict):
+    """
+    Customer sends a reply message
+    """
+    message = message_data.get("message", "").strip()
+    email = message_data.get("email", "").strip().lower()
+    
+    if not message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    
+    # Find order and verify customer email
+    order = await db.orders.find_one({
+        "id": order_id,
+        "customer_email": {"$regex": f"^{email}$", "$options": "i"}
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found or email mismatch")
+    
+    tenant_id = order.get("tenant_id")
+    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
+    
+    # Create message entry
+    import uuid
+    message_entry = {
+        "id": str(uuid.uuid4()),
+        "sender": "customer",
+        "sender_name": order.get('customer_name', 'Customer'),
+        "message": message,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "read": False
+    }
+    
+    # Create timeline event
+    from utils.timeline import create_timeline_event
+    timeline_event = create_timeline_event(
+        event_type="customer_message",
+        user_name=order.get('customer_name', 'Customer'),
+        user_role="customer",
+        description=f"Customer sent a message",
+        metadata={"message": message}
+    )
+    
+    # Update order with message
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$push": {
+                "messages": message_entry,
+                "timeline": timeline_event
+            },
+            "$set": {
+                "has_unread_messages": True,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Send notification email to admin
+    if tenant:
+        try:
+            from email_templates import get_customer_reply_email
+            from utils.helpers import send_email
+            
+            # Get admin notification email from settings or use SMTP user
+            admin_email = tenant.get("settings", {}).get("notification_email") or tenant.get("smtp_user")
+            
+            if admin_email:
+                logo_url = tenant.get("settings", {}).get("logo_url")
+                company_name = tenant.get("name", "AllBobbleheads")
+                
+                subject, html_content = get_customer_reply_email(
+                    order['order_number'],
+                    order.get('customer_name', 'Customer'),
+                    message,
+                    logo_url=logo_url,
+                    company_name=company_name
+                )
+                
+                await send_email(tenant, admin_email, subject, html_content)
+                logger.info(f"Customer reply notification sent to admin for order {order['order_number']}")
+        except Exception as e:
+            logger.error(f"Failed to send customer reply notification: {e}")
+    
+    # Log to sheets
+    try:
+        from utils.helpers import log_to_sheets
+        await log_to_sheets(
+            db,
+            tenant_id,
+            order['order_number'],
+            "Customer Message",
+            message[:100] + "..." if len(message) > 100 else message,
+            stage=order.get('stage', ''),
+            status=order.get(f"{order.get('stage', 'clay')}_status", ''),
+            emailed_customer="No"
+        )
+    except Exception as e:
+        logger.warning(f"Failed to log to sheets: {e}")
+    
+    return {
+        "message": "Message sent successfully",
+        "message_entry": message_entry
+    }
+
+@api_router.get("/admin/orders/{order_id}/messages")
+async def get_order_messages(order_id: str):
+    """
+    Get all messages for an order
+    """
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "tenant_id": tenant["id"]
+    }, {"_id": 0, "messages": 1, "order_number": 1})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Mark messages as read
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "has_unread_messages": False,
+                "messages.$[].read": True
+            }
+        }
+    )
+    
+    return {
+        "messages": order.get("messages", []),
+        "order_number": order.get("order_number")
+    }
+
+# ============== END ORDER MESSAGING SYSTEM ==============
+
 # Google Sheets OAuth routes
 @api_router.get("/oauth/sheets/login")
 async def sheets_login():
