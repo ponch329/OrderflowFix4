@@ -287,17 +287,17 @@ const OrderDetailsAdminNew = () => {
     setSendingReply(true);
     try {
       const token = localStorage.getItem('admin_token');
-      await axios.post(`${API}/admin/orders/${orderId}/messages`, {
+      await axios.post(`${API}/admin/orders/${orderId}/reply`, {
         message: replyMessage
       }, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      toast.success("Reply sent to customer");
+      toast.success("Reply sent to customer via email");
       setReplyMessage("");
       setReplyDialogOpen(false);
       fetchOrder();
     } catch (error) {
-      toast.error("Failed to send reply");
+      toast.error(error.response?.data?.detail || "Failed to send reply");
       console.error(error);
     } finally {
       setSendingReply(false);
