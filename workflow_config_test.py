@@ -344,8 +344,12 @@ class WorkflowConfigTester:
                             self.log("✅ Workflow config update and integration working")
                             
                             # Clean up - remove the test stage
-                            cleanup_config = original_config.copy()
-                            cleanup_response = self.session.put(f"{API_BASE}/workflow/config", json=cleanup_config)
+                            cleanup_data = {
+                                "settings": {
+                                    "workflow_config": original_workflow_config
+                                }
+                            }
+                            cleanup_response = self.session.patch(f"{API_BASE}/settings/tenant", json=cleanup_data)
                             if cleanup_response.status_code == 200:
                                 self.log("✅ Test stage cleaned up successfully")
                             else:
