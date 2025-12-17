@@ -48,6 +48,50 @@ const hexToHSL = (hex) => {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
+// Default workflow stages - used only as fallback when DB config unavailable
+const DEFAULT_WORKFLOW_STAGES = [
+  {
+    id: 'clay',
+    name: 'Clay',
+    order: 1,
+    statuses: [
+      { id: 'sculpting', name: 'In Progress' },
+      { id: 'feedback_needed', name: 'Feedback Needed' },
+      { id: 'changes_requested', name: 'Changes Requested' },
+      { id: 'approved', name: 'Approved' },
+    ]
+  },
+  {
+    id: 'paint',
+    name: 'Paint',
+    order: 2,
+    statuses: [
+      { id: 'painting', name: 'In Progress' },
+      { id: 'feedback_needed', name: 'Feedback Needed' },
+      { id: 'changes_requested', name: 'Changes Requested' },
+      { id: 'approved', name: 'Approved' },
+    ]
+  },
+  {
+    id: 'shipped',
+    name: 'Shipped',
+    order: 3,
+    statuses: [
+      { id: 'in_transit', name: 'In Transit' },
+      { id: 'delivered', name: 'Delivered' },
+    ]
+  },
+  {
+    id: 'archived',
+    name: 'Archived',
+    order: 4,
+    statuses: [
+      { id: 'completed', name: 'Completed' },
+      { id: 'canceled', name: 'Canceled' },
+    ]
+  }
+];
+
 export const BrandingProvider = ({ children }) => {
   const [branding, setBranding] = useState({
     logo_url: '',
@@ -58,27 +102,14 @@ export const BrandingProvider = ({ children }) => {
     company_name: ''
   });
   
+  // Full workflow configuration from database - single source of truth
   const [workflowConfig, setWorkflowConfig] = useState({
-    stage_labels: [
-      'Clay Stage',
-      'Paint Stage',
-      'Shipped',
-      '',
-      '',
-      '',
-      '',
-      ''
-    ],
-    status_labels: [
-      'Pending',
-      'In Progress',
-      'Customer Feedback Needed',
-      'Changes Requested',
-      'Approved',
-      '',
-      '',
-      ''
-    ]
+    stages: DEFAULT_WORKFLOW_STAGES,
+    rules: [],
+    timers: [],
+    // Legacy label arrays for backward compatibility
+    stage_labels: [],
+    status_labels: []
   });
   
   const [loading, setLoading] = useState(true);
@@ -98,25 +129,38 @@ export const BrandingProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       const response = await axios.get(`${API}/settings/tenant`);
-      const settings = response.data.settings;
+      const settings = response.data.settings || {};
       
-      if (settings) {
-        setBranding({
-          logo_url: settings.logo_url || '',
-          primary_color: settings.primary_color || '#2196F3',
-          secondary_color: settings.secondary_color || '#9C27B0',
-          font_family: settings.font_family || 'Arial, sans-serif',
-          font_size_base: settings.font_size_base || '16px',
-          company_name: response.data.name || ''
-        });
-        
-        if (settings.workflow) {
-          setWorkflowConfig({
-            stage_labels: settings.workflow.stage_labels || workflowConfig.stage_labels,
-            status_labels: settings.workflow.status_labels || workflowConfig.status_labels
-          });
-        }
-      }
+      setBranding({
+        logo_url: settings.logo_url || '',
+        primary_color: settings.primary_color || '#2196F3',
+        secondary_color: settings.secondary_color || '#9C27B0',
+        font_family: settings.font_family || 'Arial, sans-serif',
+        font_size_base: settings.font_size_base || '16px',
+        company_name: response.data.name || ''
+      });
+      
+      // Load complete workflow_config from DB - this is the single source of truth
+      const dbWorkflowConfig = settings.workflow_config || {};
+      const stages = dbWorkflowConfig.stages || DEFAULT_WORKFLOW_STAGES;
+      
+      // Build legacy label arrays from stages for backward compatibility
+      const stageLabels = stages.map(s => s.name);
+      const allStatuses = stages.flatMap(s => s.statuses || []);
+      const uniqueStatusIds = [...new Set(allStatuses.map(st => st.id))];
+      const statusLabels = uniqueStatusIds.map(id => {
+        const status = allStatuses.find(st => st.id === id);
+        return status?.name || id;
+      });
+      
+      setWorkflowConfig({
+        stages: stages,
+        rules: dbWorkflowConfig.rules || [],
+        timers: dbWorkflowConfig.timers || [],
+        // Legacy support
+        stage_labels: stageLabels,
+        status_labels: statusLabels
+      });
     } catch (error) {
       console.error('Failed to fetch branding settings:', error);
     } finally {
