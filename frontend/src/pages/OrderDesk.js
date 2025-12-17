@@ -210,59 +210,7 @@ export default function OrderDesk() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch workflow configuration (stages, statuses, timers)
-  const fetchWorkflowConfig = async () => {
-    try {
-      const response = await axios.get(`${API}/settings/tenant`);
-      const settings = response.data.settings || {};
-      const workflowConfig = settings.workflow_config || {};
-      
-      // Set stages from workflow config, or use defaults
-      const stages = workflowConfig.stages || [
-        { id: 'clay', name: 'Clay', statuses: [
-          { id: 'sculpting', name: 'In Progress' },
-          { id: 'feedback_needed', name: 'Feedback Needed' },
-          { id: 'changes_requested', name: 'Changes Requested' },
-          { id: 'approved', name: 'Approved' }
-        ]},
-        { id: 'paint', name: 'Paint', statuses: [
-          { id: 'painting', name: 'In Progress' },
-          { id: 'feedback_needed', name: 'Feedback Needed' },
-          { id: 'changes_requested', name: 'Changes Requested' },
-          { id: 'approved', name: 'Approved' }
-        ]},
-        { id: 'shipped', name: 'Shipped', statuses: [
-          { id: 'in_transit', name: 'In Transit' },
-          { id: 'delivered', name: 'Delivered' }
-        ]},
-        { id: 'archived', name: 'Archived', statuses: [
-          { id: 'completed', name: 'Completed' },
-          { id: 'canceled', name: 'Canceled' }
-        ]}
-      ];
-      
-      setWorkflowStages(stages);
-      setTimerRules(workflowConfig.timers || settings.workflow?.timer_rules || []);
-    } catch (error) {
-      console.error("Failed to load workflow config:", error);
-      // Set defaults on error
-      setWorkflowStages([
-        { id: 'clay', name: 'Clay', statuses: [
-          { id: 'sculpting', name: 'In Progress' },
-          { id: 'feedback_needed', name: 'Feedback Needed' },
-          { id: 'changes_requested', name: 'Changes Requested' },
-          { id: 'approved', name: 'Approved' }
-        ]},
-        { id: 'paint', name: 'Paint', statuses: [
-          { id: 'painting', name: 'In Progress' },
-          { id: 'feedback_needed', name: 'Feedback Needed' },
-          { id: 'changes_requested', name: 'Changes Requested' },
-          { id: 'approved', name: 'Approved' }
-        ]},
-        { id: 'archived', name: 'Archived', statuses: [] }
-      ]);
-    }
-  };
+  // Workflow config is now provided by BrandingContext - no local fetch needed
 
   const fetchOrderCounts = async () => {
     try {
