@@ -404,8 +404,8 @@ class BobbleheadAPITester:
                         self.results["custom_email_templates"]["details"] = f"❌ Template creation failed with status {create_response.status_code}: {create_response.text}"
                         self.log(f"❌ Template creation failed with status {create_response.status_code}")
                 else:
-                    self.results["custom_email_templates"]["details"] = f"❌ GET email-templates response missing 'templates' field: {data}"
-                    self.log("❌ GET email-templates response missing 'templates' field")
+                    self.results["custom_email_templates"]["details"] = f"❌ GET email-templates response in unexpected format: {type(data)}"
+                    self.log("❌ GET email-templates response in unexpected format")
             else:
                 self.results["custom_email_templates"]["details"] = f"❌ GET email-templates failed with status {response.status_code}: {response.text}"
                 self.log(f"❌ GET email-templates failed with status {response.status_code}")
