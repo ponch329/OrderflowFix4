@@ -319,11 +319,12 @@ class WorkflowConfigTester:
                 # Wait a moment for the update to propagate
                 time.sleep(1)
                 
-                # Verify the update by fetching config again
-                verify_response = self.session.get(f"{API_BASE}/workflow/config")
+                # Verify the update by fetching tenant settings again
+                verify_response = self.session.get(f"{API_BASE}/settings/tenant")
                 if verify_response.status_code == 200:
-                    updated_config_check = verify_response.json()
-                    updated_stages = updated_config_check.get("stages", [])
+                    updated_tenant_data = verify_response.json()
+                    updated_workflow_config_check = updated_tenant_data.get("settings", {}).get("workflow_config", {})
+                    updated_stages = updated_workflow_config_check.get("stages", [])
                     
                     # Check if our test stage is present
                     test_stage_found = any(stage.get("id") == test_stage_id for stage in updated_stages)
