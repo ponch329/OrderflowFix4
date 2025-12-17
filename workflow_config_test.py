@@ -304,11 +304,16 @@ class WorkflowConfigTester:
             }
             
             # Add the test stage to config
-            updated_config = original_config.copy()
-            updated_config["stages"] = original_stages + [test_stage]
+            updated_workflow_config = original_workflow_config.copy()
+            updated_workflow_config["stages"] = original_stages + [test_stage]
             
-            # Update workflow config
-            update_response = self.session.put(f"{API_BASE}/workflow/config", json=updated_config)
+            # Update tenant settings with new workflow config
+            update_data = {
+                "settings": {
+                    "workflow_config": updated_workflow_config
+                }
+            }
+            update_response = self.session.patch(f"{API_BASE}/settings/tenant", json=update_data)
             
             if update_response.status_code == 200:
                 # Wait a moment for the update to propagate
