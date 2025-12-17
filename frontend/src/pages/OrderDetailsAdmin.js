@@ -492,12 +492,22 @@ const OrderDetailsAdminNew = () => {
                               const allRounds = [...new Set(proofs.map(p => p.round || 1))].sort((a, b) => a - b);
                               const totalRounds = allRounds.length;
                               const isLatestRound = group.round === Math.max(...allRounds);
+                              // Get the upload timestamp from the first proof in this round
+                              const firstProofInRound = group.items.find(item => item.type === 'proof');
+                              const uploadedAt = firstProofInRound?.data?.uploaded_at;
                               
                               return (
                                 <>
-                                  <h4 className="font-semibold text-gray-800">
-                                    Round {group.round} {totalRounds > 1 && `of ${totalRounds}`}
-                                  </h4>
+                                  <div>
+                                    <h4 className="font-semibold text-gray-800">
+                                      Round {group.round} {totalRounds > 1 && `of ${totalRounds}`}
+                                    </h4>
+                                    {uploadedAt && (
+                                      <p className="text-xs text-gray-500">
+                                        Sent: {new Date(uploadedAt).toLocaleString()}
+                                      </p>
+                                    )}
+                                  </div>
                                   {isLatestRound && (
                                     <Badge className="bg-green-600 text-white text-sm px-2 py-0.5">
                                       ⭐ LATEST REVISION
@@ -507,6 +517,28 @@ const OrderDetailsAdminNew = () => {
                               );
                             })()}
                           </div>
+                          {/* Ping Customer Button - only show for latest round with feedback_needed status */}
+                          {(() => {
+                            const allRounds = [...new Set(proofs.map(p => p.round || 1))].sort((a, b) => a - b);
+                            const isLatestRound = group.round === Math.max(...allRounds);
+                            const stageStatus = order?.[`${stage}_status`];
+                            
+                            if (isLatestRound && stageStatus === 'feedback_needed') {
+                              return (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePingCustomer(stage)}
+                                  disabled={pingingCustomer}
+                                  className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                                >
+                                  <Bell className="w-4 h-4 mr-1" />
+                                  {pingingCustomer ? "Sending..." : "Remind Customer"}
+                                </Button>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                         
                         <div className="grid grid-cols-3 gap-4">
