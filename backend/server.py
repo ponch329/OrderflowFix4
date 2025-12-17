@@ -46,6 +46,8 @@ app = FastAPI(title="Bobblehead Proof Approval System - Multi-Tenant SaaS")
 @app.on_event("startup")
 async def startup_event():
     """Log application startup"""
+    import asyncio
+    
     logger.info("=" * 50)
     logger.info("Application starting up...")
     logger.info(f"MongoDB URL configured: {mongo_url[:20]}..." if mongo_url else "No MongoDB URL")
@@ -60,6 +62,14 @@ async def startup_event():
     except Exception as e:
         logger.error(f"❌ MongoDB connection failed: {str(e)}")
         raise
+    
+    # Start workflow scheduler as background task
+    try:
+        from utils.workflow_scheduler import start_scheduler_loop
+        asyncio.create_task(start_scheduler_loop(interval_minutes=5))
+        logger.info("✅ Workflow scheduler started (runs every 5 minutes)")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not start workflow scheduler: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_event():
