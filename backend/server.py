@@ -1164,8 +1164,11 @@ async def sync_orders():
                     "item_vendor": item_vendor,
                     "parent_order_id": None,
                     "line_items": line_items,
-                    "stage": "fulfilled" if fulfillment_status == "fulfilled" else "clay",
-                    "clay_status": "sculpting",
+                    # Use workflow config for default stage/status (single source of truth)
+                    "stage": "fulfilled" if fulfillment_status == "fulfilled" else first_stage,
+                    f"{first_stage}_status": first_status,
+                    # Initialize other stage statuses as pending (will be populated when order moves to that stage)
+                    "clay_status": first_status if first_stage == "clay" else "pending",
                     "paint_status": "pending",
                     "is_manual_order": False,
                     "is_archived": False,
