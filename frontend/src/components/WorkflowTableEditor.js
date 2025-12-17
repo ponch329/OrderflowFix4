@@ -450,6 +450,63 @@ export default function WorkflowTableEditor() {
     }
   };
 
+  // ==================== CUSTOM EMAIL TEMPLATES ====================
+  const handleCreateTemplate = async () => {
+    if (!newTemplate.name || !newTemplate.subject) {
+      toast.error("Please fill in template name and subject");
+      return;
+    }
+    
+    try {
+      const response = await axios.post(`${API}/settings/email-templates`, newTemplate);
+      setCustomTemplates([...customTemplates, response.data.template]);
+      setNewTemplate({ name: '', subject: '', body: '', description: '' });
+      toast.success("Email template created!");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to create template");
+    }
+  };
+  
+  const handleUpdateTemplate = async () => {
+    if (!editingTemplate) return;
+    
+    try {
+      await axios.patch(`${API}/settings/email-templates/${editingTemplate.id}`, editingTemplate);
+      setCustomTemplates(customTemplates.map(t => 
+        t.id === editingTemplate.id ? editingTemplate : t
+      ));
+      setEditingTemplate(null);
+      toast.success("Template updated!");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update template");
+    }
+  };
+  
+  const handleDeleteTemplate = async (templateId) => {
+    if (!confirm("Are you sure you want to delete this template?")) return;
+    
+    try {
+      await axios.delete(`${API}/settings/email-templates/${templateId}`);
+      setCustomTemplates(customTemplates.filter(t => t.id !== templateId));
+      toast.success("Template deleted!");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete template");
+    }
+  };
+  
+  // Get all available email templates (predefined + custom)
+  const getAllEmailTemplates = () => {
+    const allTemplates = [...EMAIL_TEMPLATES];
+    customTemplates.forEach(ct => {
+      allTemplates.push({
+        id: `custom_${ct.id}`,
+        label: `📝 ${ct.name}`,
+        description: ct.description || 'Custom template'
+      });
+    });
+    return allTemplates;
+  };
+
   return (
     <Card>
       <CardHeader>
