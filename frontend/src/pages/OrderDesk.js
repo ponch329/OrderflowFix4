@@ -130,6 +130,10 @@ function DraggableColumnItem({ column, toggleColumnVisibility }) {
 
 export default function OrderDesk() {
   const navigate = useNavigate();
+  
+  // Get workflow config from BrandingContext - single source of truth
+  const { workflowConfig, loading: brandingLoading } = useBranding();
+  
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFolder, setSelectedFolder] = useState('all');
@@ -144,13 +148,13 @@ export default function OrderDesk() {
   const [resizingColumn, setResizingColumn] = useState(null);
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
-  const [timerRules, setTimerRules] = useState([]);
   
   // Authentication ready state
   const [authReady, setAuthReady] = useState(false);
   
-  // Workflow config stages (dynamic folders)
-  const [workflowStages, setWorkflowStages] = useState([]);
+  // Derive workflow stages and timer rules from context
+  const workflowStages = workflowConfig?.stages || [];
+  const timerRules = workflowConfig?.timers || [];
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -187,7 +191,6 @@ export default function OrderDesk() {
     }
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setAuthReady(true);
-    fetchWorkflowConfig();
     fetchOrderCounts();
   }, [navigate]);
 
