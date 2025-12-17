@@ -487,6 +487,34 @@ export default function WorkflowTableEditor() {
               </div>
             </div>
 
+            {/* Add New Status - moved up per user request */}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <h3 className="font-semibold mb-3">Add New Status</h3>
+              <div className="flex gap-2">
+                <Select value={selectedStageForStatus} onValueChange={setSelectedStageForStatus}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select Stage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stages.map(stage => (
+                      <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  value={newStatusName}
+                  onChange={(e) => setNewStatusName(e.target.value)}
+                  placeholder="Enter status name"
+                  className="flex-1"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddStatus()}
+                />
+                <Button onClick={handleAddStatus}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Status
+                </Button>
+              </div>
+            </div>
+
             {/* Stages List */}
             <div className="space-y-4">
               {stages.map((stage, stageIdx) => (
@@ -537,34 +565,6 @@ export default function WorkflowTableEditor() {
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Add New Status */}
-            <div className="border rounded-lg p-4 bg-gray-50">
-              <h3 className="font-semibold mb-3">Add New Status</h3>
-              <div className="flex gap-2">
-                <Select value={selectedStageForStatus} onValueChange={setSelectedStageForStatus}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select Stage" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {stages.map(stage => (
-                      <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  value={newStatusName}
-                  onChange={(e) => setNewStatusName(e.target.value)}
-                  placeholder="Enter status name"
-                  className="flex-1"
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddStatus()}
-                />
-                <Button onClick={handleAddStatus}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Status
-                </Button>
-              </div>
             </div>
           </TabsContent>
 
