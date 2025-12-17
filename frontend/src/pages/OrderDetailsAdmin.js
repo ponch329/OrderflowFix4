@@ -307,20 +307,27 @@ const OrderDetailsAdminNew = () => {
   const [pingingCustomer, setPingingCustomer] = useState(false);
   
   const handlePingCustomer = async (stage) => {
-    if (!window.confirm(`Send a reminder email to ${order?.customer_email} about their pending proofs?`)) {
+    if (!window.confirm(`Send a reminder email to ${order?.customer_email} about their pending ${stage} proofs?`)) {
       return;
     }
     
     setPingingCustomer(true);
     try {
       const token = localStorage.getItem('admin_token');
-      await axios.post(`${API}/admin/orders/${orderId}/ping-customer`, {
-        stage: stage
-      }, {
+      await axios.post(`${API}/admin/orders/${orderId}/ping-customer?stage=${stage}`, {}, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      toast.success("Reminder email sent to customer");
-      fetchOrder();
+      toast.success(
+        <div className="flex items-center gap-2">
+          <Bell className="w-5 h-5" />
+          <div>
+            <strong>Reminder Sent!</strong>
+            <p className="text-sm">Email sent to {order?.customer_email}</p>
+          </div>
+        </div>,
+        { duration: 4000 }
+      );
+      fetchOrder(); // Refresh to show the new timeline event
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to send reminder");
       console.error(error);
