@@ -392,7 +392,7 @@ class BobbleheadAPITester:
                                         self.results["custom_email_templates"]["details"] = f"❌ Template update failed with status {update_response.status_code}: {update_response.text}"
                                         self.log(f"❌ Template update failed with status {update_response.status_code}")
                                 else:
-                                    self.results["custom_email_templates"]["details"] = f"❌ Template creation verification failed - expected {initial_count + 1} templates, got {len(verify_data['templates'])}"
+                                    self.results["custom_email_templates"]["details"] = f"❌ Template creation verification failed - expected {initial_count + 1} templates, got {len(verify_templates)}"
                                     self.log("❌ Template creation verification failed")
                             else:
                                 self.results["custom_email_templates"]["details"] = f"❌ Template verification GET failed with status {verify_response.status_code}: {verify_response.text}"
