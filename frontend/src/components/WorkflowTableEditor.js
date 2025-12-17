@@ -31,7 +31,7 @@ const PREDEFINED_TRIGGERS = [
   { id: 'tracking_added', label: 'Tracking Number Added', description: 'When tracking information is added to order' },
   { id: 'order_shipped', label: 'Order Shipped', description: 'When order is marked as shipped' },
   { id: 'manual_change', label: 'Manual Status Change', description: 'When admin manually changes status' },
-  { id: 'timer_expired', label: 'Timer Expired', description: 'When SLA timer expires for a status' },
+  { id: 'time_delay', label: '⏱️ After Time Delay', description: 'Automatically trigger after specified time in this status', hasTimeDelay: true },
 ];
 
 // Email templates that can be sent as actions
