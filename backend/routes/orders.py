@@ -9,11 +9,14 @@ import uuid
 import base64
 import zipfile
 import io
+import logging
 from datetime import datetime, timezone
 
 from models.order import Order, ManualOrderCreate, OrderNoteCreate
 from models.user import Permission
 from middleware.auth import AuthContext, get_current_user, require_permissions
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
