@@ -597,6 +597,7 @@ export default function WorkflowTableEditor() {
                     <th className="p-3 text-left text-sm font-semibold text-gray-700">From Stage</th>
                     <th className="p-3 text-left text-sm font-semibold text-gray-700">From Status</th>
                     <th className="p-3 text-left text-sm font-semibold text-gray-700">When (Trigger)</th>
+                    <th className="p-3 text-left text-sm font-semibold text-gray-700">⏱️ Time Delay</th>
                     <th className="p-3 text-left text-sm font-semibold text-gray-700">To Stage</th>
                     <th className="p-3 text-left text-sm font-semibold text-gray-700">To Status</th>
                     <th className="p-3 text-left text-sm font-semibold text-gray-700">📧 Email Action</th>
