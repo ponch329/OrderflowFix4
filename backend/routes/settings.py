@@ -413,14 +413,16 @@ async def sync_shopify_orders_endpoint(
 
 
 # ============== CUSTOM EMAIL TEMPLATES ==============
+# Note: These routes use /custom-email-templates to avoid conflict with 
+# the existing /email-templates endpoint that manages predefined templates
 
-@router.get("/email-templates")
-async def get_email_templates(
+@router.get("/custom-email-templates")
+async def get_custom_email_templates(
     auth: AuthContext = Depends(require_permissions(Permission.VIEW_SETTINGS)),
     db = Depends(get_db)
 ):
     """
-    Get all custom email templates for this tenant
+    Get all custom email templates for this tenant (user-created templates)
     """
     templates = await db.email_templates.find(
         {"tenant_id": auth.tenant_id},
@@ -429,8 +431,8 @@ async def get_email_templates(
     
     return {"templates": templates}
 
-@router.post("/email-templates")
-async def create_email_template(
+@router.post("/custom-email-templates")
+async def create_custom_email_template(
     template_data: dict,
     auth: AuthContext = Depends(require_permissions(Permission.MANAGE_SETTINGS)),
     db = Depends(get_db)
@@ -468,8 +470,8 @@ async def create_email_template(
     
     return {"message": "Template created", "template": {k: v for k, v in template.items() if k != "_id"}}
 
-@router.patch("/email-templates/{template_id}")
-async def update_email_template(
+@router.patch("/custom-email-templates/{template_id}")
+async def update_custom_email_template(
     template_id: str,
     template_data: dict,
     auth: AuthContext = Depends(require_permissions(Permission.MANAGE_SETTINGS)),
@@ -505,8 +507,8 @@ async def update_email_template(
     
     return {"message": "Template updated", "template": updated}
 
-@router.delete("/email-templates/{template_id}")
-async def delete_email_template(
+@router.delete("/custom-email-templates/{template_id}")
+async def delete_custom_email_template(
     template_id: str,
     auth: AuthContext = Depends(require_permissions(Permission.MANAGE_SETTINGS)),
     db = Depends(get_db)
