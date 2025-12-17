@@ -458,7 +458,7 @@ export default function WorkflowTableEditor() {
     }
     
     try {
-      const response = await axios.post(`${API}/settings/email-templates`, newTemplate);
+      const response = await axios.post(`${API}/settings/custom-email-templates`, newTemplate);
       setCustomTemplates([...customTemplates, response.data.template]);
       setNewTemplate({ name: '', subject: '', body: '', description: '' });
       toast.success("Email template created!");
@@ -471,7 +471,7 @@ export default function WorkflowTableEditor() {
     if (!editingTemplate) return;
     
     try {
-      await axios.patch(`${API}/settings/email-templates/${editingTemplate.id}`, editingTemplate);
+      await axios.patch(`${API}/settings/custom-email-templates/${editingTemplate.id}`, editingTemplate);
       setCustomTemplates(customTemplates.map(t => 
         t.id === editingTemplate.id ? editingTemplate : t
       ));
@@ -486,7 +486,7 @@ export default function WorkflowTableEditor() {
     if (!confirm("Are you sure you want to delete this template?")) return;
     
     try {
-      await axios.delete(`${API}/settings/email-templates/${templateId}`);
+      await axios.delete(`${API}/settings/custom-email-templates/${templateId}`);
       setCustomTemplates(customTemplates.filter(t => t.id !== templateId));
       toast.success("Template deleted!");
     } catch (error) {
