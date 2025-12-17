@@ -1553,7 +1553,7 @@ async def admin_reply_to_customer(order_id: str, message_data: dict):
         event_type="admin_reply",
         user_name="Admin",
         user_role="admin",
-        description=f"Sent reply to customer",
+        description="Sent reply to customer",
         metadata={"message": message}
     )
     
