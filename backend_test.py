@@ -256,6 +256,253 @@ class BobbleheadAPITester:
             self.results["proof_deletion"]["details"] = f"❌ Exception during proof deletion test: {str(e)}"
             self.log(f"❌ Exception during proof deletion test: {e}")
     
+    def test_time_delay_rules(self):
+        """Test Time-Delay Workflow Rules API"""
+        self.log("Testing Time-Delay Workflow Rules API...")
+        
+        if not self.admin_token:
+            self.results["time_delay_rules"]["details"] = "❌ Cannot test - admin login failed"
+            self.log("❌ Cannot test time-delay rules - admin login failed")
+            return
+        
+        try:
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            # Test 1: GET /api/admin/workflow/time-delay-rules
+            self.log("Testing GET /api/admin/workflow/time-delay-rules...")
+            response = self.session.get(f"{API_BASE}/admin/workflow/time-delay-rules", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "rules" in data and "scheduler_interval_minutes" in data:
+                    self.log(f"✅ GET time-delay-rules successful. Found {len(data['rules'])} rules, scheduler interval: {data['scheduler_interval_minutes']} minutes")
+                    
+                    # Test 2: POST /api/admin/workflow/run-scheduler
+                    self.log("Testing POST /api/admin/workflow/run-scheduler...")
+                    scheduler_response = self.session.post(f"{API_BASE}/admin/workflow/run-scheduler", headers=headers)
+                    
+                    if scheduler_response.status_code == 200:
+                        scheduler_data = scheduler_response.json()
+                        if "success" in scheduler_data and "orders_processed" in scheduler_data:
+                            self.results["time_delay_rules"]["passed"] = True
+                            self.results["time_delay_rules"]["details"] = f"✅ Time-delay rules API working. GET returns {len(data['rules'])} rules with scheduler info. Manual scheduler trigger successful, processed {scheduler_data['orders_processed']} orders."
+                            self.log(f"✅ Manual scheduler trigger successful, processed {scheduler_data['orders_processed']} orders")
+                        else:
+                            self.results["time_delay_rules"]["details"] = f"❌ Scheduler response missing required fields: {scheduler_data}"
+                            self.log("❌ Scheduler response missing required fields")
+                    else:
+                        self.results["time_delay_rules"]["details"] = f"❌ Manual scheduler trigger failed with status {scheduler_response.status_code}: {scheduler_response.text}"
+                        self.log(f"❌ Manual scheduler trigger failed with status {scheduler_response.status_code}")
+                else:
+                    self.results["time_delay_rules"]["details"] = f"❌ GET time-delay-rules response missing required fields: {data}"
+                    self.log("❌ GET time-delay-rules response missing required fields")
+            else:
+                self.results["time_delay_rules"]["details"] = f"❌ GET time-delay-rules failed with status {response.status_code}: {response.text}"
+                self.log(f"❌ GET time-delay-rules failed with status {response.status_code}")
+                
+        except Exception as e:
+            self.results["time_delay_rules"]["details"] = f"❌ Exception during time-delay rules test: {str(e)}"
+            self.log(f"❌ Exception during time-delay rules test: {e}")
+    
+    def test_custom_email_templates(self):
+        """Test Custom Email Templates API"""
+        self.log("Testing Custom Email Templates API...")
+        
+        if not self.admin_token:
+            self.results["custom_email_templates"]["details"] = "❌ Cannot test - admin login failed"
+            self.log("❌ Cannot test custom email templates - admin login failed")
+            return
+        
+        try:
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            template_id = None
+            
+            # Test 1: GET /api/settings/email-templates (should be empty initially)
+            self.log("Testing GET /api/settings/email-templates (initial state)...")
+            response = self.session.get(f"{API_BASE}/settings/email-templates", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "templates" in data:
+                    initial_count = len(data["templates"])
+                    self.log(f"✅ GET email-templates successful. Found {initial_count} templates initially")
+                    
+                    # Test 2: POST /api/settings/email-templates (create new template)
+                    self.log("Testing POST /api/settings/email-templates (create template)...")
+                    template_data = {
+                        "name": "Test Production Update",
+                        "subject": "Order #{order_number} - Production Update",
+                        "body": "Hi {customer_name},\n\nYour order #{order_number} is being worked on.\n\nBest regards",
+                        "description": "Send when production stage changes"
+                    }
+                    
+                    create_response = self.session.post(f"{API_BASE}/settings/email-templates", json=template_data, headers=headers)
+                    
+                    if create_response.status_code == 200:
+                        create_data = create_response.json()
+                        if "template" in create_data and "id" in create_data["template"]:
+                            template_id = create_data["template"]["id"]
+                            self.log(f"✅ Template creation successful. Template ID: {template_id}")
+                            
+                            # Test 3: GET /api/settings/email-templates (verify template was created)
+                            self.log("Testing GET /api/settings/email-templates (verify creation)...")
+                            verify_response = self.session.get(f"{API_BASE}/settings/email-templates", headers=headers)
+                            
+                            if verify_response.status_code == 200:
+                                verify_data = verify_response.json()
+                                if len(verify_data["templates"]) == initial_count + 1:
+                                    self.log("✅ Template creation verified - count increased by 1")
+                                    
+                                    # Test 4: PATCH /api/settings/email-templates/{template_id} (update template)
+                                    self.log(f"Testing PATCH /api/settings/email-templates/{template_id} (update template)...")
+                                    update_data = {"name": "Updated Test Production Update"}
+                                    
+                                    update_response = self.session.patch(f"{API_BASE}/settings/email-templates/{template_id}", json=update_data, headers=headers)
+                                    
+                                    if update_response.status_code == 200:
+                                        self.log("✅ Template update successful")
+                                        
+                                        # Test 5: DELETE /api/settings/email-templates/{template_id} (delete template)
+                                        self.log(f"Testing DELETE /api/settings/email-templates/{template_id} (delete template)...")
+                                        delete_response = self.session.delete(f"{API_BASE}/settings/email-templates/{template_id}", headers=headers)
+                                        
+                                        if delete_response.status_code == 200:
+                                            self.results["custom_email_templates"]["passed"] = True
+                                            self.results["custom_email_templates"]["details"] = "✅ Custom Email Templates API fully functional. Successfully tested: GET (empty state), POST (create), GET (verify), PATCH (update), DELETE (cleanup). All CRUD operations working correctly."
+                                            self.log("✅ Template deletion successful - All CRUD operations working")
+                                        else:
+                                            self.results["custom_email_templates"]["details"] = f"❌ Template deletion failed with status {delete_response.status_code}: {delete_response.text}"
+                                            self.log(f"❌ Template deletion failed with status {delete_response.status_code}")
+                                    else:
+                                        self.results["custom_email_templates"]["details"] = f"❌ Template update failed with status {update_response.status_code}: {update_response.text}"
+                                        self.log(f"❌ Template update failed with status {update_response.status_code}")
+                                else:
+                                    self.results["custom_email_templates"]["details"] = f"❌ Template creation verification failed - expected {initial_count + 1} templates, got {len(verify_data['templates'])}"
+                                    self.log("❌ Template creation verification failed")
+                            else:
+                                self.results["custom_email_templates"]["details"] = f"❌ Template verification GET failed with status {verify_response.status_code}: {verify_response.text}"
+                                self.log(f"❌ Template verification GET failed with status {verify_response.status_code}")
+                        else:
+                            self.results["custom_email_templates"]["details"] = f"❌ Template creation response missing required fields: {create_data}"
+                            self.log("❌ Template creation response missing required fields")
+                    else:
+                        self.results["custom_email_templates"]["details"] = f"❌ Template creation failed with status {create_response.status_code}: {create_response.text}"
+                        self.log(f"❌ Template creation failed with status {create_response.status_code}")
+                else:
+                    self.results["custom_email_templates"]["details"] = f"❌ GET email-templates response missing 'templates' field: {data}"
+                    self.log("❌ GET email-templates response missing 'templates' field")
+            else:
+                self.results["custom_email_templates"]["details"] = f"❌ GET email-templates failed with status {response.status_code}: {response.text}"
+                self.log(f"❌ GET email-templates failed with status {response.status_code}")
+                
+        except Exception as e:
+            self.results["custom_email_templates"]["details"] = f"❌ Exception during custom email templates test: {str(e)}"
+            self.log(f"❌ Exception during custom email templates test: {e}")
+    
+    def test_workflow_config(self):
+        """Test Workflow Config Integration with time-delay rules"""
+        self.log("Testing Workflow Config Integration...")
+        
+        if not self.admin_token:
+            self.results["workflow_config"]["details"] = "❌ Cannot test - admin login failed"
+            self.log("❌ Cannot test workflow config - admin login failed")
+            return
+        
+        try:
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            # Test 1: GET current tenant settings to check workflow_config structure
+            self.log("Testing GET /api/settings/tenant (check workflow_config structure)...")
+            response = self.session.get(f"{API_BASE}/settings/tenant", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "settings" in data:
+                    settings = data["settings"]
+                    workflow_config = settings.get("workflow_config", {})
+                    
+                    # Check if workflow_config has rules array
+                    if "rules" in workflow_config:
+                        rules = workflow_config["rules"]
+                        self.log(f"✅ Workflow config found with {len(rules)} rules")
+                        
+                        # Test 2: Create a test time_delay rule via PATCH /api/settings/tenant
+                        self.log("Testing PATCH /api/settings/tenant (create time_delay rule)...")
+                        
+                        # Add a test time-delay rule
+                        test_rule = {
+                            "id": f"test_time_delay_{uuid.uuid4().hex[:8]}",
+                            "trigger": "time_delay",
+                            "fromStage": "clay",
+                            "fromStatus": "sculpting",
+                            "toStage": "clay",
+                            "toStatus": "feedback_needed",
+                            "delayDays": 2,
+                            "delayHours": 12,
+                            "emailAction": "proof_ready",
+                            "description": "Auto-transition clay sculpting to feedback after 2.5 days"
+                        }
+                        
+                        # Add the test rule to existing rules
+                        updated_rules = rules + [test_rule]
+                        updated_workflow_config = {**workflow_config, "rules": updated_rules}
+                        
+                        update_data = {
+                            "settings": {
+                                "workflow_config": updated_workflow_config
+                            }
+                        }
+                        
+                        update_response = self.session.patch(f"{API_BASE}/settings/tenant", json=update_data, headers=headers)
+                        
+                        if update_response.status_code == 200:
+                            self.log("✅ Test time_delay rule created successfully")
+                            
+                            # Test 3: Verify the rule was saved by getting tenant settings again
+                            verify_response = self.session.get(f"{API_BASE}/settings/tenant", headers=headers)
+                            
+                            if verify_response.status_code == 200:
+                                verify_data = verify_response.json()
+                                verify_workflow_config = verify_data["settings"].get("workflow_config", {})
+                                verify_rules = verify_workflow_config.get("rules", [])
+                                
+                                # Check if our test rule exists
+                                test_rule_found = any(r.get("id") == test_rule["id"] for r in verify_rules)
+                                
+                                if test_rule_found:
+                                    # Check if the rule has the required delayDays and delayHours fields
+                                    found_rule = next(r for r in verify_rules if r.get("id") == test_rule["id"])
+                                    
+                                    if "delayDays" in found_rule and "delayHours" in found_rule:
+                                        self.results["workflow_config"]["passed"] = True
+                                        self.results["workflow_config"]["details"] = f"✅ Workflow Config Integration working. Successfully created time_delay rule with delayDays ({found_rule['delayDays']}) and delayHours ({found_rule['delayHours']}) fields. Rule persisted correctly in tenant settings."
+                                        self.log(f"✅ Test rule verified with delayDays: {found_rule['delayDays']}, delayHours: {found_rule['delayHours']}")
+                                    else:
+                                        self.results["workflow_config"]["details"] = f"❌ Test rule missing delayDays or delayHours fields: {found_rule}"
+                                        self.log("❌ Test rule missing delayDays or delayHours fields")
+                                else:
+                                    self.results["workflow_config"]["details"] = "❌ Test time_delay rule not found after creation"
+                                    self.log("❌ Test time_delay rule not found after creation")
+                            else:
+                                self.results["workflow_config"]["details"] = f"❌ Verification GET failed with status {verify_response.status_code}: {verify_response.text}"
+                                self.log(f"❌ Verification GET failed with status {verify_response.status_code}")
+                        else:
+                            self.results["workflow_config"]["details"] = f"❌ Rule creation failed with status {update_response.status_code}: {update_response.text}"
+                            self.log(f"❌ Rule creation failed with status {update_response.status_code}")
+                    else:
+                        self.results["workflow_config"]["details"] = f"❌ Workflow config missing 'rules' array: {workflow_config}"
+                        self.log("❌ Workflow config missing 'rules' array")
+                else:
+                    self.results["workflow_config"]["details"] = f"❌ Tenant settings missing 'settings' field: {data}"
+                    self.log("❌ Tenant settings missing 'settings' field")
+            else:
+                self.results["workflow_config"]["details"] = f"❌ GET tenant settings failed with status {response.status_code}: {response.text}"
+                self.log(f"❌ GET tenant settings failed with status {response.status_code}")
+                
+        except Exception as e:
+            self.results["workflow_config"]["details"] = f"❌ Exception during workflow config test: {str(e)}"
+            self.log(f"❌ Exception during workflow config test: {e}")
+    
     def run_all_tests(self):
         """Run all tests"""
         self.log("=" * 60)
