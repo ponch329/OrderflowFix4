@@ -1090,6 +1090,70 @@ async def get_analytics(days: int = 7, compare_days: int = 7):
         }
     }
 
+# ============== WORKFLOW SCHEDULER ==============
+
+@api_router.post("/admin/workflow/run-scheduler")
+async def run_workflow_scheduler():
+    """
+    Manually trigger the workflow scheduler to process time-delay rules.
+    Useful for testing or forcing immediate processing.
+    """
+    try:
+        from utils.workflow_scheduler import run_scheduler_once
+        processed = await run_scheduler_once()
+        return {
+            "success": True,
+            "message": f"Workflow scheduler completed",
+            "orders_processed": processed
+        }
+    except Exception as e:
+        logger.error(f"Manual scheduler run failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Scheduler error: {str(e)}")
+
+@api_router.get("/admin/workflow/time-delay-rules")
+async def get_time_delay_rules():
+    """
+    Get all time-delay workflow rules and their current status.
+    """
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    settings = tenant.get("settings", {})
+    workflow_config = settings.get("workflow_config", {})
+    rules = workflow_config.get("rules", [])
+    
+    time_delay_rules = [r for r in rules if r.get("trigger") == "time_delay"]
+    
+    # For each rule, count how many orders are currently in the "from" state
+    rule_stats = []
+    for rule in time_delay_rules:
+        from_stage = rule.get("fromStage")
+        from_status = rule.get("fromStatus")
+        status_field = f"{from_stage}_status"
+        
+        count = await db.orders.count_documents({
+            "tenant_id": tenant["id"],
+            "stage": from_stage,
+            status_field: from_status,
+            "$or": [
+                {"is_archived": False},
+                {"is_archived": {"$exists": False}}
+            ]
+        })
+        
+        rule_stats.append({
+            **rule,
+            "orders_in_queue": count
+        })
+    
+    return {
+        "rules": rule_stats,
+        "scheduler_interval_minutes": 5
+    }
+
+# ============== END WORKFLOW SCHEDULER ==============
+
 # Shopify sync endpoint
 @api_router.post("/admin/sync-orders")
 async def sync_orders():
