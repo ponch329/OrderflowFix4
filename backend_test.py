@@ -50,7 +50,10 @@ class BobbleheadAPITester:
         self.results = {
             "admin_login": {"passed": False, "details": ""},
             "email_notifications": {"passed": False, "details": ""},
-            "proof_deletion": {"passed": False, "details": ""}
+            "proof_deletion": {"passed": False, "details": ""},
+            "time_delay_rules": {"passed": False, "details": ""},
+            "custom_email_templates": {"passed": False, "details": ""},
+            "workflow_config": {"passed": False, "details": ""}
         }
     
     def log(self, message):
