@@ -875,7 +875,7 @@ export default function OrderDesk() {
                         {column.id === 'email' && order.customer_email}
                         {column.id === 'folder' && (
                           <span className="text-gray-600">
-                            {order.stage?.charAt(0).toUpperCase() + order.stage?.slice(1)}
+                            {getStageLabel(order.stage, workflowConfig)}
                           </span>
                         )}
                         {column.id === 'name' && order.customer_name}
