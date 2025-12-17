@@ -336,14 +336,14 @@ class BobbleheadAPITester:
                 
                 # Test 2: POST /api/settings/email-templates (create new template)
                 self.log("Testing POST /api/settings/email-templates (create template)...")
-                    template_data = {
-                        "name": "Test Production Update",
-                        "subject": "Order #{order_number} - Production Update",
-                        "body": "Hi {customer_name},\n\nYour order #{order_number} is being worked on.\n\nBest regards",
-                        "description": "Send when production stage changes"
-                    }
-                    
-                    create_response = self.session.post(f"{API_BASE}/settings/email-templates", json=template_data, headers=headers)
+                template_data = {
+                    "name": "Test Production Update",
+                    "subject": "Order #{order_number} - Production Update",
+                    "body": "Hi {customer_name},\n\nYour order #{order_number} is being worked on.\n\nBest regards",
+                    "description": "Send when production stage changes"
+                }
+                
+                create_response = self.session.post(f"{API_BASE}/settings/email-templates", json=template_data, headers=headers)
                     
                     if create_response.status_code == 200:
                         create_data = create_response.json()
