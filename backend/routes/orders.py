@@ -85,6 +85,7 @@ async def create_order(
     """
     Create a manual order
     Requires: CREATE_ORDERS permission
+    Uses workflow config from database for default stage/status values.
     """
     # Check if order number already exists in this tenant
     existing = await db.orders.find_one({
@@ -95,8 +96,27 @@ async def create_order(
     if existing:
         raise HTTPException(status_code=400, detail=f"Order #{order_data.order_number} already exists")
     
+    # Get workflow config from tenant settings for default status values
+    tenant = await db.tenants.find_one({"id": auth.tenant_id}, {"_id": 0})
+    workflow_config = tenant.get("settings", {}).get("workflow_config", {}) if tenant else {}
+    stages = workflow_config.get("stages", [])
+    
+    # Get first status for the selected stage from workflow config
+    def get_first_status_for_stage_local(stage_id):
+        for stage in stages:
+            if stage.get("id") == stage_id:
+                statuses = stage.get("statuses", [])
+                if statuses:
+                    return statuses[0].get("id", "pending")
+        # Fallback based on stage
+        if stage_id == "clay":
+            return "sculpting"
+        elif stage_id == "paint":
+            return "painting"
+        return "pending"
+    
     now = datetime.now(timezone.utc)
-    clay_status = "sculpting" if order_data.stage == "clay" else "pending"
+    initial_status = get_first_status_for_stage_local(order_data.stage)
     
     new_order = {
         "id": str(uuid.uuid4()),
@@ -108,8 +128,10 @@ async def create_order(
         "item_vendor": order_data.item_vendor,
         "parent_order_id": None,
         "stage": order_data.stage,
-        "clay_status": clay_status,
-        "paint_status": "pending",
+        # Set status dynamically based on workflow config
+        f"{order_data.stage}_status": initial_status,
+        "clay_status": initial_status if order_data.stage == "clay" else "pending",
+        "paint_status": initial_status if order_data.stage == "paint" else "pending",
         "is_manual_order": True,
         "is_archived": False,
         "shopify_fulfillment_status": None,
