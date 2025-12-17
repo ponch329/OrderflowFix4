@@ -847,3 +847,31 @@ agent_communication:
       message: "Major refactoring completed to eliminate hardcoded stages/statuses and use database workflow_config as single source of truth. Testing agent should verify: 1) OrderDesk loads successfully and shows all stages from workflow config in sidebar (including any custom stages like 'Quality Check' or 'Test Stage'), 2) Stage labels display correctly in the order table (e.g., 'Clay' not 'clay'), 3) Status labels display correctly (e.g., 'In Progress' not 'sculpting'), 4) Go to Settings > Workflow > Stages tab - add/rename a stage - verify it reflects in OrderDesk sidebar immediately after refresh, 5) Test manual order creation - verify new orders get the correct initial status from workflow config, 6) Test Shopify sync if credentials available - verify synced orders get correct default stage/status."
     - agent: "testing"
       message: "✅ WORKFLOW CONFIG REFACTORING BACKEND TESTING COMPLETED SUCCESSFULLY: Comprehensive testing of the major refactoring to use workflow_config from database as single source of truth completed with all 5/5 tests passing. **CRITICAL SUCCESS**: Backend implementation is working perfectly as single source of truth. **Key Findings**: 1) Workflow config successfully retrieved from database with 6 stages (Clay, Paint, Shipped, Archived, Quality Check, Test Stage) via /api/settings/tenant endpoint, 2) Dynamic orders counts API working correctly - returns counts based on workflow config stages (Total: 254 orders with proper status breakdowns), 3) Orders list contains proper stage/status data with dynamic fields, 4) Workflow config update integration working - successfully added test stage, verified it appears in counts API, then cleaned up, 5) All backend helper functions (get_workflow_config_from_db, get_first_stage, get_first_status_for_stage) functioning correctly. **IMPLEMENTATION VERIFIED**: The refactoring successfully eliminated hardcoded stages/statuses and established database workflow_config as the authoritative source. System handles dynamic stage additions and reflects changes immediately in API responses. Created workflow_config_test.py for ongoing backend verification. Backend refactoring objectives fully achieved."
+
+  - task: "P1 - Time-Delay Trigger for Workflow Rules"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/WorkflowTableEditor.js, backend/utils/workflow_scheduler.py, backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented time-based trigger for workflow rules. New trigger type 'time_delay' added with days/hours inputs. Backend scheduler runs every 5 minutes to check orders and apply time-based transitions. New endpoints: POST /api/admin/workflow/run-scheduler, GET /api/admin/workflow/time-delay-rules. Example use case: Order in Clay-Approved for 1 day auto-moves to Paint-In Progress."
+
+  - task: "P2 - Custom Email Templates"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/WorkflowTableEditor.js, backend/routes/settings.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added new Email Templates tab in Workflow Configuration. Users can create/edit/delete custom email templates with name, subject, body (HTML), and description. Templates support variables: {customer_name}, {customer_email}, {order_number}, {stage}, {status}, {company_name}. Custom templates appear in workflow rule Email Action dropdown with '📝' prefix. Backend endpoints: GET/POST/PATCH/DELETE /api/settings/email-templates."
+
+agent_communication:
+    - agent: "main"
+      message: "Implemented P1 (time-delay triggers) and P2 (custom email templates). Testing agent should verify: 1) Time-delay trigger appears in workflow rules trigger dropdown with '⏱️ After Time Delay' label, 2) When selected, days/hours input fields appear in the Time Delay column, 3) Email Templates tab shows create form with all fields, 4) Can create a custom email template and it appears in the 'Your Custom Templates' list, 5) Custom templates appear in workflow rule Email Action dropdown, 6) Backend scheduler endpoint /api/admin/workflow/run-scheduler can be called manually."
