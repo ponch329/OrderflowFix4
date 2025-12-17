@@ -304,6 +304,31 @@ const OrderDetailsAdminNew = () => {
     }
   };
 
+  const [pingingCustomer, setPingingCustomer] = useState(false);
+  
+  const handlePingCustomer = async (stage) => {
+    if (!window.confirm(`Send a reminder email to ${order?.customer_email} about their pending proofs?`)) {
+      return;
+    }
+    
+    setPingingCustomer(true);
+    try {
+      const token = localStorage.getItem('admin_token');
+      await axios.post(`${API}/admin/orders/${orderId}/ping-customer`, {
+        stage: stage
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      toast.success("Reminder email sent to customer");
+      fetchOrder();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to send reminder");
+      console.error(error);
+    } finally {
+      setPingingCustomer(false);
+    }
+  };
+
   const getStageColor = (stage) => {
     const colors = {
       clay: "bg-yellow-500",
