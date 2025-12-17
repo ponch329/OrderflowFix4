@@ -156,13 +156,20 @@ class WorkflowConfigTester:
         
         try:
             # Get workflow config first to know expected stages
-            config_response = self.session.get(f"{API_BASE}/workflow/config")
+            config_response = self.session.get(f"{API_BASE}/settings/tenant")
             if config_response.status_code != 200:
-                self.results["orders_counts_dynamic"]["details"] = "❌ Cannot get workflow config for comparison"
+                self.results["orders_counts_dynamic"]["details"] = "❌ Cannot get tenant settings for workflow config"
                 return
             
-            workflow_config = config_response.json()
-            expected_stages = [stage["id"] for stage in workflow_config.get("stages", [])]
+            tenant_data = config_response.json()
+            workflow_config = tenant_data.get("settings", {}).get("workflow_config", {})
+            
+            # If no custom workflow config, use default stages
+            if workflow_config.get("stages"):
+                expected_stages = [stage["id"] for stage in workflow_config.get("stages", [])]
+            else:
+                # Default stages from backend code
+                expected_stages = ["clay", "paint", "shipped", "archived"]
             
             # Test orders counts endpoint
             response = self.session.get(f"{API_BASE}/admin/orders/counts")
