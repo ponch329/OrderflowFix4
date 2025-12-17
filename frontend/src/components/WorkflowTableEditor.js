@@ -657,6 +657,31 @@ export default function WorkflowTableEditor() {
                         </Select>
                       </td>
                       <td className="p-2">
+                        {rule.trigger === 'time_delay' ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              min="0"
+                              value={rule.delayDays || 0}
+                              onChange={(e) => handleUpdateRule(rule.id, 'delayDays', parseInt(e.target.value) || 0)}
+                              className="w-14 text-center"
+                            />
+                            <span className="text-xs text-gray-500">d</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="23"
+                              value={rule.delayHours || 0}
+                              onChange={(e) => handleUpdateRule(rule.id, 'delayHours', parseInt(e.target.value) || 0)}
+                              className="w-14 text-center"
+                            />
+                            <span className="text-xs text-gray-500">h</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">—</span>
+                        )}
+                      </td>
+                      <td className="p-2">
                         <Select 
                           value={rule.toStage} 
                           onValueChange={(v) => handleUpdateRule(rule.id, 'toStage', v)}
