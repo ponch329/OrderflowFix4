@@ -338,6 +338,9 @@ export default function WorkflowTableEditor() {
       toStage: stages[0]?.id || '',
       toStatus: stages[0]?.statuses?.[0]?.id || '',
       emailAction: 'none',
+      // Time delay fields (used when trigger is 'time_delay')
+      delayDays: 0,
+      delayHours: 0,
     };
     setWorkflowRules([...workflowRules, newRule]);
   };
