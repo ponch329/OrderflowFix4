@@ -333,9 +333,9 @@ class BobbleheadAPITester:
                 
                 initial_count = len(templates)
                 self.log(f"✅ GET email-templates successful. Found {initial_count} templates initially")
-                    
-                    # Test 2: POST /api/settings/email-templates (create new template)
-                    self.log("Testing POST /api/settings/email-templates (create template)...")
+                
+                # Test 2: POST /api/settings/email-templates (create new template)
+                self.log("Testing POST /api/settings/email-templates (create template)...")
                     template_data = {
                         "name": "Test Production Update",
                         "subject": "Order #{order_number} - Production Update",
