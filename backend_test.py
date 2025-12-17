@@ -274,6 +274,15 @@ class BobbleheadAPITester:
         self.test_proof_deletion()
         self.log("")
         
+        self.test_time_delay_rules()
+        self.log("")
+        
+        self.test_custom_email_templates()
+        self.log("")
+        
+        self.test_workflow_config()
+        self.log("")
+        
         # Print summary
         self.print_summary()
     
