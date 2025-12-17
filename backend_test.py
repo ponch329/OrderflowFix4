@@ -323,9 +323,16 @@ class BobbleheadAPITester:
             
             if response.status_code == 200:
                 data = response.json()
+                # Handle both response formats: {"templates": [...]} or [...]
                 if "templates" in data:
-                    initial_count = len(data["templates"])
-                    self.log(f"✅ GET email-templates successful. Found {initial_count} templates initially")
+                    templates = data["templates"]
+                elif isinstance(data, list):
+                    templates = data
+                else:
+                    templates = []
+                
+                initial_count = len(templates)
+                self.log(f"✅ GET email-templates successful. Found {initial_count} templates initially")
                     
                     # Test 2: POST /api/settings/email-templates (create new template)
                     self.log("Testing POST /api/settings/email-templates (create template)...")
