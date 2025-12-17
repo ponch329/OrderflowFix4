@@ -1094,6 +1094,12 @@ async def sync_orders():
     
     tenant_id = tenant["id"]
     
+    # Get workflow config from database - single source of truth for stages/statuses
+    settings = tenant.get("settings", {})
+    workflow_config = settings.get("workflow_config", get_default_workflow_config())
+    first_stage = get_first_stage(workflow_config)
+    first_status = get_first_status_for_stage(workflow_config, first_stage)
+    
     # Get Shopify config from tenant
     shopify_shop_name = tenant.get("shopify_shop_name")
     shopify_access_token = tenant.get("shopify_access_token")
