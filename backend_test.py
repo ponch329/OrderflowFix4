@@ -357,7 +357,15 @@ class BobbleheadAPITester:
                             
                             if verify_response.status_code == 200:
                                 verify_data = verify_response.json()
-                                if len(verify_data["templates"]) == initial_count + 1:
+                                # Handle both response formats
+                                if "templates" in verify_data:
+                                    verify_templates = verify_data["templates"]
+                                elif isinstance(verify_data, list):
+                                    verify_templates = verify_data
+                                else:
+                                    verify_templates = []
+                                
+                                if len(verify_templates) == initial_count + 1:
                                     self.log("✅ Template creation verified - count increased by 1")
                                     
                                     # Test 4: PATCH /api/settings/email-templates/{template_id} (update template)
