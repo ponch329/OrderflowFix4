@@ -124,9 +124,15 @@ export default function WorkflowTableEditor() {
   const [newStageName, setNewStageName] = useState('');
   const [newStatusName, setNewStatusName] = useState('');
   const [selectedStageForStatus, setSelectedStageForStatus] = useState('');
+  
+  // Custom email templates
+  const [customTemplates, setCustomTemplates] = useState([]);
+  const [newTemplate, setNewTemplate] = useState({ name: '', subject: '', body: '', description: '' });
+  const [editingTemplate, setEditingTemplate] = useState(null);
 
   useEffect(() => {
     loadWorkflowConfig();
+    loadCustomTemplates();
   }, []);
 
   const loadWorkflowConfig = async () => {
@@ -145,6 +151,15 @@ export default function WorkflowTableEditor() {
       setStages(DEFAULT_STAGES);
       setWorkflowRules(DEFAULT_WORKFLOW_RULES);
       setTimerRules(DEFAULT_TIMER_RULES);
+    }
+  };
+  
+  const loadCustomTemplates = async () => {
+    try {
+      const response = await axios.get(`${API}/settings/email-templates`);
+      setCustomTemplates(response.data.templates || []);
+    } catch (error) {
+      console.error("Failed to load custom templates:", error);
     }
   };
 
