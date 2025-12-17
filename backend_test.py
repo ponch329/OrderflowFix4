@@ -344,8 +344,8 @@ class BobbleheadAPITester:
                 }
                 
                 create_response = self.session.post(f"{API_BASE}/settings/email-templates", json=template_data, headers=headers)
-                    
-                    if create_response.status_code == 200:
+                
+                if create_response.status_code == 200:
                         create_data = create_response.json()
                         if "template" in create_data and "id" in create_data["template"]:
                             template_id = create_data["template"]["id"]
