@@ -161,7 +161,7 @@ async def create_order(
         "Manual Order Created",
         f"Created by {auth.user.full_name} ({auth.user.role.value})",
         stage=order_data.stage,
-        status=clay_status
+        status=initial_status
     )
     
     return Order(**new_order)
