@@ -280,14 +280,16 @@ class WorkflowConfigTester:
             return
         
         try:
-            # First, get current workflow config
-            response = self.session.get(f"{API_BASE}/workflow/config")
+            # First, get current tenant settings
+            response = self.session.get(f"{API_BASE}/settings/tenant")
             if response.status_code != 200:
-                self.results["workflow_config_update"]["details"] = "❌ Cannot get current workflow config"
+                self.results["workflow_config_update"]["details"] = "❌ Cannot get current tenant settings"
                 return
             
-            original_config = response.json()
-            original_stages = original_config.get("stages", [])
+            tenant_data = response.json()
+            original_settings = tenant_data.get("settings", {})
+            original_workflow_config = original_settings.get("workflow_config", {})
+            original_stages = original_workflow_config.get("stages", [])
             
             # Create a test stage to add
             test_stage_id = f"test_stage_{int(time.time())}"
