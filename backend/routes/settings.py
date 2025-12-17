@@ -410,3 +410,118 @@ async def sync_shopify_orders_endpoint(
         raise HTTPException(status_code=400, detail=result.get("error", "Shopify sync failed"))
     
     return result
+
+
+# ============== CUSTOM EMAIL TEMPLATES ==============
+
+@router.get("/email-templates")
+async def get_email_templates(
+    auth: AuthContext = Depends(require_permissions(Permission.VIEW_SETTINGS)),
+    db = Depends(get_db)
+):
+    """
+    Get all custom email templates for this tenant
+    """
+    templates = await db.email_templates.find(
+        {"tenant_id": auth.tenant_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return {"templates": templates}
+
+@router.post("/email-templates")
+async def create_email_template(
+    template_data: dict,
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_SETTINGS)),
+    db = Depends(get_db)
+):
+    """
+    Create a new custom email template
+    """
+    import uuid
+    
+    template_id = template_data.get("id") or f"custom_{uuid.uuid4().hex[:8]}"
+    
+    # Check if template with same ID exists
+    existing = await db.email_templates.find_one({
+        "tenant_id": auth.tenant_id,
+        "id": template_id
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Template with this ID already exists")
+    
+    template = {
+        "id": template_id,
+        "tenant_id": auth.tenant_id,
+        "name": template_data.get("name", "Untitled Template"),
+        "subject": template_data.get("subject", ""),
+        "body": template_data.get("body", ""),
+        "description": template_data.get("description", ""),
+        "variables": template_data.get("variables", ["order_number", "customer_name", "stage", "status"]),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": auth.user_id
+    }
+    
+    await db.email_templates.insert_one(template)
+    
+    return {"message": "Template created", "template": {k: v for k, v in template.items() if k != "_id"}}
+
+@router.patch("/email-templates/{template_id}")
+async def update_email_template(
+    template_id: str,
+    template_data: dict,
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_SETTINGS)),
+    db = Depends(get_db)
+):
+    """
+    Update an existing custom email template
+    """
+    existing = await db.email_templates.find_one({
+        "tenant_id": auth.tenant_id,
+        "id": template_id
+    })
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    update_fields = {}
+    for field in ["name", "subject", "body", "description", "variables"]:
+        if field in template_data:
+            update_fields[field] = template_data[field]
+    
+    update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.email_templates.update_one(
+        {"tenant_id": auth.tenant_id, "id": template_id},
+        {"$set": update_fields}
+    )
+    
+    updated = await db.email_templates.find_one(
+        {"tenant_id": auth.tenant_id, "id": template_id},
+        {"_id": 0}
+    )
+    
+    return {"message": "Template updated", "template": updated}
+
+@router.delete("/email-templates/{template_id}")
+async def delete_email_template(
+    template_id: str,
+    auth: AuthContext = Depends(require_permissions(Permission.MANAGE_SETTINGS)),
+    db = Depends(get_db)
+):
+    """
+    Delete a custom email template
+    """
+    result = await db.email_templates.delete_one({
+        "tenant_id": auth.tenant_id,
+        "id": template_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    return {"message": "Template deleted"}
+
+# ============== END CUSTOM EMAIL TEMPLATES ==============
