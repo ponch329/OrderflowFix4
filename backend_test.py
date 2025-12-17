@@ -6,6 +6,9 @@ Tests the following features:
 1. Admin Login Authentication
 2. Automated Customer Email Notifications
 3. Proof Deletion
+4. Time-Delay Workflow Rules API
+5. Custom Email Templates API
+6. Workflow Config Integration
 
 Usage: python backend_test.py
 """
