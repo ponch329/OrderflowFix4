@@ -346,66 +346,66 @@ class BobbleheadAPITester:
                 create_response = self.session.post(f"{API_BASE}/settings/email-templates", json=template_data, headers=headers)
                 
                 if create_response.status_code == 200:
-                        create_data = create_response.json()
-                        if "template" in create_data and "id" in create_data["template"]:
-                            template_id = create_data["template"]["id"]
-                            self.log(f"✅ Template creation successful. Template ID: {template_id}")
-                            
-                            # Test 3: GET /api/settings/email-templates (verify template was created)
-                            self.log("Testing GET /api/settings/email-templates (verify creation)...")
-                            verify_response = self.session.get(f"{API_BASE}/settings/email-templates", headers=headers)
-                            
-                            if verify_response.status_code == 200:
-                                verify_data = verify_response.json()
-                                # Handle both response formats
-                                if "templates" in verify_data:
-                                    verify_templates = verify_data["templates"]
-                                elif isinstance(verify_data, list):
-                                    verify_templates = verify_data
-                                else:
-                                    verify_templates = []
-                                
-                                if len(verify_templates) == initial_count + 1:
-                                    self.log("✅ Template creation verified - count increased by 1")
-                                    
-                                    # Test 4: PATCH /api/settings/email-templates/{template_id} (update template)
-                                    self.log(f"Testing PATCH /api/settings/email-templates/{template_id} (update template)...")
-                                    update_data = {"name": "Updated Test Production Update"}
-                                    
-                                    update_response = self.session.patch(f"{API_BASE}/settings/email-templates/{template_id}", json=update_data, headers=headers)
-                                    
-                                    if update_response.status_code == 200:
-                                        self.log("✅ Template update successful")
-                                        
-                                        # Test 5: DELETE /api/settings/email-templates/{template_id} (delete template)
-                                        self.log(f"Testing DELETE /api/settings/email-templates/{template_id} (delete template)...")
-                                        delete_response = self.session.delete(f"{API_BASE}/settings/email-templates/{template_id}", headers=headers)
-                                        
-                                        if delete_response.status_code == 200:
-                                            self.results["custom_email_templates"]["passed"] = True
-                                            self.results["custom_email_templates"]["details"] = "✅ Custom Email Templates API fully functional. Successfully tested: GET (empty state), POST (create), GET (verify), PATCH (update), DELETE (cleanup). All CRUD operations working correctly."
-                                            self.log("✅ Template deletion successful - All CRUD operations working")
-                                        else:
-                                            self.results["custom_email_templates"]["details"] = f"❌ Template deletion failed with status {delete_response.status_code}: {delete_response.text}"
-                                            self.log(f"❌ Template deletion failed with status {delete_response.status_code}")
-                                    else:
-                                        self.results["custom_email_templates"]["details"] = f"❌ Template update failed with status {update_response.status_code}: {update_response.text}"
-                                        self.log(f"❌ Template update failed with status {update_response.status_code}")
-                                else:
-                                    self.results["custom_email_templates"]["details"] = f"❌ Template creation verification failed - expected {initial_count + 1} templates, got {len(verify_templates)}"
-                                    self.log("❌ Template creation verification failed")
+                    create_data = create_response.json()
+                    if "template" in create_data and "id" in create_data["template"]:
+                        template_id = create_data["template"]["id"]
+                        self.log(f"✅ Template creation successful. Template ID: {template_id}")
+                        
+                        # Test 3: GET /api/settings/email-templates (verify template was created)
+                        self.log("Testing GET /api/settings/email-templates (verify creation)...")
+                        verify_response = self.session.get(f"{API_BASE}/settings/email-templates", headers=headers)
+                        
+                        if verify_response.status_code == 200:
+                            verify_data = verify_response.json()
+                            # Handle both response formats
+                            if "templates" in verify_data:
+                                verify_templates = verify_data["templates"]
+                            elif isinstance(verify_data, list):
+                                verify_templates = verify_data
                             else:
-                                self.results["custom_email_templates"]["details"] = f"❌ Template verification GET failed with status {verify_response.status_code}: {verify_response.text}"
-                                self.log(f"❌ Template verification GET failed with status {verify_response.status_code}")
+                                verify_templates = []
+                            
+                            if len(verify_templates) == initial_count + 1:
+                                self.log("✅ Template creation verified - count increased by 1")
+                                
+                                # Test 4: PATCH /api/settings/email-templates/{template_id} (update template)
+                                self.log(f"Testing PATCH /api/settings/email-templates/{template_id} (update template)...")
+                                update_data = {"name": "Updated Test Production Update"}
+                                
+                                update_response = self.session.patch(f"{API_BASE}/settings/email-templates/{template_id}", json=update_data, headers=headers)
+                                
+                                if update_response.status_code == 200:
+                                    self.log("✅ Template update successful")
+                                    
+                                    # Test 5: DELETE /api/settings/email-templates/{template_id} (delete template)
+                                    self.log(f"Testing DELETE /api/settings/email-templates/{template_id} (delete template)...")
+                                    delete_response = self.session.delete(f"{API_BASE}/settings/email-templates/{template_id}", headers=headers)
+                                    
+                                    if delete_response.status_code == 200:
+                                        self.results["custom_email_templates"]["passed"] = True
+                                        self.results["custom_email_templates"]["details"] = "✅ Custom Email Templates API fully functional. Successfully tested: GET (empty state), POST (create), GET (verify), PATCH (update), DELETE (cleanup). All CRUD operations working correctly."
+                                        self.log("✅ Template deletion successful - All CRUD operations working")
+                                    else:
+                                        self.results["custom_email_templates"]["details"] = f"❌ Template deletion failed with status {delete_response.status_code}: {delete_response.text}"
+                                        self.log(f"❌ Template deletion failed with status {delete_response.status_code}")
+                                else:
+                                    self.results["custom_email_templates"]["details"] = f"❌ Template update failed with status {update_response.status_code}: {update_response.text}"
+                                    self.log(f"❌ Template update failed with status {update_response.status_code}")
+                            else:
+                                self.results["custom_email_templates"]["details"] = f"❌ Template creation verification failed - expected {initial_count + 1} templates, got {len(verify_templates)}"
+                                self.log("❌ Template creation verification failed")
                         else:
-                            self.results["custom_email_templates"]["details"] = f"❌ Template creation response missing required fields: {create_data}"
-                            self.log("❌ Template creation response missing required fields")
+                            self.results["custom_email_templates"]["details"] = f"❌ Template verification GET failed with status {verify_response.status_code}: {verify_response.text}"
+                            self.log(f"❌ Template verification GET failed with status {verify_response.status_code}")
                     else:
-                        self.results["custom_email_templates"]["details"] = f"❌ Template creation failed with status {create_response.status_code}: {create_response.text}"
-                        self.log(f"❌ Template creation failed with status {create_response.status_code}")
+                        self.results["custom_email_templates"]["details"] = f"❌ Template creation response missing required fields: {create_data}"
+                        self.log("❌ Template creation response missing required fields")
                 else:
-                    self.results["custom_email_templates"]["details"] = f"❌ GET email-templates response in unexpected format: {type(data)}"
-                    self.log("❌ GET email-templates response in unexpected format")
+                    self.results["custom_email_templates"]["details"] = f"❌ Template creation failed with status {create_response.status_code}: {create_response.text}"
+                    self.log(f"❌ Template creation failed with status {create_response.status_code}")
+            else:
+                self.results["custom_email_templates"]["details"] = f"❌ GET email-templates response in unexpected format: {type(data)}"
+                self.log("❌ GET email-templates response in unexpected format")
             else:
                 self.results["custom_email_templates"]["details"] = f"❌ GET email-templates failed with status {response.status_code}: {response.text}"
                 self.log(f"❌ GET email-templates failed with status {response.status_code}")
