@@ -826,3 +826,19 @@ agent_communication:
 agent_communication:
     - agent: "main"
       message: "Implemented dynamic folders and email actions. Testing agent should verify: 1) Navigate to OrderDesk - folders should reflect stages from Workflow Config (Clay, Paint, Shipped, Archived by default), 2) Go to Settings > Workflow > Stages tab - add a new stage, save, return to OrderDesk - new stage should appear as a folder, 3) Go to Workflow Rules tab - verify new 'Email Action' column exists with dropdown of email templates, 4) Test adding a workflow rule with an email action selected."
+
+  - task: "Refactor to Dynamic Workflow Config (Single Source of Truth)"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/contexts/BrandingContext.js, frontend/src/utils/labelMapper.js, frontend/src/pages/OrderDesk.js, backend/server.py, backend/routes/orders.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Major refactoring completed to use workflow_config from database as single source of truth. Changes: 1) BrandingContext.js now fetches complete workflow_config (stages, rules, timers) from database and provides it to all components via context. 2) labelMapper.js completely rewritten to dynamically build stage/status labels from workflow config instead of using hardcoded STAGE_INDEX_MAP and STATUS_INDEX_MAP. 3) OrderDesk.js now uses useBranding hook to get workflowConfig from context instead of fetching locally. Stage and status labels in the table now use getStageLabel() and getStatusLabel() from labelMapper. 4) Backend server.py added helper functions: get_workflow_config_from_db(), get_default_workflow_config(), get_first_stage(), get_first_status_for_stage(). Shopify sync now uses dynamic first stage/status from workflow config. 5) Backend routes/orders.py manual order creation now uses workflow config to set initial status. Screenshot verified: OrderDesk shows custom stages (Quality Check, Test Stage) from workflow config in sidebar. Needs comprehensive testing."
+
+agent_communication:
+    - agent: "main"
+      message: "Major refactoring completed to eliminate hardcoded stages/statuses and use database workflow_config as single source of truth. Testing agent should verify: 1) OrderDesk loads successfully and shows all stages from workflow config in sidebar (including any custom stages like 'Quality Check' or 'Test Stage'), 2) Stage labels display correctly in the order table (e.g., 'Clay' not 'clay'), 3) Status labels display correctly (e.g., 'In Progress' not 'sculpting'), 4) Go to Settings > Workflow > Stages tab - add/rename a stage - verify it reflects in OrderDesk sidebar immediately after refresh, 5) Test manual order creation - verify new orders get the correct initial status from workflow config, 6) Test Shopify sync if credentials available - verify synced orders get correct default stage/status."
