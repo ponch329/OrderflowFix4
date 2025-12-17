@@ -96,6 +96,90 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production'
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 
+# ============== WORKFLOW CONFIG HELPERS ==============
+# These functions get stage/status configuration from the database
+
+async def get_workflow_config_from_db():
+    """
+    Get workflow configuration from database - single source of truth.
+    Returns default config if none exists in DB.
+    """
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        return get_default_workflow_config()
+    
+    settings = tenant.get("settings", {})
+    workflow_config = settings.get("workflow_config", {})
+    
+    if not workflow_config.get("stages"):
+        return get_default_workflow_config()
+    
+    return workflow_config
+
+def get_default_workflow_config():
+    """
+    Default workflow configuration - used only when no DB config exists.
+    """
+    return {
+        "stages": [
+            {"id": "clay", "name": "Clay", "order": 1, "statuses": [
+                {"id": "sculpting", "name": "In Progress"},
+                {"id": "feedback_needed", "name": "Feedback Needed"},
+                {"id": "changes_requested", "name": "Changes Requested"},
+                {"id": "approved", "name": "Approved"}
+            ]},
+            {"id": "paint", "name": "Paint", "order": 2, "statuses": [
+                {"id": "painting", "name": "In Progress"},
+                {"id": "feedback_needed", "name": "Feedback Needed"},
+                {"id": "changes_requested", "name": "Changes Requested"},
+                {"id": "approved", "name": "Approved"}
+            ]},
+            {"id": "shipped", "name": "Shipped", "order": 3, "statuses": [
+                {"id": "in_transit", "name": "In Transit"},
+                {"id": "delivered", "name": "Delivered"}
+            ]},
+            {"id": "archived", "name": "Archived", "order": 4, "statuses": [
+                {"id": "completed", "name": "Completed"},
+                {"id": "canceled", "name": "Canceled"}
+            ]}
+        ],
+        "rules": [],
+        "timers": []
+    }
+
+def get_first_stage(workflow_config):
+    """Get the first active stage ID from workflow config."""
+    stages = workflow_config.get("stages", [])
+    for stage in stages:
+        if stage.get("id") not in ["archived", "shipped"]:
+            return stage.get("id", "clay")
+    return "clay"
+
+def get_first_status_for_stage(workflow_config, stage_id):
+    """Get the first status ID for a given stage."""
+    stages = workflow_config.get("stages", [])
+    for stage in stages:
+        if stage.get("id") == stage_id:
+            statuses = stage.get("statuses", [])
+            if statuses:
+                return statuses[0].get("id", "pending")
+    return "pending"
+
+def get_all_valid_stages(workflow_config):
+    """Get list of all valid stage IDs."""
+    stages = workflow_config.get("stages", [])
+    return [s.get("id") for s in stages if s.get("id")]
+
+def get_all_valid_statuses_for_stage(workflow_config, stage_id):
+    """Get list of all valid status IDs for a stage."""
+    stages = workflow_config.get("stages", [])
+    for stage in stages:
+        if stage.get("id") == stage_id:
+            return [st.get("id") for st in stage.get("statuses", []) if st.get("id")]
+    return []
+
+# ============== END WORKFLOW CONFIG HELPERS ==============
+
 @api_router.post("/admin/login")
 async def admin_login_legacy(login_data: dict):
     """
