@@ -887,15 +887,13 @@ export default function OrderDesk() {
                               color: '#ffffff'
                             }}
                           >
-                            {order.stage}
+                            {getStageLabel(order.stage, workflowConfig)}
                           </span>
                         )}
                         {column.id === 'status' && (
                           <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeColor(order[`${order.stage}_status`])}`}>
-                            {/* Display "painting" for paint stage orders with "sculpting" status (backward compatibility) */}
-                            {order.stage === 'paint' && order.paint_status === 'sculpting' 
-                              ? 'painting' 
-                              : order[`${order.stage}_status`]?.replace(/_/g, ' ')}
+                            {/* Display status using dynamic label from workflow config */}
+                            {getStatusLabel(order[`${order.stage}_status`], workflowConfig, order.stage)}
                           </span>
                         )}
                         {column.id === 'tracking_number' && (
