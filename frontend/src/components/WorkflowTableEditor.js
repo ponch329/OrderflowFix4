@@ -520,7 +520,7 @@ export default function WorkflowTableEditor() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="stages" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="stages" className="flex items-center gap-2">
               <Layers className="w-4 h-4" />
               Stages & Statuses
@@ -532,6 +532,10 @@ export default function WorkflowTableEditor() {
             <TabsTrigger value="timers" className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
               Timer Alerts
+            </TabsTrigger>
+            <TabsTrigger value="emails" className="flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              Email Templates
             </TabsTrigger>
           </TabsList>
 
