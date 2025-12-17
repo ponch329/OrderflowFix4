@@ -156,7 +156,7 @@ export default function WorkflowTableEditor() {
   
   const loadCustomTemplates = async () => {
     try {
-      const response = await axios.get(`${API}/settings/email-templates`);
+      const response = await axios.get(`${API}/settings/custom-email-templates`);
       setCustomTemplates(response.data.templates || []);
     } catch (error) {
       console.error("Failed to load custom templates:", error);
