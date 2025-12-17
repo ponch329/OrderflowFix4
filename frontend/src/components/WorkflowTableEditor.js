@@ -796,7 +796,7 @@ export default function WorkflowTableEditor() {
                             <SelectValue placeholder="Select Email" />
                           </SelectTrigger>
                           <SelectContent>
-                            {EMAIL_TEMPLATES.map(template => (
+                            {getAllEmailTemplates().map(template => (
                               <SelectItem key={template.id} value={template.id}>
                                 {template.label}
                               </SelectItem>
