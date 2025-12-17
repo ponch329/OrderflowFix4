@@ -954,6 +954,175 @@ export default function WorkflowTableEditor() {
               )}
             </div>
           </TabsContent>
+
+          {/* ==================== TAB 4: EMAIL TEMPLATES ==================== */}
+          <TabsContent value="emails" className="space-y-4 mt-4">
+            <Alert>
+              <Mail className="h-4 w-4" />
+              <AlertDescription>
+                Create custom email templates to use in workflow rules. Templates can include variables like {'{customer_name}'}, {'{order_number}'}, {'{stage}'}, and {'{status}'}.
+              </AlertDescription>
+            </Alert>
+
+            {/* Create New Template */}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <h3 className="font-semibold mb-3">Create New Email Template</h3>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm">Template Name</Label>
+                    <Input
+                      value={newTemplate.name}
+                      onChange={(e) => setNewTemplate({...newTemplate, name: e.target.value})}
+                      placeholder="e.g., Production Update"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Description</Label>
+                    <Input
+                      value={newTemplate.description}
+                      onChange={(e) => setNewTemplate({...newTemplate, description: e.target.value})}
+                      placeholder="Brief description of when to use this template"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm">Email Subject</Label>
+                  <Input
+                    value={newTemplate.subject}
+                    onChange={(e) => setNewTemplate({...newTemplate, subject: e.target.value})}
+                    placeholder="e.g., Order #{order_number} - Production Update"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Email Body (HTML supported)</Label>
+                  <textarea
+                    value={newTemplate.body}
+                    onChange={(e) => setNewTemplate({...newTemplate, body: e.target.value})}
+                    placeholder="Hi {customer_name},&#10;&#10;Your order #{order_number} has been updated...&#10;&#10;Best regards"
+                    className="w-full h-32 p-2 border rounded-md text-sm font-mono"
+                  />
+                </div>
+                <div className="text-xs text-gray-500 bg-white p-2 rounded border">
+                  <strong>Available variables:</strong> {'{customer_name}'}, {'{customer_email}'}, {'{order_number}'}, {'{stage}'}, {'{status}'}, {'{company_name}'}
+                </div>
+                <Button onClick={handleCreateTemplate}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Template
+                </Button>
+              </div>
+            </div>
+
+            {/* Existing Templates */}
+            <div className="space-y-3">
+              <h3 className="font-semibold">Your Custom Templates ({customTemplates.length})</h3>
+              
+              {customTemplates.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 border rounded-lg">
+                  No custom templates yet. Create one above to use in workflow rules.
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {customTemplates.map(template => (
+                    <div key={template.id} className="border rounded-lg p-4 bg-white">
+                      {editingTemplate?.id === template.id ? (
+                        // Edit mode
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-sm">Template Name</Label>
+                              <Input
+                                value={editingTemplate.name}
+                                onChange={(e) => setEditingTemplate({...editingTemplate, name: e.target.value})}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-sm">Description</Label>
+                              <Input
+                                value={editingTemplate.description}
+                                onChange={(e) => setEditingTemplate({...editingTemplate, description: e.target.value})}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-sm">Subject</Label>
+                            <Input
+                              value={editingTemplate.subject}
+                              onChange={(e) => setEditingTemplate({...editingTemplate, subject: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm">Body</Label>
+                            <textarea
+                              value={editingTemplate.body}
+                              onChange={(e) => setEditingTemplate({...editingTemplate, body: e.target.value})}
+                              className="w-full h-32 p-2 border rounded-md text-sm font-mono"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button onClick={handleUpdateTemplate} size="sm">
+                              <Save className="w-4 h-4 mr-2" />
+                              Save Changes
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setEditingTemplate(null)}>
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        // View mode
+                        <div>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-medium">{template.name}</h4>
+                              <p className="text-sm text-gray-500">{template.description}</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setEditingTemplate(template)}
+                              >
+                                Edit
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDeleteTemplate(template.id)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
+                            <span className="text-gray-500">Subject:</span> {template.subject}
+                          </div>
+                          <div className="mt-2 p-2 bg-gray-50 rounded text-sm font-mono text-xs max-h-20 overflow-y-auto whitespace-pre-wrap">
+                            {template.body || '(No body content)'}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Predefined Templates Reference */}
+            <div className="border rounded-lg p-4 bg-blue-50">
+              <h3 className="font-semibold mb-2 text-blue-800">Built-in Templates</h3>
+              <p className="text-sm text-blue-700 mb-2">These templates are always available in workflow rules:</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {EMAIL_TEMPLATES.filter(t => t.id !== 'none' && t.id !== 'custom').map(template => (
+                  <div key={template.id} className="flex items-center gap-2 text-blue-600">
+                    <Mail className="w-3 h-3" />
+                    {template.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
       </CardContent>
 
