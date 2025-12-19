@@ -1004,12 +1004,12 @@ async def send_bulk_reminder_emails(
                 </html>
                 """
                 
-                # Send email
+                # Send email using tenant config
                 await send_email(
+                    tenant_config=tenant,
                     to_email=customer_email,
                     subject=subject,
-                    body=html_body,
-                    tenant_id=auth.tenant_id
+                    html_content=html_body
                 )
                 
                 # Log to timeline and update last_updated_at
