@@ -1012,10 +1012,39 @@ async def send_bulk_reminder_emails(
                     tenant_id=auth.tenant_id
                 )
                 
+                # Log to timeline and update last_updated_at
+                now = datetime.now(timezone.utc)
+                from utils.timeline import create_timeline_event
+                
+                timeline_event = create_timeline_event(
+                    event_type="reminder_sent",
+                    user_name=auth.user.full_name if auth.user else "Admin",
+                    user_role=auth.user.role.value if auth.user else "admin",
+                    description=f"Reminder email sent to {customer_email} for {stage} stage",
+                    metadata={
+                        "stage": stage,
+                        "status": status,
+                        "email": customer_email,
+                        "source": "bulk_reminder"
+                    }
+                )
+                
+                await db.orders.update_one(
+                    {"id": order.get("id")},
+                    {
+                        "$push": {"timeline": timeline_event},
+                        "$set": {
+                            "updated_at": now.isoformat(),
+                            "last_updated_at": now.isoformat(),
+                            "last_updated_by": auth.user_id
+                        }
+                    }
+                )
+                
                 sent_count += 1
                 
             except Exception as e:
-                print(f"Failed to send email for order {order.get('id')}: {str(e)}")
+                logger.error(f"Failed to send email for order {order.get('id')}: {str(e)}")
                 failed_count += 1
                 continue
         
