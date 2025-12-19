@@ -1223,7 +1223,7 @@ async def run_workflow_scheduler():
         processed = await run_scheduler_once()
         return {
             "success": True,
-            "message": f"Workflow scheduler completed",
+            "message": "Workflow scheduler completed",
             "orders_processed": processed
         }
     except Exception as e:
