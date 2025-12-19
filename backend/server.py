@@ -1228,6 +1228,95 @@ async def run_workflow_scheduler():
         }
     except Exception as e:
         logger.error(f"Manual scheduler run failed: {e}")
+
+# ============== SHOPIFY TAG SYNC ==============
+
+@api_router.post("/admin/orders/{order_id}/sync-shopify-tags")
+async def sync_order_shopify_tags(order_id: str):
+    """
+    Manually sync an order's stage/status tags to Shopify.
+    Updates the Shopify order with a tag in "Stage - Status" format.
+    """
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    if not order.get("shopify_order_id"):
+        raise HTTPException(status_code=400, detail="Order does not have a Shopify order ID")
+    
+    stage = order.get("stage", "clay")
+    status = order.get(f"{stage}_status", "pending")
+    
+    settings = tenant.get("settings", {})
+    workflow_config = settings.get("workflow_config", {})
+    
+    success = await sync_order_tags_to_shopify(
+        order["shopify_order_id"],
+        stage,
+        status,
+        tenant,
+        workflow_config
+    )
+    
+    if success:
+        return {"message": f"Synced tags to Shopify: {stage} - {status}", "success": True}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to sync tags to Shopify")
+
+@api_router.post("/admin/orders/bulk-sync-shopify-tags")
+async def bulk_sync_shopify_tags(order_ids: List[str] = None, all_orders: bool = False):
+    """
+    Bulk sync order tags to Shopify.
+    Either provide a list of order_ids or set all_orders=True to sync all orders with Shopify IDs.
+    """
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    settings = tenant.get("settings", {})
+    workflow_config = settings.get("workflow_config", {})
+    
+    query = {"tenant_id": tenant["id"], "shopify_order_id": {"$exists": True, "$ne": None}}
+    if order_ids and not all_orders:
+        query["id"] = {"$in": order_ids}
+    
+    orders = await db.orders.find(query, {"_id": 0}).to_list(1000)
+    
+    success_count = 0
+    failed_count = 0
+    
+    for order in orders:
+        stage = order.get("stage", "clay")
+        status = order.get(f"{stage}_status", "pending")
+        
+        try:
+            result = await sync_order_tags_to_shopify(
+                order["shopify_order_id"],
+                stage,
+                status,
+                tenant,
+                workflow_config
+            )
+            if result:
+                success_count += 1
+            else:
+                failed_count += 1
+        except Exception as e:
+            logger.error(f"Failed to sync tags for order {order.get('order_number')}: {e}")
+            failed_count += 1
+    
+    return {
+        "message": f"Synced {success_count} orders, {failed_count} failed",
+        "success": success_count,
+        "failed": failed_count,
+        "total": len(orders)
+    }
+
+# ============== END SHOPIFY TAG SYNC ==============
         raise HTTPException(status_code=500, detail=f"Scheduler error: {str(e)}")
 
 @api_router.get("/admin/workflow/time-delay-rules")
