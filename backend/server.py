@@ -754,6 +754,29 @@ async def update_admin_order_status(order_id: str, update_data: dict):
         {"$set": update_fields}
     )
     
+    # Sync tags to Shopify (non-blocking) when stage or status changes
+    if order.get("shopify_order_id") and ("stage" in update_data or "clay_status" in update_data or "paint_status" in update_data):
+        import asyncio
+        try:
+            # Determine current stage and status after update
+            final_stage = update_fields.get("stage", order.get("stage", "clay"))
+            final_status = update_fields.get(f"{final_stage}_status") or order.get(f"{final_stage}_status", "pending")
+            
+            # Get workflow config for display labels
+            settings = tenant.get("settings", {})
+            workflow_config = settings.get("workflow_config", {})
+            
+            asyncio.create_task(sync_order_tags_to_shopify(
+                order["shopify_order_id"],
+                final_stage,
+                final_status,
+                tenant,
+                workflow_config
+            ))
+            logger.info(f"Scheduled Shopify tag sync for order {order_id}: {final_stage} - {final_status}")
+        except Exception as e:
+            logger.warning(f"Could not schedule Shopify tag sync for order {order_id}: {e}")
+    
     return {"message": "Status updated successfully"}
 
 @api_router.post("/admin/orders/{order_id}/request-changes")
