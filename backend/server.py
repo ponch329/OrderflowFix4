@@ -1317,7 +1317,6 @@ async def bulk_sync_shopify_tags(order_ids: List[str] = None, all_orders: bool =
     }
 
 # ============== END SHOPIFY TAG SYNC ==============
-        raise HTTPException(status_code=500, detail=f"Scheduler error: {str(e)}")
 
 @api_router.get("/admin/workflow/time-delay-rules")
 async def get_time_delay_rules():
