@@ -1576,18 +1576,25 @@ async def ping_customer(order_id: str, stage: str):
             emailed_customer="Yes"
         )
         
-        # Add timeline event
+        # Add timeline event and update last_updated_at
+        now = datetime.now(timezone.utc)
         timeline_event = create_timeline_event(
             event_type="ping",
             user_name="Admin",
             user_role="admin",
             description=f"Sent reminder to customer for {stage} stage",
-            metadata={"stage": stage}
+            metadata={"stage": stage, "email": order['customer_email']}
         )
         
         await db.orders.update_one(
             {"id": order_id},
-            {"$push": {"timeline": timeline_event}}
+            {
+                "$push": {"timeline": timeline_event},
+                "$set": {
+                    "updated_at": now.isoformat(),
+                    "last_updated_at": now.isoformat()
+                }
+            }
         )
         
         return {"message": "Reminder email sent successfully"}
