@@ -178,6 +178,28 @@ async def transition_order(db, tenant, order, to_stage, to_status, email_action,
         }
     )
     
+    # Sync tags to Shopify if order has Shopify ID
+    if order.get("shopify_order_id"):
+        try:
+            # Import here to avoid circular imports
+            import sys
+            sys.path.insert(0, '/app/backend')
+            from server import sync_order_tags_to_shopify
+            
+            settings = tenant.get("settings", {})
+            workflow_config = settings.get("workflow_config", {})
+            
+            await sync_order_tags_to_shopify(
+                order["shopify_order_id"],
+                to_stage,
+                to_status,
+                tenant,
+                workflow_config
+            )
+            logger.info(f"Synced Shopify tags for order {order.get('order_number')}: {to_stage} - {to_status}")
+        except Exception as e:
+            logger.warning(f"Failed to sync Shopify tags for order {order.get('order_number')}: {e}")
+    
     # Send email if configured
     if email_action and email_action != "none":
         try:
