@@ -579,6 +579,103 @@ async def sync_tracking_to_shopify(shopify_order_id: str, tracking_number: str, 
         logging.error(f"Failed to sync tracking to Shopify: {e}")
         raise
 
+
+async def sync_order_tags_to_shopify(shopify_order_id: str, stage: str, status: str, tenant_settings: dict, workflow_config: dict = None):
+    """
+    Sync order stage/status as tags to Shopify in format "Stage - Status"
+    
+    Args:
+        shopify_order_id: The Shopify order ID
+        stage: The current stage (e.g., 'clay', 'paint')
+        status: The current status (e.g., 'sculpting', 'feedback_needed')
+        tenant_settings: Tenant settings containing Shopify credentials
+        workflow_config: Optional workflow config to get display labels
+    """
+    try:
+        import shopify
+        
+        shopify_shop_name = tenant_settings.get("shopify_shop_name")
+        shopify_access_token = tenant_settings.get("shopify_access_token")
+        
+        if not shopify_shop_name or not shopify_access_token:
+            logger.warning("Shopify not configured, skipping tag sync")
+            return False
+        
+        if not shopify_order_id:
+            logger.warning("No Shopify order ID, skipping tag sync")
+            return False
+        
+        # Get display labels from workflow config if available
+        stage_label = stage.capitalize()
+        status_label = status.replace('_', ' ').title()
+        
+        if workflow_config and workflow_config.get("stages"):
+            for s in workflow_config["stages"]:
+                if s.get("id") == stage:
+                    stage_label = s.get("name", stage_label)
+                    for st in s.get("statuses", []):
+                        if st.get("id") == status:
+                            status_label = st.get("name", status_label)
+                            break
+                    break
+        
+        # Create the tag in "Stage - Status" format
+        new_tag = f"{stage_label} - {status_label}"
+        
+        # Initialize Shopify session
+        shopify_api_version = "2024-10"
+        session = shopify.Session(
+            f"{shopify_shop_name}.myshopify.com",
+            shopify_api_version,
+            shopify_access_token
+        )
+        shopify.ShopifyResource.activate_session(session)
+        
+        try:
+            # Get the order
+            shopify_order = shopify.Order.find(shopify_order_id)
+            
+            if not shopify_order:
+                logger.warning(f"Shopify order {shopify_order_id} not found")
+                return False
+            
+            # Get existing tags
+            existing_tags = shopify_order.tags or ""
+            tag_list = [t.strip() for t in existing_tags.split(",") if t.strip()]
+            
+            # Remove any existing "Stage - Status" format tags (from our app)
+            # We identify them by checking if they contain " - " and the first part is a known stage
+            known_stages = ["Clay", "Paint", "Shipped", "Archived", "Fulfilled", "Canceled"]
+            if workflow_config and workflow_config.get("stages"):
+                known_stages = [s.get("name", s.get("id", "").capitalize()) for s in workflow_config["stages"]]
+            
+            filtered_tags = []
+            for tag in tag_list:
+                is_stage_tag = False
+                if " - " in tag:
+                    tag_stage = tag.split(" - ")[0].strip()
+                    if tag_stage in known_stages:
+                        is_stage_tag = True
+                if not is_stage_tag:
+                    filtered_tags.append(tag)
+            
+            # Add the new tag
+            filtered_tags.append(new_tag)
+            
+            # Update the order tags
+            shopify_order.tags = ", ".join(filtered_tags)
+            shopify_order.save()
+            
+            logger.info(f"Synced tag '{new_tag}' to Shopify order {shopify_order_id}")
+            return True
+            
+        finally:
+            shopify.ShopifyResource.clear_session()
+            
+    except Exception as e:
+        logger.error(f"Failed to sync tags to Shopify for order {shopify_order_id}: {e}")
+        return False
+
 @api_router.patch("/admin/orders/{order_id}/status")
 async def update_admin_order_status(order_id: str, update_data: dict):
     """
