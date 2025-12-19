@@ -895,3 +895,19 @@ agent_communication:
       message: "Implemented P1 (time-delay triggers) and P2 (custom email templates). Testing agent should verify: 1) Time-delay trigger appears in workflow rules trigger dropdown with '⏱️ After Time Delay' label, 2) When selected, days/hours input fields appear in the Time Delay column, 3) Email Templates tab shows create form with all fields, 4) Can create a custom email template and it appears in the 'Your Custom Templates' list, 5) Custom templates appear in workflow rule Email Action dropdown, 6) Backend scheduler endpoint /api/admin/workflow/run-scheduler can be called manually."
     - agent: "testing"
       message: "✅ COMPREHENSIVE WORKFLOW FEATURES TESTING COMPLETED: Successfully tested all 3 major workflow features from review request. **RESULTS SUMMARY**: 1) **Time-Delay Workflow Rules API**: ✅ FULLY FUNCTIONAL - Both GET /api/admin/workflow/time-delay-rules (returns rules + scheduler info) and POST /api/admin/workflow/run-scheduler (processed 154 orders) working perfectly, 2) **Workflow Config Integration**: ✅ FULLY FUNCTIONAL - Successfully created time_delay rule with delayDays/delayHours fields via settings/tenant endpoint, rule persisted correctly, 3) **Custom Email Templates API**: ❌ PARTIALLY WORKING - Template creation works but verification fails due to duplicate route definitions in routes/settings.py (lines 226 & 417). **CRITICAL SUCCESS**: The workflow scheduler is operational in production, automatically processing 154 orders and transitioning them based on time-delay rules. **REQUIRES ATTENTION**: Custom email templates route conflict needs resolution for complete CRUD functionality. Overall: 2/3 features fully working, 1/3 needs minor route fix."
+
+  - task: "Shopify Order Tag Syncing"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py, backend/utils/workflow_scheduler.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented Shopify tag syncing in 'Stage - Status' format. Function sync_order_tags_to_shopify() added. Tags sync automatically when stage/status changes via admin update endpoint. Tags also sync when workflow scheduler auto-transitions orders. Manual sync endpoints added: POST /api/admin/orders/{id}/sync-shopify-tags (single order) and POST /api/admin/orders/bulk-sync-shopify-tags (bulk sync). Test successful: order 203913 synced as 'mud - In Progress' using workflow config display labels."
+
+agent_communication:
+    - agent: "main"
+      message: "Shopify tag sync implemented. Testing agent should verify: 1) Manual sync endpoint works (/api/admin/orders/{id}/sync-shopify-tags), 2) Status change triggers tag sync (change order status and check Shopify), 3) Bulk sync endpoint works, 4) Workflow scheduler auto-transitions also sync tags. Note: Uses workflow config display labels, so 'clay'/'sculpting' becomes 'mud'/'In Progress' based on settings."
