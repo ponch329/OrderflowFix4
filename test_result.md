@@ -898,15 +898,18 @@ agent_communication:
 
   - task: "Shopify Order Tag Syncing"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py, backend/utils/workflow_scheduler.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented Shopify tag syncing in 'Stage - Status' format. Function sync_order_tags_to_shopify() added. Tags sync automatically when stage/status changes via admin update endpoint. Tags also sync when workflow scheduler auto-transitions orders. Manual sync endpoints added: POST /api/admin/orders/{id}/sync-shopify-tags (single order) and POST /api/admin/orders/bulk-sync-shopify-tags (bulk sync). Test successful: order 203913 synced as 'mud - In Progress' using workflow config display labels."
+        - working: true
+          agent: "testing"
+          comment: "✅ SHOPIFY ORDER TAG SYNCING COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY: All 4 requested test areas passed with excellent results. **Test Results**: 1) **Manual Tag Sync Endpoint**: ✅ POST /api/admin/orders/81695e32-4681-4de3-a3ea-909be91d50ba/sync-shopify-tags successful, response: 'Synced tags to Shopify: clay - sculpting', backend logs show successful API calls to Shopify order 7709997269090. 2) **Status Change Tag Sync**: ✅ PATCH /api/admin/orders/{order_id}/status successful, changed clay_status from 'sculpting' to 'feedback_needed', backend logs show 'Scheduled Shopify tag sync for order 81695e32-4681-4de3-a3ea-909be91d50ba: clay - feedback_needed' and successful sync to 'mud - Feedback Needed'. 3) **Bulk Sync Endpoint**: ✅ POST /api/admin/orders/bulk-sync-shopify-tags successful with small order list, response: 'Synced 1 orders, 0 failed', proper success/failed counts returned. 4) **Tag Format Verification**: ✅ Tags use correct 'Stage - Status' format with display labels from workflow config: 'mud - Feedback Needed' (stage: clay -> mud, status: feedback_needed -> Feedback Needed), 'Paint - In Progress' for paint stage transitions. **Backend Logs Verified**: Multiple successful Shopify API calls logged (GET/PUT to allbobbleheads2.myshopify.com), proper tag syncing messages, error handling for non-existent orders (404 responses). **Additional Testing**: ✅ Stage transitions (clay -> paint) trigger tag sync correctly, ✅ Invalid order scenarios handled properly (404 for non-existent orders), ✅ All orders have Shopify IDs (good data integrity). **CONCLUSION**: All Shopify tag syncing functionality working perfectly with real Shopify API integration, proper error handling, and correct tag format using workflow config display labels."
 
 agent_communication:
     - agent: "main"
