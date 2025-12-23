@@ -192,6 +192,18 @@ export default function OrderDesk() {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setAuthReady(true);
     fetchOrderCounts();
+    
+    // Check if we should invalidate cache (e.g., returning from order details)
+    const shouldRefresh = sessionStorage.getItem('orders_cache_invalidate');
+    if (shouldRefresh) {
+      sessionStorage.removeItem('orders_cache_invalidate');
+      // Clear all order caches
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('orders_cache')) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    }
   }, [navigate]);
 
   // Fetch orders when filters change - only after auth is ready
