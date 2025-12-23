@@ -151,6 +151,7 @@ const OrderDetailsAdminNew = () => {
       setConfirmDialogOpen(false);
       setEditStageDialogOpen(false);
       setNotifyCustomer(false);
+      invalidateDashboardCache();
       fetchOrder();
     } catch (error) {
       toast.error("Failed to update status");
