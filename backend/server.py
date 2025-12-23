@@ -63,6 +63,19 @@ async def startup_event():
         logger.error(f"❌ MongoDB connection failed: {str(e)}")
         raise
     
+    # Ensure indexes exist for performance (idempotent - won't recreate if exists)
+    try:
+        await db.orders.create_index([("tenant_id", 1), ("stage", 1)])
+        await db.orders.create_index([("tenant_id", 1), ("is_archived", 1)])
+        await db.orders.create_index([("tenant_id", 1), ("created_at", -1)])
+        await db.orders.create_index([("tenant_id", 1), ("updated_at", -1)])
+        await db.orders.create_index([("tenant_id", 1), ("stage", 1), ("is_archived", 1), ("created_at", -1)])
+        await db.orders.create_index([("order_number", 1)])
+        await db.orders.create_index([("customer_email", 1)])
+        logger.info("✅ MongoDB indexes ensured")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not create indexes: {e}")
+    
     # Start workflow scheduler as background task
     try:
         from utils.workflow_scheduler import start_scheduler_loop
