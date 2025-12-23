@@ -181,6 +181,7 @@ const OrderDetailsAdminNew = () => {
       setUploadDialogOpen(false);
       setUploadFiles([]);
       setRevisionNote("");
+      invalidateDashboardCache();
       fetchOrder();
     } catch (error) {
       toast.error("Failed to upload proofs");
