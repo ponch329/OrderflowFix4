@@ -270,8 +270,21 @@ async def get_admin_orders_legacy(
     # Calculate skip for pagination
     skip = (page - 1) * limit
     
-    # Fetch paginated orders
-    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    # Projection: Exclude heavy fields for list view (timeline, proofs, notes, approval details)
+    # These fields are only needed when viewing a single order's details
+    list_projection = {
+        "_id": 0,
+        "timeline": 0,
+        "clay_proofs": 0,
+        "paint_proofs": 0,
+        "notes": 0,
+        "clay_approval": 0,
+        "paint_approval": 0,
+        "line_items": 0,  # Usually not needed in list view
+    }
+    
+    # Fetch paginated orders with lightweight projection
+    orders = await db.orders.find(query, list_projection).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
     for order in orders:
         # Convert datetime strings to datetime objects
