@@ -84,6 +84,11 @@ const OrderDetailsAdminNew = () => {
     
     fetchOrder();
   }, [orderId, navigate]);
+  
+  // Helper to invalidate dashboard cache when order is modified
+  const invalidateDashboardCache = () => {
+    sessionStorage.setItem('orders_cache_invalidate', 'true');
+  };
 
   const fetchOrder = async () => {
     try {
