@@ -271,8 +271,41 @@ export default function OrderDesk() {
         params.append('search', searchDebounce);
       }
       
+      // Create cache key for this specific query
+      const cacheKey = `orders_cache_${params.toString()}`;
+      const cacheTimestampKey = `orders_cache_timestamp_${params.toString()}`;
+      const CACHE_DURATION = 30 * 1000; // 30 seconds cache
+      
+      // Check cache first (only if not searching)
+      if (!searchDebounce) {
+        const cachedData = sessionStorage.getItem(cacheKey);
+        const cachedTimestamp = sessionStorage.getItem(cacheTimestampKey);
+        
+        if (cachedData && cachedTimestamp) {
+          const age = Date.now() - parseInt(cachedTimestamp);
+          if (age < CACHE_DURATION) {
+            const data = JSON.parse(cachedData);
+            setOrders(data.orders || data);
+            if (data.pagination) {
+              setTotalPages(data.pagination.total_pages);
+              setTotalCount(data.pagination.total_count);
+            }
+            setLoading(false);
+            // Fetch fresh data in background
+            fetchOrdersBackground(params.toString(), cacheKey, cacheTimestampKey);
+            return;
+          }
+        }
+      }
+      
       const response = await axios.get(`${API}/admin/orders?${params.toString()}`);
       const data = response.data;
+      
+      // Cache the response (only if not searching)
+      if (!searchDebounce) {
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
+        sessionStorage.setItem(cacheTimestampKey, Date.now().toString());
+      }
       
       // Handle both new paginated response and legacy array response
       if (data.orders) {
@@ -290,6 +323,25 @@ export default function OrderDesk() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Background fetch to update cache without blocking UI
+  const fetchOrdersBackground = async (queryString, cacheKey, cacheTimestampKey) => {
+    try {
+      const response = await axios.get(`${API}/admin/orders?${queryString}`);
+      const data = response.data;
+      sessionStorage.setItem(cacheKey, JSON.stringify(data));
+      sessionStorage.setItem(cacheTimestampKey, Date.now().toString());
+      
+      // Update UI with fresh data
+      if (data.orders) {
+        setOrders(data.orders);
+        setTotalPages(data.pagination.total_pages);
+        setTotalCount(data.pagination.total_count);
+      }
+    } catch (error) {
+      console.error("Background fetch failed:", error);
     }
   };
 
