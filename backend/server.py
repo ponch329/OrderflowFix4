@@ -34,17 +34,18 @@ try:
     
     logger.info(f"Initializing MongoDB connection to database: {db_name}")
     
-    # Optimized connection settings for reliability and performance
+    # Optimized connection settings for reliability and performance in production
     client = AsyncIOMotorClient(
         mongo_url,
-        serverSelectionTimeoutMS=10000,  # 10 seconds to select server
-        connectTimeoutMS=10000,           # 10 seconds to connect
-        socketTimeoutMS=30000,            # 30 seconds for socket operations
-        maxPoolSize=50,                   # Connection pool size
-        minPoolSize=10,                   # Minimum connections to keep
-        maxIdleTimeMS=60000,              # Close idle connections after 60s
-        retryWrites=True,                 # Retry failed writes
-        retryReads=True,                  # Retry failed reads
+        serverSelectionTimeoutMS=30000,   # 30 seconds to select server (increased for Atlas)
+        connectTimeoutMS=30000,            # 30 seconds to connect (increased for Atlas)
+        socketTimeoutMS=60000,             # 60 seconds for socket operations (increased for slow queries)
+        maxPoolSize=100,                   # Connection pool size (increased for production)
+        minPoolSize=5,                     # Minimum connections to keep (reduced to avoid idle connections)
+        maxIdleTimeMS=45000,               # Close idle connections after 45s
+        retryWrites=True,                  # Retry failed writes
+        retryReads=True,                   # Retry failed reads
+        waitQueueTimeoutMS=30000,          # 30 seconds to wait for connection from pool
     )
     db = client[db_name]
     logger.info(f"✅ MongoDB client initialized for database: {db_name}")
