@@ -1018,14 +1018,26 @@ export default function OrderDesk() {
             </table>
           )}
 
-          {!loading && sortedOrders.length === 0 && (
+          {!loading && !loadError && sortedOrders.length === 0 && (
             <div className="flex items-center justify-center h-64">
               <p className="text-gray-500">No orders found</p>
             </div>
           )}
+          
+          {/* Error State with Retry */}
+          {!loading && loadError && (
+            <div className="flex flex-col items-center justify-center h-64 gap-4">
+              <AlertCircle className="w-12 h-12 text-red-400" />
+              <p className="text-gray-600 text-center max-w-md">{loadError}</p>
+              <Button onClick={() => fetchOrders(true)} variant="outline">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry Loading Orders
+              </Button>
+            </div>
+          )}
 
           {/* Pagination Controls */}
-          {!loading && totalPages > 1 && (
+          {!loading && !loadError && totalPages > 1 && (
             <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-3 flex items-center justify-between">
               <div className="text-sm text-gray-600">
                 Showing {((currentPage - 1) * ORDERS_PER_PAGE) + 1} - {Math.min(currentPage * ORDERS_PER_PAGE, totalCount)} of {totalCount} orders
