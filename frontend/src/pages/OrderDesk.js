@@ -248,7 +248,11 @@ export default function OrderDesk() {
 
   const fetchOrderCounts = async () => {
     try {
-      const response = await axios.get(`${API}/admin/orders/counts`);
+      const response = await fetchWithRetry(
+        () => axios.get(`${API}/admin/orders/counts`, { timeout: 15000 }),
+        3,
+        1000
+      );
       setOrderCounts(response.data);
     } catch (error) {
       console.error("Failed to load order counts:", error);
