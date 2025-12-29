@@ -289,6 +289,11 @@ def get_customer_proofs_ready_email(order_number, customer_name, stage, num_imag
         logo_url: Company logo URL (optional)
         company_name: Company name for branding
     """
+    import os
+    # Use environment variable if portal_url not provided
+    if not portal_url:
+        portal_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000') + '/customer'
+    
     subject = f"Your Bobblehead Proofs Are Ready! - Order #{order_number}"
     
     # Logo section HTML
