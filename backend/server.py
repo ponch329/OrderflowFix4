@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection with error handling
+# MongoDB connection with optimized settings for reliability
 try:
     mongo_url = os.environ.get('MONGO_URL')
     db_name = os.environ.get('DB_NAME')
@@ -33,7 +33,19 @@ try:
         raise ValueError("DB_NAME environment variable is not set")
     
     logger.info(f"Initializing MongoDB connection to database: {db_name}")
-    client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
+    
+    # Optimized connection settings for reliability and performance
+    client = AsyncIOMotorClient(
+        mongo_url,
+        serverSelectionTimeoutMS=10000,  # 10 seconds to select server
+        connectTimeoutMS=10000,           # 10 seconds to connect
+        socketTimeoutMS=30000,            # 30 seconds for socket operations
+        maxPoolSize=50,                   # Connection pool size
+        minPoolSize=10,                   # Minimum connections to keep
+        maxIdleTimeMS=60000,              # Close idle connections after 60s
+        retryWrites=True,                 # Retry failed writes
+        retryReads=True,                  # Retry failed reads
+    )
     db = client[db_name]
     logger.info(f"✅ MongoDB client initialized for database: {db_name}")
 except Exception as e:
