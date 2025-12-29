@@ -2092,10 +2092,7 @@ async def root():
     return {"message": "Bobblehead Order Approval System API - Multi-Tenant SaaS", "version": "2.0"}
 
 # Health check endpoints (not behind /api prefix for Kubernetes probes)
-@app.get("/health")
-async def health_check():
-    """Health check endpoint for Kubernetes liveness probe"""
-    return {"status": "healthy", "service": "backend"}
+# Note: Main health check is at /api/health with detailed status
 
 @app.get("/ready")
 async def readiness_check():
