@@ -916,3 +916,19 @@ agent_communication:
       message: "Shopify tag sync implemented. Testing agent should verify: 1) Manual sync endpoint works (/api/admin/orders/{id}/sync-shopify-tags), 2) Status change triggers tag sync (change order status and check Shopify), 3) Bulk sync endpoint works, 4) Workflow scheduler auto-transitions also sync tags. Note: Uses workflow config display labels, so 'clay'/'sculpting' becomes 'mud'/'In Progress' based on settings."
     - agent: "testing"
       message: "✅ SHOPIFY ORDER TAG SYNCING COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY: All 4 requested test areas from the review request have been thoroughly tested and are working perfectly. **CRITICAL SUCCESS**: 1) **Manual Tag Sync**: POST /api/admin/orders/81695e32-4681-4de3-a3ea-909be91d50ba/sync-shopify-tags working with real Shopify API integration (order 203913), 2) **Status Change Sync**: PATCH /api/admin/orders/{order_id}/status triggers automatic tag sync as confirmed in backend logs, 3) **Bulk Sync**: POST /api/admin/orders/bulk-sync-shopify-tags handles multiple orders correctly with proper success/failed reporting, 4) **Tag Format**: Verified 'Stage - Status' format using workflow config display labels ('mud - Feedback Needed' instead of 'clay - feedback_needed'). **BACKEND VERIFICATION**: Backend logs show successful Shopify API calls (GET/PUT to allbobbleheads2.myshopify.com), proper 'Synced tag' and 'Scheduled Shopify tag sync' messages, appropriate error handling for invalid orders. **ADDITIONAL TESTING**: Created comprehensive test suites (shopify_tag_sync_test.py and shopify_tag_sync_additional_test.py) covering edge cases, error scenarios, and stage transitions. All tests passed 5/5 for main functionality and 3/4 for additional scenarios (mixed bulk sync behaves correctly by only processing valid orders). The Shopify tag syncing feature is fully functional and ready for production use with real Shopify integration."
+
+    - agent: "main"
+      message: "LIVE DEPLOYMENT 500 ERROR INVESTIGATION: User redeployed and still experiencing 500 errors on live site. Preview environment confirmed working. Fixed: 1) Malformed .gitignore with duplicate entries blocking .env files, 2) Hardcoded preview URLs in email_templates.py and server.py changed to use environment variables. Testing API endpoints and full flow to verify preview works before advising redeployment."
+
+backend:
+  - task: "500 Error Fix - Deployment Configuration"
+    implemented: true
+    working: "pending_redeployment"
+    file: ".gitignore, backend/email_templates.py, backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "User reported 500 errors on live deployment after redeploying. Investigation revealed: 1) Malformed .gitignore with duplicate entries and -e flags blocking .env files from git, 2) Hardcoded preview URLs in email_templates.py and server.py. Both issues fixed. Preview environment API working correctly (tested login and orders endpoint - 40 orders loaded successfully)."
