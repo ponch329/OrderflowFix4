@@ -54,6 +54,27 @@ except Exception as e:
     logger.error(f"❌ Failed to initialize MongoDB connection: {str(e)}")
     raise
 
+# Helper function for database operations with retry
+async def db_operation_with_retry(operation, max_retries=3, delay=1):
+    """Execute a database operation with retry logic for transient failures"""
+    last_exception = None
+    for attempt in range(max_retries):
+        try:
+            return await operation()
+        except Exception as e:
+            last_exception = e
+            error_str = str(e).lower()
+            # Check if it's a transient error worth retrying
+            if any(x in error_str for x in ['timeout', 'connection', 'network', 'unavailable']):
+                logger.warning(f"Database operation attempt {attempt + 1}/{max_retries} failed: {e}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(delay * (attempt + 1))  # Exponential backoff
+                    continue
+            # Non-transient error, don't retry
+            raise
+    # If we've exhausted retries, raise the last exception
+    raise last_exception
+
 # Create the main app without a prefix
 app = FastAPI(title="Bobblehead Proof Approval System - Multi-Tenant SaaS")
 
