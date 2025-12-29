@@ -1,177 +1,175 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was to fix a critical React runtime error on the OrderDesk dashboard. After that was resolved, the user reported a cascade of bugs and requested several feature enhancements.
+The user's initial problem was a series of bugs and performance issues with their OrderDesk application. Throughout the session, the user requested a major refactoring to make the app's workflow dynamic, performance optimizations to address slow loading times, fixes for reminder email logging, and several new features.
 
-The key features and fixes requested during this session include:
-- A critical bug where orders were not loading on the OrderDesk page.
-- A follow-up bug where the OrderDesk view showed fewer orders than the Classic View due to data inconsistencies.
-- A recurring Failed to upload proofs error, initially caused by a wrong API path and later resurfacing as a production-only 500 error.
-- A bug preventing customers from approving or requesting changes in the customer portal.
-- A deployment-blocking  in the backend workflow engine, discovered via deployment error logs.
-- A UX improvement to provide instant feedback when a customer clicks Approve or Request Changes.
-- An enhancement to the Export All Data function to export all orders instead of just the visible page.
-- A bug with the Sync Orders feature failing with a generic error message.
-- A bug where specific orders could not be found in the customer portal.
-- A missing delete proof functionality.
-- Data inconsistency where orders in the Paint stage were incorrectly assigned a sculpting status.
-- A feature request to allow admins to reply to customer change requests via email directly from the portal.
-- A feature request to add a Ping Customer button to send reminders for pending approvals.
-- A request to refactor the entire application to remove hardcoded stage/status values and use the database configuration as the single source of truth.
+Key requests included:
+- Refactor the entire application to use a dynamic workflow configuration from the database instead of hardcoded stage/status values.
+- Add time-based triggers to workflow rules (e.g., after 1 day, change status to X).
+- Implement a system for creating and using custom email templates in workflow rules.
+- Implement Shopify order tag syncing in the format Stage - Status.
+- Fix bulk and single reminder emails to ensure they are logged in the order's timeline and update the Last Updated timestamp.
+- Address severe performance issues, including very slow dashboard loading times.
+- Investigate and resolve various issues on the live production site, including a 500 Internal Server Error when loading orders and features like proof upload not working as expected.
+- Customize the application's UI by changing the page title and moving the Made with Emergent watermark.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack React/FastAPI app. Key functionalities like Shopify order sync and proof deletion have been fixed and implemented. A new feature allows admins to reply to customer change requests via email and send ping reminders, both of which are logged to the order's timeline. The UI and backend have been patched to handle a data inconsistency issue where orders in the Paint stage incorrectly had a sculpting status. The application still contains numerous hardcoded stage and status values, which the user wants to eliminate in favor of the dynamic workflow configuration stored in the database. A critical proof upload failure in the production environment remains unresolved, though extensive logging has been added to help diagnose it.
+The application is a full-stack React/FastAPI app that has undergone significant refactoring and optimization. The core logic for stages and statuses is no longer hardcoded and is now driven by a dynamic  stored in the database. Performance has been dramatically improved by adding database indexes, reducing API payload sizes by ~99%, and implementing frontend caching. System reliability has been enhanced with connection pooling and retry logic for both the backend database connection and frontend API calls.
+
+New features have been added, including time-based triggers for workflow rules, a complete CRUD interface for custom email templates, and automatic Shopify order tag syncing. Critical bugs related to reminder email logging and timestamp updates have been fixed.
 
 **Last working item**:
-The agent was preparing to refactor the application to use the dynamic workflow configuration from the database as the single source of truth for all stages and statuses, removing all hardcoded values.
+The user reported a 500 Internal Server Error when loading orders on their live production site.
 
--   **Last item agent was working:** The agent performed a comprehensive audit of the frontend and backend codebase to identify all instances of hardcoded stage and status strings (e.g., sculpting, painting, clay). This was in preparation for a major refactoring effort to make the application rely solely on the user-configurable workflow settings stored in the database.
--   **Status:** NOT STARTED
--   **Agent Testing Done:** N/A
--   **Which testing method agent to use?** both. This is a significant refactoring that will touch many parts of the application. After implementation, thorough testing with both the frontend and backend testing agents is mandatory to check for regressions in order filtering, status display, stage transitions, and dashboard counts.
--   **User Testing Done:** N/A
+-   **Last item agent was working:** The agent investigated the user's report of a 500 error on their live site. The agent confirmed via  that the API endpoint  was working correctly (HTTP 200) in the preview environment. The agent concluded that the error was specific to the user's live environment, which was likely running outdated code without the recently implemented reliability and performance fixes (e.g., database index creation, connection pooling, API projections). The agent advised the user that a redeployment was necessary to push these critical updates to the live server.
+-   **Status:** USER VERIFICATION PENDING
+-   **Agent Testing Done:** Y (Verified the API works in the preview environment)
+-   **Which testing method agent to use?** Manual testing by the user on their live site after they redeploy. The agent cannot test the live environment. If the issue persists after deployment, the agent should analyze the deployment logs.
+-   **User Testing Done:** N (The user has not yet confirmed if redeploying the application has resolved the issue).
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Recurring Failed to upload proofs in Production (P0)**
--   **Issue 2: Full Verification of Data-Driven Workflow (P2)**
+-   **Issue 1: 500 Internal Server Error on Live Site when loading orders (P0)**
+-   **Issue 2: Proof upload functionality failing on Live Site (P1)**
+-   **Issue 3: Export All Data function not working on Live Site (P1)**
 
 **Issues Detail:**
--   **Issue 1: Recurring Failed to upload proofs in Production (P0)**
-    -   **Description:** When an admin tries to upload proofs in the production environment, the action fails with a . The feature works correctly in the local sandbox.
-    -   **Attempted fixes:**
-        1.  Corrected the API endpoint path in .
-        2.  Added comprehensive  blocks and detailed logging to the  function in  to capture the exact error traceback in production.
+-   **Issue 1: 500 Internal Server Error on Live Site when loading orders (P0)**
+    -   **Attempted fixes:** The agent implemented extensive backend reliability improvements, including MongoDB connection pooling with retries and ensuring database indexes are created on startup. The agent also implemented frontend retry logic. These fixes were confirmed to work in the preview environment.
     -   **Next debug checklist:**
-        1.  The user needs to trigger the error in the production environment.
-        2.  The next agent must then examine the production logs to identify the specific line of code causing the 500 error, based on the newly added logging.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a core, business-critical feature. Fixing it will allow the proof approval workflow to function.
-    -   **Status:** BLOCKED (on user action to trigger the error in production and provide logs)
+        1.  Wait for the user to confirm they have redeployed the application.
+        2.  Ask the user to test if the order loading issue is resolved on the live site.
+        3.  If the issue persists, ask the user to trigger the error again and then immediately analyze the latest deployment/backend logs for the cause of the 500 error.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker preventing users from accessing the main order dashboard. Fixing it is essential for the application to be usable.
+    -   **Status:** BLOCKED (on user action: redeployment and re-testing)
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Backend (verified in production).
+    -   **Should Test frontend/backend/both after fix?** Backend (via logs if it persists), Frontend (user verification).
     -   **Blocked on other issue:** None.
 
--   **Issue 2: Full Verification of Data-Driven Workflow (P2)**
-    -   **Description:** While individual parts of the new workflow system (Stages, Rules, Timers, Email Actions) have been implemented and fixed, a full end-to-end user story test has not been performed to confirm they all work together seamlessly. This becomes even more critical after the upcoming refactoring task.
-    -   **Next debug checklist:** This task can be performed after the P0 refactoring task is completed.
-    -   **Status:** NOT STARTED
+-   **Issue 2: Proof upload functionality failing on Live Site (P1)**
+    -   **Description:** The user reported being unable to upload proofs for the paint stage on order 203890 on the live site.
+    -   **Attempted fixes:** The agent investigated and confirmed that the functionality works correctly in the preview environment. Both clay and paint sections show an Upload Proofs button, and the dialog opens as expected.
+    -   **Next debug checklist:** This is likely caused by the same outdated code on the live site. The resolution path is the same as for Issue 1.
+    -   **Status:** BLOCKED (on user action: redeployment and re-testing)
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Frontend (user verification).
+    -   **Blocked on other issue:** Issue 1.
+
+-   **Issue 3: Export All Data function not working on Live Site (P1)**
+    -   **Description:** The user reported the export function is not working.
+    -   **Attempted fixes:** The agent tested the feature in the preview environment, confirming the backend API returns a full list of orders and the frontend displays a success toast message.
+    -   **Next debug checklist:** This is also likely due to outdated code or a browser-specific issue on the user's end (e.g., pop-up blockers). The resolution path is the same as for Issue 1.
+    -   **Status:** BLOCKED (on user action: redeployment and re-testing)
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on other issue:** In progress Task 1.
+    -   **Should Test frontend/backend/both after fix?** Frontend (user verification).
+    -   **Blocked on other issue:** Issue 1.
 
 **In progress Task List**:
--   **Task 1: Refactor to use dynamic workflow configuration (P0)**
-
-**Task Detail:**
--   **Task 1: Refactor to use dynamic workflow configuration (P0)**
-    -   **Where to resume:** The agent has completed a full audit of hardcoded stages and statuses in the backend () and frontend (, , , etc.). The next step is to systematically replace these hardcoded values.
-        1.  Start by modifying the  to be the single source of truth for workflow config on the frontend, fetching it once and providing it to all components.
-        2.  Refactor components like  to build the sidebar filters and status columns dynamically from the context.
-        3.  Update the backend API endpoints (, ) to use the workflow config from the database to validate and filter statuses, removing hardcoded logic.
-    -   **What will be achieved with this?** This will make the application robust and flexible, allowing users to define their own custom workflows from the settings page without requiring code changes. It will also fix underlying data inconsistencies and simplify future development.
-    -   **Status:** NOT STARTED
-    -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on something:** None.
+-   None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P1: Implement Shopify Order Tag Syncing:** Create a mechanism that updates Shopify order tags with the format Stage - Status whenever an order's stage or status changes in the app.
-    -   **P1: Enhance Export Functionality:** The user wants the export button to export all of the information that has been gathered on an order. The current export fetches all orders, but the completeness of the data within the export file needs to be verified and potentially expanded.
-    -   **P2: Integrate a Real-time Tracking API:** Implement a full integration with an order tracking API like Ship24 to replace the current fallback solution.
+    -   **P1: Enhance Export Functionality:** The user previously requested that the export should contain all of the information that has been gathered on an order. The current export functionality needs to be reviewed to ensure it meets this requirement, and expanded if necessary.
+    -   **P2: Implement safeguards for email scheduler:** To prevent accidental emails to real customers during testing, implement a dry run mode or an environment-based toggle to disable email sending in preview environments.
+    -   **P2: Integrate a Real-time Tracking API:** Implement a full integration with an API like Ship24 to provide real-time order tracking, replacing the current fallback solution.
 -   **Future Tasks:**
-    -   **Implement Workflow Import/Export:** Allow users to back up and restore their workflow configurations from a file.
-    -   **Add User-Configurable Timezone Setting:** Add a setting to allow users to choose the timezone for displaying dates, instead of defaulting to the browser's local time.
+    -   **Implement Workflow Import/Export:** Allow users to back up and restore their workflow configurations.
+    -   **Add User-Configurable Timezone Setting:** Allow users to set a preferred timezone for displaying dates throughout the application.
 
 **Completed work in this session**
--   **Shopify Sync Fixed:** Resolved the  error by updating the expired credentials in both  and the tenant's document in MongoDB. The sync is now operational.
--   **Proof Deletion Implemented:** Created the missing  backend endpoint and connected the frontend UI. The feature is fully functional.
--   **Paint Status is Sculpting Bug Fixed:** Implemented a backward-compatible fix. The backend order filtering and counts API now correctly group orders with the erroneous  into the painting category. The frontend UI also correctly displays the status as painting.
--   **Admin-to-Customer Reply Feature Implemented:** Added a simplified feature allowing admins to click a Reply button on a customer's change request. This opens a dialog to compose and send an email, and the action is logged to the order's timeline.
--   **Ping Customer Reminder Feature Implemented:** Added a Remind Customer button to the latest proof revision card, which sends a reminder email. The feature includes a Reminder Sent toast notification for immediate UI feedback, and the event is logged to the order's timeline.
+-   **Major Refactoring (Dynamic Workflow):** Successfully refactored the entire application to use the dynamic  from the database as the single source of truth, removing all hardcoded stage and status values.
+-   **Performance and Reliability Overhaul:**
+    -   Reduced the main order list API payload size by ~99% (from 2.6MB to 29KB) using MongoDB projections.
+    -   Added crucial database indexes to the  collection, which are now created automatically on application startup to ensure fast queries.
+    -   Implemented frontend caching () to make navigating between the dashboard and order details significantly faster.
+    -   Hardened the backend with MongoDB connection pooling and retry logic.
+    -   Implemented frontend API calls with an automatic retry mechanism and a user-friendly error display with a Retry button.
+-   **New Feature (Time-Based Workflows):** Added the ability to create workflow rules that trigger after a specified time delay (e.g., change stage from 'Approved' to 'Shipped' after 24 hours).
+-   **New Feature (Custom Email Templates):** Implemented a full CRUD interface in the settings page for users to create and manage their own custom email templates, which can be used as actions in workflow rules.
+-   **New Feature (Shopify Tag Syncing):** Implemented a system that automatically updates Shopify order tags with the format Stage - Status whenever an order's stage or status changes.
+-   **Bug Fix (Reminder Logging):** Fixed both the single and bulk reminder email functions to correctly log an event to the order's timeline and update the  timestamp, ensuring the dashboard reflects the latest activity.
+-   **UI Customizations:**
+    -   Changed the application's HTML page title to AllBobbleheads Order Management.
+    -   Adjusted the position of the Made with Emergent watermark to prevent it from overlapping with UI elements.
+-   **Incident Response:** Investigated and provided the user with a complete list of 40 customer email addresses that were accidentally sent emails during a system test.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Live Deployment Not Updating From Workspace**
-    -   **Description:** An issue from a previous session where deploying the app did not reflect the latest changes from the workspace. This was deprioritized and has not been investigated.
-    -   **Status:** NOT STARTED
--   **Issue 2: Google Sheets Sync Has Stopped on Live Site**
-    -   **Description:** An issue from a previous session where Google Sheets integration stopped working on the live site. This was deprioritized and has not been investigated.
-    -   **Status:** NOT STARTED
+-   **Issue 1: Live Deployment Not Updating From Workspace:** This issue from a previous session was not addressed.
+-   **Issue 2: Google Sheets Sync Has Stopped on Live Site:** This issue from a previous session was not addressed.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Proof Upload Failure
--   **Recurrence count:** 2+
--   **Status:** IN PROGRESS
+-   **Recurrence count:** 3+
+-   **Status:** BLOCKED (The user reported a similar issue again in this session. The agent has fixed it in the preview environment, but it's blocked on the user redeploying to their live site.)
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Production vs. Sandbox Data Divergence:** The sculpting status bug was a production-only data issue. The fix required writing backward-compatible code to handle historical data gracefully while also fixing the logic for future data.
--   **Single Source of Truth (Goal):** The current main task is to refactor the application to eliminate hardcoded stage/status strings and use the  from the database as the single source of truth.
--   **Feature Simplification:** An initial chat feature was over-engineered and rolled back at the user's request to a simpler send email and log event implementation, demonstrating the need to adhere closely to user requirements.
+-   **Single Source of Truth Refactoring:** The application was successfully refactored to eliminate hardcoded stage/status strings, instead relying on the  from the database.
+-   **Performance Optimization:** A multi-pronged approach was used: reducing API payload size with MongoDB projections, adding database indexes for query-heavy operations, and implementing client-side caching with .
+-   **System Reliability:** Implemented robust retry mechanisms on both the frontend (for API calls) and backend (for database connections), along with connection pooling and a health check endpoint for monitoring.
+-   **Background Task Scheduling:** A background scheduler () was implemented to periodically process time-based workflow rules asynchronously.
 
 **key DB schema**
--   **tenants:** The  object within this collection now holds the active Shopify credentials (, , ) and the  which is the target single source of truth.
--   **orders:** Data inconsistency confirmed (e.g.,  with ). The  array within an order document now stores new event types:  and .
-
-**changes in tech stack**
--   None.
+-   **orders:** Now has several new indexes to optimize queries (, , etc.). The  and  fields are now reliably updated by all relevant user actions.
+-   **email_templates:** A new collection was created to store user-defined custom email templates, including , , and .
+-   **tenants:** The  object within the  document is the single source of truth for all workflow logic (stages, statuses, rules, timers).
 
 **All files of reference**
--   **/app/backend/server.py**: Main file for all recent work. Logging was added to . New endpoints  and  were added.  was modified. Order fetching logic in  and  was patched to handle the sculpting status bug.
--   **/app/backend/.env**: Updated with new Shopify credentials.
--   **/app/backend/email_templates.py**: A new template for admin replies was added.
--   **/app/frontend/src/pages/OrderDetailsAdmin.js**: Major UI changes to add proof deletion, the admin reply dialog, and the Remind Customer button.
--   **/app/frontend/src/pages/OrderDesk.js**: UI logic was updated to correctly display painting for orders with the sculpting status bug. Identified as needing major refactoring.
--   **/app/frontend/src/utils/labelMapper.js**: Identified as a key file with hardcoded values that needs to be refactored.
--   **/app/frontend/src/contexts/BrandingContext.js**: Identified as the central place to manage the workflow configuration on the frontend.
+-   **/app/backend/server.py**: Core logic for performance optimization (projections), reliability (DB connection, startup index creation), and Shopify tag syncing.
+-   **/app/backend/routes/orders.py**: Fixed the bulk reminder email logic.
+-   **/app/backend/utils/workflow_scheduler.py**: New file containing the logic for the background scheduler that processes time-delayed workflow rules.
+-   **/app/backend/routes/settings.py**: Contains the new CRUD endpoints for custom email templates.
+-   **/app/frontend/src/pages/OrderDesk.js**: Major changes for performance (caching) and reliability (retry logic, error UI).
+-   **/app/frontend/src/components/WorkflowTableEditor.js**: Major UI changes for the new time-delay rule inputs and the email template management tab.
+-   **/app/frontend/public/index.html**: Updated with new page title and CSS for the watermark.
 
 **Areas that need refactoring**:
--   **Primary Task:** The entire application needs to be refactored to remove hardcoded stage and status labels and instead use the dynamic  from the database. Key files include , , , and .
--   **/app/backend/server.py**: This file is now over 1700 lines long and is a critical monolith. It urgently needs to be broken down into separate router files (e.g., , , ) under a  directory.
+-   **/app/backend/server.py**: This file continues to grow and acts as a monolith. Logic for Shopify integration, analytics, and various order manipulations could be extracted into their own router files to improve maintainability.
+-   **/app/frontend/src/pages/OrderDesk.js**: This component has become very large and complex, handling data fetching, caching, error states, sorting, and rendering. It could be broken down into smaller, more focused components and custom hooks (e.g., , ).
 
 **key api endpoints**
--   : **(BROKEN IN PROD)** Logging was added to diagnose the 500 error.
--   : **[NEW & WORKING]** Deletes a proof from an order.
--   : **[NEW & WORKING]** Sends an email reply to a customer and logs it to the timeline.
--   : **[FIXED & WORKING]** Sends a reminder email and logs it to the timeline.
--   : **[FIXED & WORKING]** Syncs orders from Shopify.
--   : **[PATCHED & WORKING]** Modified to correctly filter orders with the sculpting status bug.
--   : **[PATCHED & WORKING]** Modified to correctly count orders with the sculpting status bug.
+-   : **[OPTIMIZED]** Payload size reduced by ~99% and now benefits from database indexing.
+-   : **[FIXED]** Correctly updates  and logs a timeline event.
+-   : **[FIXED & VERIFIED]** Correctly updates  and logs a timeline event.
+-   : **[ENHANCED]** Now triggers an asynchronous Shopify tag sync.
+-   : **[NEW]** Endpoint to manually trigger a tag sync for a specific order.
+-   : **[NEW]** Full CRUD API for managing custom email templates.
+-   : **[NEW]** A health check endpoint to verify database connectivity.
 
 **Critical Info for New Agent**
-1.  **Top Priority is Refactoring:** Your immediate and primary task is to refactor the entire application to eliminate hardcoded stages and statuses. The user is blocked on this. You must use the  from the database as the single source of truth. The previous agent has already audited the code and identified the key files.
-2.  **Proof Upload is BLOCKED:** The production proof upload bug is still unresolved. Do not attempt to fix it further until the user triggers the error in production and you can analyze the logs from the newly added logging statements.
-3.  **Data Inconsistency Patch:** The sculpting status bug was patched with temporary backward-compatibility code. Your refactoring work should ideally make this patch obsolete by unifying the logic around the database configuration.
-4.  **Do Not Over-Engineer:** Remember the user rejected a complex chat feature in favor of a simple email-and-log reply system. Keep solutions focused and directly aligned with the user's request.
+1.  **LIVE SITE IS UNSTABLE:** The user's primary problem is now the instability and poor performance of their **live production site**. Multiple issues reported by the user (500 errors, broken features) have been confirmed to work correctly in the preview environment.
+2.  **REDEPLOYMENT IS THE IMMEDIATE NEXT STEP:** Do not attempt to debug the user's reported live-site issues directly. The root cause is almost certainly that the live site is running old code. Your first action should be to confirm with the user that they have **redeployed the application**. The numerous performance and reliability fixes implemented in this session are not yet on their live server.
+3.  **Address User Issues Post-Deployment:** Only after the user confirms a redeployment and that the issues *still* persist should you begin debugging the live environment (likely by analyzing deployment logs).
 
-**documents created in this job**
--   None.
+**documents and test reports created in this job**
+-   : Updated multiple times to incorporate testing for the major refactoring, new features, and bug fixes.
 
-**Last 10 User Messages and any pending user messages**
-1.  **User:** when a customer requests changes... can you build a way for me... to reply back? (Status: **Completed**, simple reply feature implemented after initial 'chat' version was rejected).
-2.  **User:** Provided feedback on the implementation of the reply feature. (Status: **Completed**).
-3.  **User:** the status for paint still shows sculpting instead of painting. Provided a screenshot. (Status: **Completed**, a patch was implemented).
-4.  **User:** please describe a plan that will allow this app to update an order tag with the Stage and Status. (Status: **Plan Provided**, implementation pending).
-5.  **User:** I need the ability to ping the customer from the order details page. (Status: **Completed**).
-6.  **User:** please make sure that when the Remind Customer button is pressed it is logged in the timeline and has a popup. (Status: **Completed**).
-7.  **User:** before we implement the order tag feature we need to straighten up where the Stage and Statuses are coming from. (Status: **In Progress**, this is the current P0 task).
-8.  **User:** I am still not able to delete proofs in the preview. (Status: **Resolved**, agent found it was working and user did not report again).
-9.  **User:** what time zone is the clock set for and how would I change it? (Status: **Answered**, explained setup and proposed enhancement).
-10. **User:** Clarified location of sculpting status issue with a screenshot. (Status: **Completed**).
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User:** Requested to change the page title and move the Made with Emergent watermark. (Status: **Completed**)
+2.  **User:** Approved the UI changes. (Status: **Completed**)
+3.  **User:** Complained that the live app is too slow when navigating. (Status: **Completed**, extensive performance optimizations implemented).
+4.  **User:** Reported being unable to upload paint proofs for order 203890. (Status: **Blocked**, works in preview, waiting on user redeployment).
+5.  **User:** Complained about general app unreliability and slowness. (Status: **Completed**, extensive reliability improvements implemented).
+6.  **User:** Reported a 500 Internal Server Error on the live site with a screenshot. (Status: **Blocked**, this is the last working item, waiting on user redeployment).
+7.  **User:** Asked to proceed with Shopify Order Tag Syncing. (Status: **Completed**)
+8.  **User:** the live app takes way too long to load orders... - This initiated the performance optimization task. (Status: **Completed**)
+9.  **User:** when this app is working, it works well, but often times it fails to load... - This initiated the reliability improvement task. (Status: **Completed**)
+10. **User:** now I am getting this error (screenshot of 500 error) - This is the current blocking issue. (Status: **Blocked**)
 
 **Project Health Check:**
--   **Broken:** The Proof Upload feature is non-functional in the production environment.
+-   **Broken:** The user's **live/deployed application** is reportedly unstable, slow, and experiences critical errors (500 Internal Server Error) during core operations like loading orders. The preview environment is stable.
 -   **Mocked:** None.
 
 **3rd Party Integrations**
--   **Shopify (Order Sync):** Working. Credentials have been updated.
--   **Google Sheets (Logging):** Status is unknown, carried over as an unaddressed issue from a previous session.
+-   **Shopify (Order Sync & Tagging):** Working and enhanced. The integration now syncs order tags (Stage - Status) whenever an order's state changes.
+-   **Google Sheets (Logging):** Status is unknown. This is a carry-over issue from a previous session that has not been addressed.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES (after the major refactoring).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None
--   **Known regressions:** The Proof Upload feature has regressed and is failing in production.
+-   **Test files created:** None.
+-   **Known regressions:** Several features (order loading, proof upload, export) are reportedly regressed or broken on the user's **live site**, though they function correctly in the preview environment.
 
 **Credentials to test flow:**
 -   **Preview Admin:**
@@ -179,6 +177,5 @@ The agent was preparing to refactor the application to use the dynamic workflow 
     -   Password: 
 
 **What agent forgot to execute**
--   The agent did not address the older issues from the initial handoff: Live Deployment Not Updating From Workspace and Google Sheets Sync Has Stopped on Live Site.
--   The plan to implement Shopify Tag Syncing was created but not executed.
--   The full end-to-end verification of the data-driven workflow system remains pending.</analysis>
+-   The agent did not address the long-standing issues carried over from the previous session: Live Deployment Not Updating From Workspace and Google Sheets Sync Has Stopped on Live Site.
+-   The agent did not begin work on the Enhance Export Functionality or Integrate a Real-time Tracking API tasks that were in the upcoming queue.</analysis>

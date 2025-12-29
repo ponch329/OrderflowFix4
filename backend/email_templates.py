@@ -276,7 +276,7 @@ def get_proofs_uploaded_notification(order_number, stage, num_images):
     return subject, html_content
 
 
-def get_customer_proofs_ready_email(order_number, customer_name, stage, num_images, portal_url="https://proof-portal.preview.emergentagent.com/customer", logo_url=None, company_name=""):
+def get_customer_proofs_ready_email(order_number, customer_name, stage, num_images, portal_url="https://orderflow-fix-4.preview.emergentagent.com/customer", logo_url=None, company_name=""):
     """
     Template for customer notification when proofs are ready for review
     
