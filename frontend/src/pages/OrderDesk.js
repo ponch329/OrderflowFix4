@@ -280,8 +280,13 @@ export default function OrderDesk() {
     return '';
   };
 
-  const fetchOrders = async () => {
-    setLoading(true);
+  const fetchOrders = async (isRetry = false) => {
+    if (!isRetry) {
+      setLoading(true);
+      setLoadError(null);
+      retryCountRef.current = 0;
+    }
+    
     try {
       // Build query params for server-side filtering
       const params = new URLSearchParams();
@@ -310,8 +315,8 @@ export default function OrderDesk() {
       const cacheTimestampKey = `orders_cache_timestamp_${params.toString()}`;
       const CACHE_DURATION = 30 * 1000; // 30 seconds cache
       
-      // Check cache first (only if not searching)
-      if (!searchDebounce) {
+      // Check cache first (only if not searching and not retrying)
+      if (!searchDebounce && !isRetry) {
         const cachedData = sessionStorage.getItem(cacheKey);
         const cachedTimestamp = sessionStorage.getItem(cacheTimestampKey);
         
@@ -332,7 +337,12 @@ export default function OrderDesk() {
         }
       }
       
-      const response = await axios.get(`${API}/admin/orders?${params.toString()}`);
+      // Use retry logic for the API call
+      const response = await fetchWithRetry(
+        () => axios.get(`${API}/admin/orders?${params.toString()}`, { timeout: 30000 }),
+        3,  // max retries
+        1000 // delay between retries
+      );
       const data = response.data;
       
       // Cache the response (only if not searching)
@@ -352,9 +362,17 @@ export default function OrderDesk() {
         setTotalCount(data.length);
         setTotalPages(Math.ceil(data.length / ORDERS_PER_PAGE));
       }
+      
+      setLoadError(null);
+      retryCountRef.current = 0;
     } catch (error) {
-      toast.error("Failed to load orders");
-      console.error(error);
+      console.error("Failed to load orders:", error);
+      setLoadError(error.message || "Failed to load orders. Please try again.");
+      
+      // Show toast only on final failure
+      if (retryCountRef.current === 0) {
+        toast.error("Having trouble loading orders. Retrying...");
+      }
     } finally {
       setLoading(false);
     }
