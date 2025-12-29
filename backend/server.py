@@ -282,92 +282,107 @@ async def get_admin_orders_legacy(
     Admin orders endpoint with server-side pagination
     Returns paginated orders for better performance
     """
-    # Get first tenant
-    tenant = await db.tenants.find_one({}, {"_id": 0})
-    if not tenant:
-        raise HTTPException(status_code=500, detail="No tenant found")
-    
-    tenant_id = tenant["id"]
-    
-    # Build query filter
-    query = {"tenant_id": tenant_id}
-    
-    # Filter by archived status - simplified for better query performance
-    if archived is True:
-        # Show only archived orders
-        query["is_archived"] = True
-    elif archived is False:
-        # Show non-archived orders - use $ne for better index usage
-        query["is_archived"] = {"$ne": True}
-    # If archived is None, show all orders (no filter)
-    
-    # Filter by stage
-    if stage:
-        query["stage"] = stage
-    
-    # Filter by status (stage-specific status)
-    if status and stage:
-        # Handle backward compatibility: "painting" and "sculpting" are both "in progress" states
-        # Some older orders may have "sculpting" for paint stage instead of "painting"
-        if stage == "paint" and status == "painting":
-            query[f"{stage}_status"] = {"$in": ["painting", "sculpting"]}
-        else:
-            query[f"{stage}_status"] = status
-    
-    # Search filter - need to handle $and/$or conflict
-    if search:
-        search_regex = {"$regex": search, "$options": "i"}
-        search_conditions = [
-            {"order_number": search_regex},
-            {"customer_email": search_regex},
-            {"customer_name": search_regex}
-        ]
-        # Add search to existing $and or create new one
-        if "$and" in query:
-            query["$and"].append({"$or": search_conditions})
-        else:
-            query["$or"] = search_conditions
-    
-    # Get total count for pagination
-    total_count = await db.orders.count_documents(query)
-    total_pages = (total_count + limit - 1) // limit  # Ceiling division
-    
-    # Calculate skip for pagination
-    skip = (page - 1) * limit
-    
-    # Projection: Exclude heavy fields for list view (timeline, proofs, notes, approval details)
-    # These fields are only needed when viewing a single order's details
-    list_projection = {
-        "_id": 0,
-        "timeline": 0,
-        "clay_proofs": 0,
-        "paint_proofs": 0,
-        "notes": 0,
-        "clay_approval": 0,
-        "paint_approval": 0,
-        "line_items": 0,  # Usually not needed in list view
-    }
-    
-    # Fetch paginated orders with lightweight projection
-    orders = await db.orders.find(query, list_projection).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
-    
-    for order in orders:
-        # Convert datetime strings to datetime objects
-        for field in ['created_at', 'updated_at', 'clay_entered_at', 'paint_entered_at', 'fulfilled_at', 'canceled_at']:
-            if field in order and isinstance(order[field], str):
-                order[field] = datetime.fromisoformat(order[field])
-    
-    return {
-        "orders": orders,
-        "pagination": {
-            "page": page,
-            "limit": limit,
-            "total_count": total_count,
-            "total_pages": total_pages,
-            "has_next": page < total_pages,
-            "has_prev": page > 1
+    try:
+        # Get first tenant with retry
+        async def get_tenant():
+            return await db.tenants.find_one({}, {"_id": 0})
+        
+        tenant = await db_operation_with_retry(get_tenant)
+        if not tenant:
+            raise HTTPException(status_code=500, detail="No tenant found")
+        
+        tenant_id = tenant["id"]
+        
+        # Build query filter
+        query = {"tenant_id": tenant_id}
+        
+        # Filter by archived status - simplified for better query performance
+        if archived is True:
+            # Show only archived orders
+            query["is_archived"] = True
+        elif archived is False:
+            # Show non-archived orders - use $ne for better index usage
+            query["is_archived"] = {"$ne": True}
+        # If archived is None, show all orders (no filter)
+        
+        # Filter by stage
+        if stage:
+            query["stage"] = stage
+        
+        # Filter by status (stage-specific status)
+        if status and stage:
+            # Handle backward compatibility: "painting" and "sculpting" are both "in progress" states
+            # Some older orders may have "sculpting" for paint stage instead of "painting"
+            if stage == "paint" and status == "painting":
+                query[f"{stage}_status"] = {"$in": ["painting", "sculpting"]}
+            else:
+                query[f"{stage}_status"] = status
+        
+        # Search filter - need to handle $and/$or conflict
+        if search:
+            search_regex = {"$regex": search, "$options": "i"}
+            search_conditions = [
+                {"order_number": search_regex},
+                {"customer_email": search_regex},
+                {"customer_name": search_regex}
+            ]
+            # Add search to existing $and or create new one
+            if "$and" in query:
+                query["$and"].append({"$or": search_conditions})
+            else:
+                query["$or"] = search_conditions
+        
+        # Get total count for pagination with retry
+        async def get_count():
+            return await db.orders.count_documents(query)
+        
+        total_count = await db_operation_with_retry(get_count)
+        total_pages = (total_count + limit - 1) // limit  # Ceiling division
+        
+        # Calculate skip for pagination
+        skip = (page - 1) * limit
+        
+        # Projection: Exclude heavy fields for list view (timeline, proofs, notes, approval details)
+        # These fields are only needed when viewing a single order's details
+        list_projection = {
+            "_id": 0,
+            "timeline": 0,
+            "clay_proofs": 0,
+            "paint_proofs": 0,
+            "notes": 0,
+            "clay_approval": 0,
+            "paint_approval": 0,
+            "line_items": 0,  # Usually not needed in list view
         }
-    }
+        
+        # Fetch paginated orders with lightweight projection and retry
+        async def get_orders():
+            return await db.orders.find(query, list_projection).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        orders = await db_operation_with_retry(get_orders)
+        
+        for order in orders:
+            # Convert datetime strings to datetime objects
+            for field in ['created_at', 'updated_at', 'clay_entered_at', 'paint_entered_at', 'fulfilled_at', 'canceled_at']:
+                if field in order and isinstance(order[field], str):
+                    order[field] = datetime.fromisoformat(order[field])
+        
+        return {
+            "orders": orders,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total_count": total_count,
+                "total_pages": total_pages,
+                "has_next": page < total_pages,
+                "has_prev": page > 1
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching orders: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @api_router.get("/admin/orders/counts")
 async def get_orders_counts():
