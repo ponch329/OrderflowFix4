@@ -121,6 +121,26 @@ api_router.include_router(settings_router)
 api_router.include_router(vendors_router)
 api_router.include_router(workflow_router)
 
+# ============== HEALTH CHECK ENDPOINT ==============
+@api_router.get("/health")
+async def health_check():
+    """
+    Health check endpoint for monitoring.
+    Returns database connection status and basic system info.
+    """
+    try:
+        # Test database connection
+        await db.command("ping")
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return {
+        "status": "healthy" if db_status == "connected" else "degraded",
+        "database": db_status,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
 # Legacy admin routes (for backwards compatibility during transition)
 import hashlib
 import jwt
