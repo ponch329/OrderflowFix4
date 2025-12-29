@@ -154,6 +154,7 @@ export default function OrderDesk() {
   
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState('all');
   const [columns, setColumns] = useState(DEFAULT_COLUMNS);
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
@@ -169,6 +170,9 @@ export default function OrderDesk() {
   
   // Authentication ready state
   const [authReady, setAuthReady] = useState(false);
+  
+  // Retry tracking
+  const retryCountRef = useRef(0);
   
   // Derive workflow stages and timer rules from context
   const workflowStages = workflowConfig?.stages || [];
