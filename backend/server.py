@@ -270,16 +270,13 @@ async def get_admin_orders_legacy(
     # Build query filter
     query = {"tenant_id": tenant_id}
     
-    # Filter by archived status - check BOTH 'archived' and 'is_archived' fields for compatibility
+    # Filter by archived status - simplified for better query performance
     if archived is True:
-        # Show only archived orders (check both field names)
-        query["$or"] = [{"archived": True}, {"is_archived": True}]
+        # Show only archived orders
+        query["is_archived"] = True
     elif archived is False:
-        # Show non-archived orders - exclude orders where archived=True OR is_archived=True
-        query["$and"] = [
-            {"$or": [{"archived": False}, {"archived": {"$exists": False}}, {"archived": None}]},
-            {"$or": [{"is_archived": False}, {"is_archived": {"$exists": False}}, {"is_archived": None}]}
-        ]
+        # Show non-archived orders - use $ne for better index usage
+        query["is_archived"] = {"$ne": True}
     # If archived is None, show all orders (no filter)
     
     # Filter by stage
