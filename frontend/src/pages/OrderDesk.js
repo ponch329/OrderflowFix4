@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -34,7 +34,8 @@ import {
   Settings,
   Bell,
   RefreshCw,
-  Archive
+  Archive,
+  AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -52,6 +53,23 @@ import { getStageLabel, getStatusLabel } from "@/utils/labelMapper";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
+
+// Retry utility for API calls
+const fetchWithRetry = async (fetchFn, maxRetries = 3, delay = 1000) => {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fetchFn();
+    } catch (error) {
+      lastError = error;
+      console.warn(`API call failed (attempt ${i + 1}/${maxRetries}):`, error.message);
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+      }
+    }
+  }
+  throw lastError;
+};
 
 // Default columns configuration
 const DEFAULT_COLUMNS = [
