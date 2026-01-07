@@ -412,11 +412,15 @@ async def get_orders_counts():
     """
     Get order counts by stage/status for sidebar - dynamically based on workflow config
     """
-    tenant = await db.tenants.find_one({}, {"_id": 0})
-    if not tenant:
-        raise HTTPException(status_code=500, detail="No tenant found")
-    
-    tenant_id = tenant["id"]
+    try:
+        async def get_tenant():
+            return await db.tenants.find_one({}, {"_id": 0})
+        
+        tenant = await db_operation_with_retry(get_tenant)
+        if not tenant:
+            raise HTTPException(status_code=500, detail="No tenant found")
+        
+        tenant_id = tenant["id"]
     
     # Get workflow stages from config
     settings = tenant.get("settings", {})
