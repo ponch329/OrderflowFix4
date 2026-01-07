@@ -111,6 +111,30 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"⚠️ Could not create indexes: {e}")
     
+    # Data migration: Normalize is_archived field for all orders (one-time migration)
+    # This ensures all orders have a consistent is_archived field for faster queries
+    try:
+        # Set is_archived=True for orders with archived=True (legacy field)
+        result1 = await db.orders.update_many(
+            {"archived": True, "is_archived": {"$ne": True}},
+            {"$set": {"is_archived": True}}
+        )
+        # Set is_archived=False for orders without is_archived field
+        result2 = await db.orders.update_many(
+            {"is_archived": {"$exists": False}},
+            {"$set": {"is_archived": False}}
+        )
+        # Set is_archived=False for orders with is_archived=None
+        result3 = await db.orders.update_many(
+            {"is_archived": None},
+            {"$set": {"is_archived": False}}
+        )
+        total_migrated = result1.modified_count + result2.modified_count + result3.modified_count
+        if total_migrated > 0:
+            logger.info(f"✅ Migrated {total_migrated} orders to normalized is_archived field")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not create indexes: {e}")
+    
     # Start workflow scheduler as background task
     try:
         from utils.workflow_scheduler import start_scheduler_loop
