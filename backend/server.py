@@ -433,31 +433,31 @@ async def get_orders_counts():
         
         # Simplified filters using normalized is_archived field (much faster queries)
         non_archived_filter = {"is_archived": False}
-    archived_filter = {"is_archived": True}
-    
-    # Build dynamic aggregation pipeline
-    facet_stages = {
-        "total": [{"$count": "count"}],
-        "archived": [
-            {"$match": archived_filter},
-            {"$count": "count"}
-        ],
-        "by_stage": [
-            {"$match": non_archived_filter},
-            {"$group": {"_id": "$stage", "count": {"$sum": 1}}}
-        ]
-    }
-    
-    # Add dynamic status counts for each stage
-    for stage in stages:
-        stage_id = stage.get("id", "")
-        if stage_id and stage_id != "archived":
-            status_field = f"{stage_id}_status"
-            facet_stages[f"{stage_id}_by_status"] = [
-                {"$match": {"stage": stage_id, "is_archived": False}},
-                {"$group": {"_id": f"${status_field}", "count": {"$sum": 1}}}
+        archived_filter = {"is_archived": True}
+        
+        # Build dynamic aggregation pipeline
+        facet_stages = {
+            "total": [{"$count": "count"}],
+            "archived": [
+                {"$match": archived_filter},
+                {"$count": "count"}
+            ],
+            "by_stage": [
+                {"$match": non_archived_filter},
+                {"$group": {"_id": "$stage", "count": {"$sum": 1}}}
             ]
-    
+        }
+        
+        # Add dynamic status counts for each stage
+        for stage in stages:
+            stage_id = stage.get("id", "")
+            if stage_id and stage_id != "archived":
+                status_field = f"{stage_id}_status"
+                facet_stages[f"{stage_id}_by_status"] = [
+                    {"$match": {"stage": stage_id, "is_archived": False}},
+                    {"$group": {"_id": f"${status_field}", "count": {"$sum": 1}}}
+                ]
+        
         pipeline = [
             {"$match": {"tenant_id": tenant_id}},
             {"$facet": facet_stages}
@@ -484,11 +484,10 @@ async def get_orders_counts():
                     stage_counts = {item["_id"]: item["count"] for item in data[key] if item["_id"]}
                     
                     # For paint stage: combine "sculpting" counts into "painting" for backward compatibility
-                    # Some older orders may have "sculpting" status instead of "painting"
                     if stage_id == "paint" and "sculpting" in stage_counts:
                         painting_count = stage_counts.get("painting", 0) + stage_counts.get("sculpting", 0)
                         stage_counts["painting"] = painting_count
-                        del stage_counts["sculpting"]  # Remove sculpting from display
+                        del stage_counts["sculpting"]
                     
                     status_counts[stage_id] = stage_counts
         
