@@ -421,18 +421,18 @@ async def get_orders_counts():
             raise HTTPException(status_code=500, detail="No tenant found")
         
         tenant_id = tenant["id"]
-    
-    # Get workflow stages from config
-    settings = tenant.get("settings", {})
-    workflow_config = settings.get("workflow_config", {})
-    stages = workflow_config.get("stages", [
-        {"id": "clay", "statuses": [{"id": "sculpting"}, {"id": "feedback_needed"}, {"id": "changes_requested"}, {"id": "approved"}]},
-        {"id": "paint", "statuses": [{"id": "painting"}, {"id": "feedback_needed"}, {"id": "changes_requested"}, {"id": "approved"}]},
-        {"id": "shipped", "statuses": [{"id": "in_transit"}, {"id": "delivered"}]},
-    ])
-    
-    # Simplified filters using normalized is_archived field (much faster queries)
-    non_archived_filter = {"is_archived": False}
+        
+        # Get workflow stages from config
+        settings = tenant.get("settings", {})
+        workflow_config = settings.get("workflow_config", {})
+        stages = workflow_config.get("stages", [
+            {"id": "clay", "statuses": [{"id": "sculpting"}, {"id": "feedback_needed"}, {"id": "changes_requested"}, {"id": "approved"}]},
+            {"id": "paint", "statuses": [{"id": "painting"}, {"id": "feedback_needed"}, {"id": "changes_requested"}, {"id": "approved"}]},
+            {"id": "shipped", "statuses": [{"id": "in_transit"}, {"id": "delivered"}]},
+        ])
+        
+        # Simplified filters using normalized is_archived field (much faster queries)
+        non_archived_filter = {"is_archived": False}
     archived_filter = {"is_archived": True}
     
     # Build dynamic aggregation pipeline
