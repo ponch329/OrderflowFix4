@@ -458,42 +458,51 @@ async def get_orders_counts():
                 {"$group": {"_id": f"${status_field}", "count": {"$sum": 1}}}
             ]
     
-    pipeline = [
-        {"$match": {"tenant_id": tenant_id}},
-        {"$facet": facet_stages}
-    ]
-    
-    result = await db.orders.aggregate(pipeline).to_list(1)
-    
-    if not result:
-        return {"total": 0, "archived": 0, "by_stage": {}, "status_counts": {}}
-    
-    data = result[0]
-    
-    # Build status counts object dynamically
-    status_counts = {}
-    for stage in stages:
-        stage_id = stage.get("id", "")
-        if stage_id and stage_id != "archived":
-            key = f"{stage_id}_by_status"
-            if key in data:
-                stage_counts = {item["_id"]: item["count"] for item in data[key] if item["_id"]}
-                
-                # For paint stage: combine "sculpting" counts into "painting" for backward compatibility
-                # Some older orders may have "sculpting" status instead of "painting"
-                if stage_id == "paint" and "sculpting" in stage_counts:
-                    painting_count = stage_counts.get("painting", 0) + stage_counts.get("sculpting", 0)
-                    stage_counts["painting"] = painting_count
-                    del stage_counts["sculpting"]  # Remove sculpting from display
-                
-                status_counts[stage_id] = stage_counts
-    
-    return {
-        "total": data["total"][0]["count"] if data["total"] else 0,
-        "archived": data["archived"][0]["count"] if data["archived"] else 0,
-        "by_stage": {item["_id"]: item["count"] for item in data["by_stage"] if item["_id"]},
-        "status_counts": status_counts
-    }
+        pipeline = [
+            {"$match": {"tenant_id": tenant_id}},
+            {"$facet": facet_stages}
+        ]
+        
+        # Run aggregation with retry
+        async def run_aggregation():
+            return await db.orders.aggregate(pipeline).to_list(1)
+        
+        result = await db_operation_with_retry(run_aggregation)
+        
+        if not result:
+            return {"total": 0, "archived": 0, "by_stage": {}, "status_counts": {}}
+        
+        data = result[0]
+        
+        # Build status counts object dynamically
+        status_counts = {}
+        for stage in stages:
+            stage_id = stage.get("id", "")
+            if stage_id and stage_id != "archived":
+                key = f"{stage_id}_by_status"
+                if key in data:
+                    stage_counts = {item["_id"]: item["count"] for item in data[key] if item["_id"]}
+                    
+                    # For paint stage: combine "sculpting" counts into "painting" for backward compatibility
+                    # Some older orders may have "sculpting" status instead of "painting"
+                    if stage_id == "paint" and "sculpting" in stage_counts:
+                        painting_count = stage_counts.get("painting", 0) + stage_counts.get("sculpting", 0)
+                        stage_counts["painting"] = painting_count
+                        del stage_counts["sculpting"]  # Remove sculpting from display
+                    
+                    status_counts[stage_id] = stage_counts
+        
+        return {
+            "total": data["total"][0]["count"] if data["total"] else 0,
+            "archived": data["archived"][0]["count"] if data["archived"] else 0,
+            "by_stage": {item["_id"]: item["count"] for item in data["by_stage"] if item["_id"]},
+            "status_counts": status_counts
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching order counts: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @api_router.get("/admin/orders/{order_id}")
 async def get_admin_order_details(order_id: str):
