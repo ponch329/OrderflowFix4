@@ -1568,9 +1568,9 @@ async def sync_orders():
                 await db.orders.insert_one(order_doc)
                 synced_count += 1
                 
-                # Check if order should be split by vendor
+                # Check if order should be split by bobblehead count (multiple bobbleheads = multiple sub-orders)
                 if await should_split_order(line_items):
-                    sub_order_ids = await split_order_by_vendor(db, order_doc, line_items)
+                    sub_order_ids = await split_order_by_vendor(db, order_doc, line_items, workflow_config)
                     split_count += len(sub_order_ids)
             else:
                 # Update existing order's fulfillment status if changed
