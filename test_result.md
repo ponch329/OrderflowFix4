@@ -307,6 +307,18 @@ frontend:
           agent: "testing"
           comment: "✅ COMPREHENSIVE TESTING COMPLETED: Integrations tab fully functional. All test requirements passed: 1) Successfully navigated to Settings > Integrations tab (3rd tab), 2) SMTP Configuration: All fields editable (smtp-host, smtp-port, smtp-user, smtp-password, smtp-from), filled with test data (smtp.gmail.com, 587, test@example.com, testpassword123, noreply@test.com), 3) 'Save SMTP Settings' button functional with success toast 'Integration settings saved successfully!', 4) Shopify Configuration: All fields editable (shopify-shop, shopify-api-key, shopify-api-secret, shopify-token), filled with test data (test-store, test_api_key_123, test_secret_456, test_token_789), 5) 'Save Shopify Settings' button functional with success toast, 6) Settings persistence verified after page reload - all non-sensitive fields (SMTP host/port/user/from, Shopify shop/api_key) persisted correctly, sensitive fields (passwords/secrets/tokens) properly cleared for security, 7) Send Test Email button UI flow functional with email prompt dialog, 8) Backend API PATCH /api/settings/tenant working correctly, 9) handleSaveIntegrations function properly merging settings. All functionality working as specified."
 
+  - task: "Proof Upload Functionality Improvements"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ PROOF UPLOAD FUNCTIONALITY COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY: All requested features from review request working perfectly. **Test Results**: 1) **Admin Authentication**: ✅ Login with admin/admin123 successful, JWT token received and working, 2) **Basic Proof Upload**: ✅ POST /api/admin/orders/81695e32-4681-4de3-a3ea-909be91d50ba/proofs working correctly with stage=clay, ✅ Small test image uploaded successfully, ✅ API response contains required fields: message, proofs array, round number, 3) **File Size Limits**: ✅ Individual images >10MB correctly rejected with 413 status, ✅ ZIP files >20MB correctly rejected with 413 status, ✅ Images <10MB correctly accepted, ✅ ZIP files <20MB correctly accepted, 4) **ZIP File Processing**: ✅ ZIP files extracted correctly, ✅ Multiple images (3) extracted from ZIP and processed individually, ✅ Each image gets unique ID and proper metadata, 5) **API Response Format**: ✅ Response includes success message ('Uploaded X proofs (Round Y)'), ✅ Proofs array with complete metadata (id, url, filename, uploaded_at, round), ✅ Round numbering working correctly (incremental), 6) **Email Notifications**: ✅ Automated customer email notifications sent successfully after proof upload, ✅ SMTP integration working (smtp.gmail.com:587), ✅ Backend logs confirm 'Automated customer notification sent for order 203913', 7) **Error Handling**: ✅ Proper 413 responses for oversized files, ✅ Graceful handling of invalid order IDs, ✅ Comprehensive logging throughout upload process. **CONCLUSION**: All proof upload improvements are working as specified in the review request. File size limits enforced correctly, ZIP processing functional, API responses properly formatted, and email notifications working."
+
 backend:
   - task: "Manufacturer Login Authentication"
     implemented: true
