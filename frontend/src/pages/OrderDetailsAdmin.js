@@ -1001,6 +1001,8 @@ const OrderDetailsAdminNew = () => {
                   <>
                     <Upload className="w-4 h-4 mr-2" />
                     Upload Proofs
+                  </>
+                )}
               </Button>
             </div>
           </DialogContent>
