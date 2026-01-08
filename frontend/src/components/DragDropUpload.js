@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Upload, X } from 'lucide-react';
 
-const DragDropUpload = ({ onFilesSelected, accept = "image/*,.zip", multiple = true }) => {
+const DragDropUpload = ({ onFilesSelected, accept = "image/*,.zip", multiple = true, disabled = false }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
 
@@ -11,12 +11,13 @@ const DragDropUpload = ({ onFilesSelected, accept = "image/*,.zip", multiple = t
   }, []);
 
   const handleDragIn = useCallback((e) => {
+    if (disabled) return;
     e.preventDefault();
     e.stopPropagation();
     if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
       setIsDragging(true);
     }
-  }, []);
+  }, [disabled]);
 
   const handleDragOut = useCallback((e) => {
     e.preventDefault();
@@ -25,6 +26,7 @@ const DragDropUpload = ({ onFilesSelected, accept = "image/*,.zip", multiple = t
   }, []);
 
   const handleDrop = useCallback((e) => {
+    if (disabled) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
@@ -34,17 +36,19 @@ const DragDropUpload = ({ onFilesSelected, accept = "image/*,.zip", multiple = t
       setSelectedFiles(files);
       onFilesSelected(files);
     }
-  }, [onFilesSelected]);
+  }, [onFilesSelected, disabled]);
 
   const handleFileInput = useCallback((e) => {
+    if (disabled) return;
     const files = Array.from(e.target.files);
     if (files && files.length > 0) {
       setSelectedFiles(files);
       onFilesSelected(files);
     }
-  }, [onFilesSelected]);
+  }, [onFilesSelected, disabled]);
 
   const removeFile = (index) => {
+    if (disabled) return;
     const newFiles = selectedFiles.filter((_, i) => i !== index);
     setSelectedFiles(newFiles);
     onFilesSelected(newFiles);
@@ -54,9 +58,11 @@ const DragDropUpload = ({ onFilesSelected, accept = "image/*,.zip", multiple = t
     <div>
       <div
         className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-          isDragging
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400'
+          disabled
+            ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+            : isDragging
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-gray-300 hover:border-gray-400'
         }`}
         onDragEnter={handleDragIn}
         onDragLeave={handleDragOut}
@@ -71,15 +77,18 @@ const DragDropUpload = ({ onFilesSelected, accept = "image/*,.zip", multiple = t
           multiple={multiple}
           onChange={handleFileInput}
           className="hidden"
+          disabled={disabled}
         />
-        <label htmlFor="file-upload" className="cursor-pointer">
-          <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+        <label htmlFor="file-upload" className={disabled ? "cursor-not-allowed" : "cursor-pointer"}>
+          <Upload className={`w-12 h-12 mx-auto mb-4 ${disabled ? 'text-gray-300' : 'text-gray-400'}`} />
           <p className="text-lg font-semibold mb-2">
-            {isDragging ? 'Drop files here' : 'Drag & drop files here'}
+            {disabled ? 'Upload in progress...' : isDragging ? 'Drop files here' : 'Drag & drop files here'}
           </p>
-          <p className="text-sm text-gray-500 mb-4">or click to browse</p>
+          <p className="text-sm text-gray-500 mb-4">
+            {disabled ? 'Please wait' : 'or click to browse'}
+          </p>
           <p className="text-xs text-gray-400">
-            Supports: Images (JPG, PNG, GIF) and ZIP files
+            Supports: Images (JPG, PNG, GIF, WebP) and ZIP files up to 20MB
           </p>
         </label>
       </div>
@@ -95,12 +104,16 @@ const DragDropUpload = ({ onFilesSelected, accept = "image/*,.zip", multiple = t
             >
               <span className="text-sm truncate flex-1">{file.name}</span>
               <span className="text-xs text-gray-500 mx-3">
-                {(file.size / 1024).toFixed(1)} KB
+                {file.size < 1024 * 1024 
+                  ? `${(file.size / 1024).toFixed(1)} KB`
+                  : `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+                }
               </span>
               <button
                 onClick={() => removeFile(index)}
-                className="text-red-500 hover:text-red-700"
+                className={`${disabled ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:text-red-700'}`}
                 data-testid={`remove-file-${index}`}
+                disabled={disabled}
               >
                 <X className="w-4 h-4" />
               </button>
