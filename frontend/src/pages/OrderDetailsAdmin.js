@@ -162,6 +162,9 @@ const OrderDetailsAdminNew = () => {
   };
 
   const handleUploadProofs = async () => {
+    setIsUploading(true);
+    setUploadProgress(0);
+    
     try {
       const formData = new FormData();
       formData.append('stage', uploadStage);
@@ -176,6 +179,11 @@ const OrderDetailsAdminNew = () => {
         headers: { 
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
+        },
+        timeout: 120000, // 2 minute timeout for large files
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
         }
       });
       
@@ -183,11 +191,15 @@ const OrderDetailsAdminNew = () => {
       setUploadDialogOpen(false);
       setUploadFiles([]);
       setRevisionNote("");
+      setUploadProgress(0);
       invalidateDashboardCache();
       fetchOrder();
     } catch (error) {
       toast.error("Failed to upload proofs");
       console.error(error);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
