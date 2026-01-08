@@ -948,7 +948,7 @@ const OrderDetailsAdminNew = () => {
         </Dialog>
 
         {/* Upload Proofs Dialog */}
-        <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <Dialog open={uploadDialogOpen} onOpenChange={(open) => !isUploading && setUploadDialogOpen(open)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Upload Proofs - {uploadStage === 'clay' ? 'Clay' : 'Paint'} Stage</DialogTitle>
@@ -960,19 +960,47 @@ const OrderDetailsAdminNew = () => {
                   placeholder="Add a note about this revision..."
                   value={revisionNote}
                   onChange={(e) => setRevisionNote(e.target.value)}
+                  disabled={isUploading}
                 />
               </div>
               <DragDropUpload
                 onFilesSelected={setUploadFiles}
                 accept="image/*,.zip"
                 multiple
+                disabled={isUploading}
               />
               {uploadFiles.length > 0 && (
                 <p className="text-sm text-gray-600">{uploadFiles.length} file(s) selected</p>
               )}
-              <Button onClick={handleUploadProofs} className="w-full" disabled={uploadFiles.length === 0}>
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Proofs
+              
+              {/* Upload Progress */}
+              {isUploading && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Uploading and processing...</span>
+                    <span className="font-medium">{uploadProgress}%</span>
+                  </div>
+                  <Progress value={uploadProgress} className="h-2" />
+                  <p className="text-xs text-gray-500 text-center">
+                    Please wait while your files are being processed. This may take a moment for large files.
+                  </p>
+                </div>
+              )}
+              
+              <Button 
+                onClick={handleUploadProofs} 
+                className="w-full" 
+                disabled={uploadFiles.length === 0 || isUploading}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading... {uploadProgress}%
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Proofs
               </Button>
             </div>
           </DialogContent>
