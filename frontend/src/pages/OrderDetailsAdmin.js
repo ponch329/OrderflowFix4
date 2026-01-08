@@ -59,6 +59,7 @@ const OrderDetailsAdminNew = () => {
   const [changeMessage, setChangeMessage] = useState("");
   const [changeFiles, setChangeFiles] = useState([]);
   const [changesStage, setChangesStage] = useState("clay");
+  const [isSubmittingChanges, setIsSubmittingChanges] = useState(false);
   
   // Collapsible sections
   const [clayExpanded, setClayExpanded] = useState(true);
