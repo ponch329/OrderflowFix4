@@ -206,6 +206,7 @@ const OrderDetailsAdminNew = () => {
   };
 
   const handleRequestChanges = async () => {
+    setIsSubmittingChanges(true);
     try {
       const formData = new FormData();
       formData.append('status', 'changes_requested');
@@ -217,7 +218,8 @@ const OrderDetailsAdminNew = () => {
       });
 
       await axios.post(`${API}/admin/orders/${orderId}/request-changes`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000 // 2 minute timeout for large files
       });
       
       toast.success("Changes requested!");
@@ -228,6 +230,8 @@ const OrderDetailsAdminNew = () => {
     } catch (error) {
       toast.error("Failed to request changes");
       console.error(error);
+    } finally {
+      setIsSubmittingChanges(false);
     }
   };
 
