@@ -1038,15 +1038,28 @@ const OrderDetailsAdminNew = () => {
                   placeholder="Describe the changes needed..."
                   value={changeMessage}
                   onChange={(e) => setChangeMessage(e.target.value)}
+                  disabled={isSubmittingChanges}
                 />
               </div>
               <DragDropUpload
                 onFilesSelected={setChangeFiles}
                 accept="image/*"
                 multiple
+                disabled={isSubmittingChanges}
               />
-              <Button onClick={handleRequestChanges} className="w-full">
-                Submit Changes Request
+              <Button 
+                onClick={handleRequestChanges} 
+                className="w-full"
+                disabled={isSubmittingChanges}
+              >
+                {isSubmittingChanges ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Changes Request"
+                )}
               </Button>
             </div>
           </DialogContent>
