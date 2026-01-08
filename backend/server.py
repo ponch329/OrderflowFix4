@@ -1045,31 +1045,83 @@ async def admin_upload_proofs_legacy(
             try:
                 logger.info(f"Step 4.{idx}: Processing file '{file.filename}'...")
                 if file.filename and file.filename.lower().endswith('.zip'):
-                    # Handle zip file
+                    # Handle zip file - optimized for large files up to 20MB
                     logger.info(f"Step 4.{idx}: File is a ZIP, extracting...")
-                    content = await file.read()
+                    
+                    # Read file in chunks for memory efficiency
+                    chunks = []
+                    total_size = 0
+                    while True:
+                        chunk = await file.read(1024 * 1024)  # Read 1MB at a time
+                        if not chunk:
+                            break
+                        chunks.append(chunk)
+                        total_size += len(chunk)
+                        if total_size > MAX_ZIP_SIZE:
+                            raise HTTPException(status_code=413, detail=f"ZIP file too large. Maximum size is {MAX_ZIP_SIZE // (1024*1024)}MB")
+                    
+                    content = b''.join(chunks)
+                    logger.info(f"Step 4.{idx}: ZIP file size: {total_size / (1024*1024):.2f}MB")
+                    
                     with zipfile.ZipFile(io.BytesIO(content)) as zf:
-                        for name in zf.namelist():
-                            if name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                        # Get list of image files first
+                        image_files = [name for name in zf.namelist() 
+                                      if name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp'))
+                                      and not name.startswith('__MACOSX')  # Skip Mac metadata
+                                      and not name.startswith('.')  # Skip hidden files
+                                      ]
+                        logger.info(f"Step 4.{idx}: Found {len(image_files)} images in ZIP")
+                        
+                        for img_idx, name in enumerate(image_files):
+                            try:
                                 image_data = zf.read(name)
+                                if len(image_data) > MAX_IMAGE_SIZE:
+                                    logger.warning(f"Skipping large image {name} ({len(image_data) / (1024*1024):.2f}MB)")
+                                    continue
+                                    
                                 image_base64 = base64.b64encode(image_data).decode('utf-8')
+                                
+                                # Determine correct MIME type
+                                ext = name.lower().split('.')[-1]
+                                mime_type = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 
+                                            'gif': 'image/gif', 'webp': 'image/webp'}.get(ext, 'image/jpeg')
+                                
+                                # Get just the filename without directory path
+                                clean_filename = name.split('/')[-1]
+                                
                                 proof = {
                                     "id": str(uuid.uuid4()),
-                                    "url": f"data:image/jpeg;base64,{image_base64}",
-                                    "filename": name,
+                                    "url": f"data:{mime_type};base64,{image_base64}",
+                                    "filename": clean_filename,
                                     "uploaded_at": datetime.now(timezone.utc).isoformat(),
                                     "round": current_round,
                                     "revision_note": revision_note
                                 }
                                 uploaded_proofs.append(proof)
+                                
+                                if (img_idx + 1) % 10 == 0:
+                                    logger.info(f"Step 4.{idx}: Processed {img_idx + 1}/{len(image_files)} images")
+                            except Exception as img_err:
+                                logger.warning(f"Failed to process image {name}: {img_err}")
+                                continue
+                                
                     logger.info(f"Step 4.{idx}: ZIP processed, extracted {len(uploaded_proofs)} images")
                 else:
                     # Handle individual image file
                     content = await file.read()
+                    if len(content) > MAX_IMAGE_SIZE:
+                        raise HTTPException(status_code=413, detail=f"Image file too large. Maximum size is {MAX_IMAGE_SIZE // (1024*1024)}MB")
+                    
                     image_base64 = base64.b64encode(content).decode('utf-8')
+                    
+                    # Determine correct MIME type
+                    ext = (file.filename or '').lower().split('.')[-1] if file.filename else 'jpg'
+                    mime_type = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 
+                                'gif': 'image/gif', 'webp': 'image/webp'}.get(ext, 'image/jpeg')
+                    
                     proof = {
                         "id": str(uuid.uuid4()),
-                        "url": f"data:image/jpeg;base64,{image_base64}",
+                        "url": f"data:{mime_type};base64,{image_base64}",
                         "filename": file.filename or f"proof_{idx}.jpg",
                         "uploaded_at": datetime.now(timezone.utc).isoformat(),
                         "round": current_round,
@@ -1077,9 +1129,11 @@ async def admin_upload_proofs_legacy(
                     }
                     uploaded_proofs.append(proof)
                     logger.info(f"Step 4.{idx}: Image file processed successfully")
+            except HTTPException:
+                raise
             except Exception as file_err:
                 logger.error(f"Step 4.{idx} FAILED: Error processing file '{file.filename}': {file_err}", exc_info=True)
-                raise
+                raise HTTPException(status_code=500, detail=f"Failed to process file: {str(file_err)}")
         
         logger.info(f"Step 4 SUCCESS: Processed {len(uploaded_proofs)} proof(s)")
         
