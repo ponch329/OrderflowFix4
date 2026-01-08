@@ -51,6 +51,8 @@ const OrderDetailsAdminNew = () => {
   const [uploadFiles, setUploadFiles] = useState([]);
   const [uploadStage, setUploadStage] = useState("clay");
   const [revisionNote, setRevisionNote] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   
   // Changes request
   const [changeMessage, setChangeMessage] = useState("");
