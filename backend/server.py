@@ -1357,8 +1357,72 @@ async def admin_upload_proofs_legacy(
         
         logger.info(f"Step 4 SUCCESS: Processed {len(uploaded_proofs)} proof(s)")
         
-        # Step 5: Create timeline event
-        logger.info("Step 5: Creating timeline event...")
+        # Step 5: Calculate total size and check if we need to batch
+        total_proof_size = sum(len(p.get('url', '')) for p in uploaded_proofs)
+        logger.info(f"Step 5: Total proof data size: {total_proof_size / (1024*1024):.2f}MB")
+        
+        # MongoDB document size limit is 16MB
+        # We need to leave room for other data in the document (~2MB buffer)
+        MAX_BATCH_SIZE = 12 * 1024 * 1024  # 12MB per batch to be safe
+        
+        # Get current proofs size in the document
+        current_proofs_field = f"{stage}_proofs"
+        current_proofs = order.get(current_proofs_field, [])
+        current_proofs_size = sum(len(str(p)) for p in current_proofs)
+        
+        # Calculate how much room we have
+        available_space = MAX_BATCH_SIZE - current_proofs_size
+        logger.info(f"Step 5: Current proofs size: {current_proofs_size / (1024*1024):.2f}MB, Available space: {available_space / (1024*1024):.2f}MB")
+        
+        # If total proofs exceed available space, we need to further compress or batch
+        if total_proof_size > available_space:
+            logger.warning(f"Proof data ({total_proof_size / (1024*1024):.2f}MB) exceeds available space ({available_space / (1024*1024):.2f}MB). Applying additional compression...")
+            
+            # Re-compress with smaller target size
+            smaller_target = 200 * 1024  # 200KB per image
+            compressed_proofs = []
+            for proof in uploaded_proofs:
+                url = proof.get('url', '')
+                if url.startswith('data:'):
+                    # Extract and re-compress the image
+                    try:
+                        base64_part = url.split(',')[1]
+                        image_data = base64.b64decode(base64_part)
+                        
+                        img = Image.open(io.BytesIO(image_data))
+                        if img.mode in ('RGBA', 'P'):
+                            img = img.convert('RGB')
+                        
+                        # More aggressive resize
+                        max_dim = 1200
+                        if img.width > max_dim or img.height > max_dim:
+                            img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+                        
+                        # More aggressive compression
+                        output = io.BytesIO()
+                        quality = 60
+                        while quality >= 20:
+                            output.seek(0)
+                            output.truncate()
+                            img.save(output, format='JPEG', quality=quality, optimize=True)
+                            if output.tell() <= smaller_target:
+                                break
+                            quality -= 10
+                        
+                        output.seek(0)
+                        new_base64 = base64.b64encode(output.read()).decode('utf-8')
+                        proof['url'] = f"data:image/jpeg;base64,{new_base64}"
+                    except Exception as e:
+                        logger.warning(f"Could not re-compress proof: {e}")
+                
+                compressed_proofs.append(proof)
+            
+            uploaded_proofs = compressed_proofs
+            total_proof_size = sum(len(p.get('url', '')) for p in uploaded_proofs)
+            logger.info(f"Step 5: After additional compression: {total_proof_size / (1024*1024):.2f}MB")
+        
+        # Step 6: Create timeline event
+        logger.info("Step 6: Creating timeline event...")
         from utils.timeline import create_timeline_event
         timeline_event = create_timeline_event(
             event_type="proof_upload",
@@ -1367,10 +1431,10 @@ async def admin_upload_proofs_legacy(
             description=f"Uploaded {len(uploaded_proofs)} proof(s) for {stage} stage",
             metadata={"stage": stage, "count": len(uploaded_proofs)}
         )
-        logger.info("Step 5 SUCCESS: Timeline event created")
+        logger.info("Step 6 SUCCESS: Timeline event created")
         
-        # Step 6: Update order in database
-        logger.info("Step 6: Updating order in database...")
+        # Step 7: Update order in database
+        logger.info("Step 7: Updating order in database...")
         field = f"{stage}_proofs"
         status_field = f"{stage}_status"
         
@@ -1389,7 +1453,7 @@ async def admin_upload_proofs_legacy(
                 }
             }
         )
-        logger.info(f"Step 6 SUCCESS: matched={update_result.matched_count}, modified={update_result.modified_count}")
+        logger.info(f"Step 7 SUCCESS: matched={update_result.matched_count}, modified={update_result.modified_count}")
         
         # Step 7: Send email notification (non-blocking)
         logger.info("Step 7: Sending email notification...")
