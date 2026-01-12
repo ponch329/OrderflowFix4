@@ -1425,6 +1425,25 @@ async def admin_upload_proofs_legacy(
             total_proof_size = sum(len(p.get('url', '')) for p in uploaded_proofs)
             logger.info(f"Step 5: After additional compression: {total_proof_size / (1024*1024):.2f}MB")
         
+        # Step 5b: Check if we need to clear old proofs to make room
+        # MongoDB document limit is 16MB, we need to stay well under
+        other_stage = "paint" if stage == "clay" else "clay"
+        other_proofs_field = f"{other_stage}_proofs"
+        other_proofs = order.get(other_proofs_field, []) or []
+        other_proofs_size = sum(len(str(p)) for p in other_proofs)
+        
+        # Estimate total document size
+        estimated_doc_size = current_proofs_size + total_proof_size + other_proofs_size + 500000  # 500KB buffer for other fields
+        
+        if estimated_doc_size > 15 * 1024 * 1024:  # If over 15MB
+            logger.warning(f"Document size ({estimated_doc_size / (1024*1024):.2f}MB) would exceed limit. Clearing old {other_stage} proofs to make room.")
+            # Clear the other stage's proofs
+            await db.orders.update_one(
+                {"id": order_id, "tenant_id": tenant_id},
+                {"$set": {other_proofs_field: []}}
+            )
+            logger.info(f"Cleared {len(other_proofs)} proofs from {other_stage} stage to free space")
+        
         # Step 6: Create timeline event
         logger.info("Step 6: Creating timeline event...")
         from utils.timeline import create_timeline_event
