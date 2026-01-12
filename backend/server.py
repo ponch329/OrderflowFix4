@@ -1584,30 +1584,42 @@ async def sync_orders():
         synced_count = 0
         split_count = 0
         
+        # Batch fetch existing order IDs to avoid individual queries (OPTIMIZATION)
+        shopify_order_ids = [str(order.id) for order in orders]
+        
+        async def get_existing_orders():
+            existing_cursor = db.orders.find(
+                {"tenant_id": tenant_id, "shopify_order_id": {"$in": shopify_order_ids}},
+                {"shopify_order_id": 1, "_id": 0}
+            )
+            return await existing_cursor.to_list(length=1000)
+        
+        existing_orders = await db_operation_with_retry(get_existing_orders)
+        existing_shopify_ids = {doc["shopify_order_id"] for doc in existing_orders}
+        logger.info(f"Shopify sync: Found {len(existing_shopify_ids)} existing orders, processing {len(shopify_order_ids)} from Shopify")
+        
         for order in orders:
-            existing = await db.orders.find_one({
-                "tenant_id": tenant_id,
-                "shopify_order_id": str(order.id)
-            })
+            # Skip if already exists (using pre-fetched set instead of individual query)
+            if str(order.id) in existing_shopify_ids:
+                continue
+                
+            # Use Shopify's created_at date
+            shopify_created_at = order.created_at if hasattr(order, 'created_at') else datetime.now(timezone.utc)
             
-            if not existing:
-                # Use Shopify's created_at date
-                shopify_created_at = order.created_at if hasattr(order, 'created_at') else datetime.now(timezone.utc)
-                
-                # Prepend "20" to order number
-                order_number = f"20{order.order_number}"
-                
-                # Get fulfillment status
-                fulfillment_status = order.fulfillment_status if hasattr(order, 'fulfillment_status') else None
-                
-                # Extract line items with vendor information
-                line_items = []
-                item_vendor = None
-                if hasattr(order, 'line_items') and order.line_items:
-                    for item in order.line_items:
-                        line_item = {
-                            "id": str(item.id) if hasattr(item, 'id') else None,
-                            "title": item.title if hasattr(item, 'title') else "",
+            # Prepend "20" to order number
+            order_number = f"20{order.order_number}"
+            
+            # Get fulfillment status
+            fulfillment_status = order.fulfillment_status if hasattr(order, 'fulfillment_status') else None
+            
+            # Extract line items with vendor information
+            line_items = []
+            item_vendor = None
+            if hasattr(order, 'line_items') and order.line_items:
+                for item in order.line_items:
+                    line_item = {
+                        "id": str(item.id) if hasattr(item, 'id') else None,
+                        "title": item.title if hasattr(item, 'title') else "",
                             "quantity": item.quantity if hasattr(item, 'quantity') else 1,
                             "vendor": item.vendor if hasattr(item, 'vendor') else "Unknown",
                             "sku": item.sku if hasattr(item, 'sku') else ""
