@@ -1690,9 +1690,14 @@ async def sync_orders():
                 "is_manual_order": False,
                 "is_archived": False,
                 "shopify_fulfillment_status": fulfillment_status,
+                # Tracking information from Shopify
+                "tracking_number": tracking_number,
+                "tracking_company": tracking_company,
+                "carrier": tracking_company,  # Alias for UI compatibility
+                "tracking_url": tracking_url,
                 "clay_entered_at": shopify_created_at.isoformat() if hasattr(shopify_created_at, 'isoformat') else shopify_created_at,
                 "paint_entered_at": None,
-                "fulfilled_at": None,
+                "fulfilled_at": fulfilled_at.isoformat() if hasattr(fulfilled_at, 'isoformat') and fulfilled_at else None,
                 "canceled_at": None,
                 "clay_proofs": [],
                 "paint_proofs": [],
