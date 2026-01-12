@@ -1578,10 +1578,8 @@ async def sync_orders():
         shopify_api_version = "2024-10"
         session = shopify.Session(f"{shopify_shop_name}.myshopify.com", shopify_api_version, shopify_access_token)
         shopify.ShopifyResource.activate_session(session)
-    
-    try:
-        # Fetch orders - get recent orders first (sorted by created_at desc by default)
-        # Use since_id to get orders newer than what we have, or fetch all recent ones
+        
+        # Fetch orders from Shopify
         orders = shopify.Order.find(status='any', limit=250)
         synced_count = 0
         split_count = 0
@@ -1604,7 +1602,7 @@ async def sync_orders():
             # Skip if already exists (using pre-fetched set instead of individual query)
             if str(order.id) in existing_shopify_ids:
                 continue
-                
+            
             # Use Shopify's created_at date
             shopify_created_at = order.created_at if hasattr(order, 'created_at') else datetime.now(timezone.utc)
             
@@ -1622,62 +1620,62 @@ async def sync_orders():
                     line_item = {
                         "id": str(item.id) if hasattr(item, 'id') else None,
                         "title": item.title if hasattr(item, 'title') else "",
-                            "quantity": item.quantity if hasattr(item, 'quantity') else 1,
-                            "vendor": item.vendor if hasattr(item, 'vendor') else "Unknown",
-                            "sku": item.sku if hasattr(item, 'sku') else ""
-                        }
-                        line_items.append(line_item)
-                    
-                    # Get vendor from first line item for main order
-                    first_item = order.line_items[0]
-                    if hasattr(first_item, 'vendor'):
-                        item_vendor = first_item.vendor
+                        "quantity": item.quantity if hasattr(item, 'quantity') else 1,
+                        "vendor": item.vendor if hasattr(item, 'vendor') else "Unknown",
+                        "sku": item.sku if hasattr(item, 'sku') else ""
+                    }
+                    line_items.append(line_item)
                 
-                order_doc = {
-                    "id": str(__import__('uuid').uuid4()),
-                    "tenant_id": tenant_id,
-                    "shopify_order_id": str(order.id),
-                    "order_number": order_number,
-                    "customer_email": order.customer.email if order.customer else "",
-                    "customer_name": f"{order.customer.first_name} {order.customer.last_name}" if order.customer else "",
-                    "item_vendor": item_vendor,
-                    "parent_order_id": None,
-                    "line_items": line_items,
-                    # Use workflow config for default stage/status (single source of truth)
-                    "stage": "fulfilled" if fulfillment_status == "fulfilled" else first_stage,
-                    f"{first_stage}_status": first_status,
-                    # Initialize other stage statuses as pending (will be populated when order moves to that stage)
-                    "clay_status": first_status if first_stage == "clay" else "pending",
-                    "paint_status": "pending",
-                    "is_manual_order": False,
-                    "is_archived": False,
-                    "shopify_fulfillment_status": fulfillment_status,
-                    "clay_entered_at": shopify_created_at.isoformat() if hasattr(shopify_created_at, 'isoformat') else shopify_created_at,
-                    "paint_entered_at": None,
-                    "fulfilled_at": None,
-                    "canceled_at": None,
-                    "clay_proofs": [],
-                    "paint_proofs": [],
-                    "clay_approval": None,
-                    "paint_approval": None,
-                    "notes": [],
-                    "last_updated_by": "system",
-                    "last_updated_at": datetime.now(timezone.utc).isoformat(),
-                    "created_at": shopify_created_at.isoformat() if hasattr(shopify_created_at, 'isoformat') else shopify_created_at,
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }
-                
-                # Insert with retry
-                async def insert_order():
-                    return await db.orders.insert_one(order_doc)
-                
-                await db_operation_with_retry(insert_order)
-                synced_count += 1
-                
-                # Check if order should be split by bobblehead count (multiple bobbleheads = multiple sub-orders)
-                if await should_split_order(line_items):
-                    sub_order_ids = await split_order_by_vendor(db, order_doc, line_items, workflow_config)
-                    split_count += len(sub_order_ids)
+                # Get vendor from first line item for main order
+                first_item = order.line_items[0]
+                if hasattr(first_item, 'vendor'):
+                    item_vendor = first_item.vendor
+            
+            order_doc = {
+                "id": str(__import__('uuid').uuid4()),
+                "tenant_id": tenant_id,
+                "shopify_order_id": str(order.id),
+                "order_number": order_number,
+                "customer_email": order.customer.email if order.customer else "",
+                "customer_name": f"{order.customer.first_name} {order.customer.last_name}" if order.customer else "",
+                "item_vendor": item_vendor,
+                "parent_order_id": None,
+                "line_items": line_items,
+                # Use workflow config for default stage/status (single source of truth)
+                "stage": "fulfilled" if fulfillment_status == "fulfilled" else first_stage,
+                f"{first_stage}_status": first_status,
+                # Initialize other stage statuses as pending
+                "clay_status": first_status if first_stage == "clay" else "pending",
+                "paint_status": "pending",
+                "is_manual_order": False,
+                "is_archived": False,
+                "shopify_fulfillment_status": fulfillment_status,
+                "clay_entered_at": shopify_created_at.isoformat() if hasattr(shopify_created_at, 'isoformat') else shopify_created_at,
+                "paint_entered_at": None,
+                "fulfilled_at": None,
+                "canceled_at": None,
+                "clay_proofs": [],
+                "paint_proofs": [],
+                "clay_approval": None,
+                "paint_approval": None,
+                "notes": [],
+                "last_updated_by": "system",
+                "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": shopify_created_at.isoformat() if hasattr(shopify_created_at, 'isoformat') else shopify_created_at,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            # Insert with retry
+            async def insert_order():
+                return await db.orders.insert_one(order_doc)
+            
+            await db_operation_with_retry(insert_order)
+            synced_count += 1
+            
+            # Check if order should be split by bobblehead count
+            if await should_split_order(line_items):
+                sub_order_ids = await split_order_by_vendor(db, order_doc, line_items, workflow_config)
+                split_count += len(sub_order_ids)
         
         return {
             "message": f"Synced {synced_count} new orders, split {split_count} sub-orders",
@@ -1706,6 +1704,11 @@ async def sync_orders():
             raise HTTPException(
                 status_code=404,
                 detail="Shopify store not found. Please check your shop name in Settings → Integrations."
+            )
+        elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+            raise HTTPException(
+                status_code=504,
+                detail="Shopify sync timed out. Please try again in a moment."
             )
         else:
             raise HTTPException(status_code=500, detail=f"Shopify sync failed: {error_msg}")
