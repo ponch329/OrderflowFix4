@@ -88,7 +88,7 @@ const DragDropUpload = ({ onFilesSelected, accept = "image/*,.zip", multiple = t
             {disabled ? 'Please wait' : 'or click to browse'}
           </p>
           <p className="text-xs text-gray-400">
-            Supports: Images (JPG, PNG, GIF, WebP) and ZIP files up to 20MB
+            Supports: Images (JPG, PNG, GIF, WebP) and ZIP files up to 25MB
           </p>
         </label>
       </div>
