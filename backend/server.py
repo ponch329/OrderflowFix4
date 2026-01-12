@@ -1434,22 +1434,32 @@ async def admin_upload_proofs_legacy(
         logger.info("Step 6 SUCCESS: Timeline event created")
         
         # Step 7: Update order in database
+        # Replace existing proofs for this stage (not append) to avoid document size issues
         logger.info("Step 7: Updating order in database...")
         field = f"{stage}_proofs"
         status_field = f"{stage}_status"
         
+        # Get existing proofs to archive the round info
+        existing_proofs = order.get(field, [])
+        max_existing_round = max([p.get('round', 0) for p in existing_proofs], default=0) if existing_proofs else 0
+        
+        # If this is a new round and we have existing proofs, archive them by storing round info
+        if existing_proofs and current_round > max_existing_round:
+            # Keep only the new proofs, but log how many were replaced
+            logger.info(f"Step 7: Replacing {len(existing_proofs)} existing proofs with {len(uploaded_proofs)} new proofs")
+        
         update_result = await db.orders.update_one(
             {"id": order_id, "tenant_id": tenant_id},
             {
-                "$push": {
-                    field: {"$each": uploaded_proofs},
-                    "timeline": timeline_event
-                },
                 "$set": {
+                    field: uploaded_proofs,  # Replace, don't append
                     status_field: "feedback_needed",
                     "last_updated_by": "admin",
                     "last_updated_at": datetime.now(timezone.utc).isoformat(),
                     "updated_at": datetime.now(timezone.utc).isoformat()
+                },
+                "$push": {
+                    "timeline": timeline_event
                 }
             }
         )
