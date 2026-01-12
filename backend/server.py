@@ -1564,20 +1564,20 @@ async def sync_orders():
         # Get workflow config from database - single source of truth for stages/statuses
         settings = tenant.get("settings", {})
         workflow_config = settings.get("workflow_config", get_default_workflow_config())
-    first_stage = get_first_stage(workflow_config)
-    first_status = get_first_status_for_stage(workflow_config, first_stage)
-    
-    # Get Shopify config from tenant
-    shopify_shop_name = tenant.get("shopify_shop_name")
-    shopify_access_token = tenant.get("shopify_access_token")
-    
-    if not shopify_shop_name or not shopify_access_token:
-        raise HTTPException(status_code=400, detail="Shopify not configured. Please add your Shopify credentials in Settings → Integrations.")
-    
-    # Initialize Shopify session
-    shopify_api_version = "2024-10"
-    session = shopify.Session(f"{shopify_shop_name}.myshopify.com", shopify_api_version, shopify_access_token)
-    shopify.ShopifyResource.activate_session(session)
+        first_stage = get_first_stage(workflow_config)
+        first_status = get_first_status_for_stage(workflow_config, first_stage)
+        
+        # Get Shopify config from tenant
+        shopify_shop_name = tenant.get("shopify_shop_name")
+        shopify_access_token = tenant.get("shopify_access_token")
+        
+        if not shopify_shop_name or not shopify_access_token:
+            raise HTTPException(status_code=400, detail="Shopify not configured. Please add your Shopify credentials in Settings → Integrations.")
+        
+        # Initialize Shopify session
+        shopify_api_version = "2024-10"
+        session = shopify.Session(f"{shopify_shop_name}.myshopify.com", shopify_api_version, shopify_access_token)
+        shopify.ShopifyResource.activate_session(session)
     
     try:
         # Fetch orders - get recent orders first (sorted by created_at desc by default)
