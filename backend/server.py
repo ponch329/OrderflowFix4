@@ -1795,6 +1795,15 @@ async def sync_orders():
                         await db_operation_with_retry(update_tracking)
                         updated_tracking_count += 1
                         logger.info(f"Updated tracking for order {shopify_order_id}: {tracking_number}")
+                        
+                        # Process tracking_number_added workflow rules
+                        # Get the full order data for workflow processing
+                        full_order = await db.orders.find_one(
+                            {"tenant_id": tenant_id, "shopify_order_id": shopify_order_id},
+                            {"_id": 0}
+                        )
+                        if full_order:
+                            await process_tracking_added_workflow(tenant, full_order, update_data)
                 
                 continue  # Skip to next order
             
