@@ -1664,29 +1664,18 @@ async def sync_orders():
                     "created_at": shopify_created_at.isoformat() if hasattr(shopify_created_at, 'isoformat') else shopify_created_at,
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
-                await db.orders.insert_one(order_doc)
+                
+                # Insert with retry
+                async def insert_order():
+                    return await db.orders.insert_one(order_doc)
+                
+                await db_operation_with_retry(insert_order)
                 synced_count += 1
                 
                 # Check if order should be split by bobblehead count (multiple bobbleheads = multiple sub-orders)
                 if await should_split_order(line_items):
                     sub_order_ids = await split_order_by_vendor(db, order_doc, line_items, workflow_config)
                     split_count += len(sub_order_ids)
-            else:
-                # Update existing order's fulfillment status if changed
-                fulfillment_status = order.fulfillment_status if hasattr(order, 'fulfillment_status') else None
-                if fulfillment_status != existing.get('shopify_fulfillment_status'):
-                    update_data = {
-                        "shopify_fulfillment_status": fulfillment_status,
-                        "updated_at": datetime.now(timezone.utc).isoformat()
-                    }
-                    # If fulfilled in Shopify and not already in fulfilled/canceled stage, update stage
-                    if fulfillment_status == "fulfilled" and existing.get('stage') not in ['fulfilled', 'canceled']:
-                        update_data["stage"] = "fulfilled"
-                    
-                    await db.orders.update_one(
-                        {"tenant_id": tenant_id, "shopify_order_id": str(order.id)},
-                        {"$set": update_data}
-                    )
         
         return {
             "message": f"Synced {synced_count} new orders, split {split_count} sub-orders",
@@ -1694,9 +1683,11 @@ async def sync_orders():
             "synced": synced_count,
             "split": split_count
         }
+    except HTTPException:
+        raise
     except Exception as e:
         error_msg = str(e)
-        logging.error(f"Shopify sync error: {error_msg}")
+        logger.error(f"Shopify sync error: {error_msg}")
         
         # Check for common Shopify errors
         if "401" in error_msg or "Unauthorized" in error_msg or "Invalid API key" in error_msg:
