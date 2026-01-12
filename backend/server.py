@@ -1548,16 +1548,20 @@ async def sync_orders():
     import shopify
     from utils.order_splitting import split_order_by_vendor, should_split_order
     
-    # Get first tenant for now (will be enhanced with proper auth)
-    tenant = await db.tenants.find_one({}, {"_id": 0})
-    if not tenant:
-        raise HTTPException(status_code=500, detail="No tenant found")
-    
-    tenant_id = tenant["id"]
-    
-    # Get workflow config from database - single source of truth for stages/statuses
-    settings = tenant.get("settings", {})
-    workflow_config = settings.get("workflow_config", get_default_workflow_config())
+    try:
+        # Get first tenant with retry
+        async def get_tenant():
+            return await db.tenants.find_one({}, {"_id": 0})
+        
+        tenant = await db_operation_with_retry(get_tenant)
+        if not tenant:
+            raise HTTPException(status_code=500, detail="No tenant found")
+        
+        tenant_id = tenant["id"]
+        
+        # Get workflow config from database - single source of truth for stages/statuses
+        settings = tenant.get("settings", {})
+        workflow_config = settings.get("workflow_config", get_default_workflow_config())
     first_stage = get_first_stage(workflow_config)
     first_status = get_first_status_for_stage(workflow_config, first_stage)
     
