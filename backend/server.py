@@ -1129,16 +1129,16 @@ async def admin_upload_proofs_legacy(
 ):
     """
     Upload proofs from admin order details page
-    Optimized for handling zip files up to 20MB
+    Optimized for handling zip files up to 25MB
     """
     import base64
     import zipfile
     import io
     import uuid
     
-    # Maximum file size: 20MB for zip files
-    MAX_ZIP_SIZE = 20 * 1024 * 1024  # 20MB
-    MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB per image
+    # Maximum file size: 25MB for zip files, 15MB per image
+    MAX_ZIP_SIZE = 25 * 1024 * 1024  # 25MB
+    MAX_IMAGE_SIZE = 15 * 1024 * 1024  # 15MB per image
     
     logger.info(f"=== PROOF UPLOAD START === order_id={order_id}, stage={stage}, files_count={len(files)}")
     
