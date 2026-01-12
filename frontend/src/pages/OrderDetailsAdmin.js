@@ -182,7 +182,9 @@ const OrderDetailsAdminNew = () => {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
         },
-        timeout: 120000, // 2 minute timeout for large files
+        timeout: 300000, // 5 minute timeout for large files (25MB+)
+        maxContentLength: 30 * 1024 * 1024, // 30MB max
+        maxBodyLength: 30 * 1024 * 1024, // 30MB max
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);
