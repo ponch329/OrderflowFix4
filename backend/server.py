@@ -553,6 +553,13 @@ async def update_admin_order_info(order_id: str, update_data: dict):
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
+    # Check if tracking is being added (didn't have tracking before, now has it)
+    tracking_being_added = (
+        "tracking_number" in update_data and 
+        update_data["tracking_number"] and 
+        not order.get("tracking_number")
+    )
+    
     update_fields = {
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
@@ -577,7 +584,126 @@ async def update_admin_order_info(order_id: str, update_data: dict):
         {"$set": update_fields}
     )
     
-    return {"message": "Order updated successfully"}
+    # Process "tracking_number_added" workflow rules if tracking was just added
+    workflow_applied = None
+    if tracking_being_added:
+        workflow_applied = await process_tracking_added_workflow(tenant, order, update_fields)
+    
+    response = {"message": "Order updated successfully"}
+    if workflow_applied:
+        response["workflow_applied"] = workflow_applied
+    
+    return response
+
+
+async def process_tracking_added_workflow(tenant, order, update_fields):
+    """
+    Process workflow rules that trigger on "tracking_number_added".
+    Finds matching rules based on the order's current stage/status and applies them.
+    """
+    try:
+        settings = tenant.get("settings", {})
+        workflow_config = settings.get("workflow_config", {})
+        rules = workflow_config.get("rules", [])
+        
+        # Filter to only tracking_number_added rules
+        tracking_rules = [r for r in rules if r.get("trigger") == "tracking_number_added"]
+        
+        if not tracking_rules:
+            return None
+        
+        current_stage = order.get("stage")
+        current_status = order.get(f"{current_stage}_status")
+        
+        logger.info(f"Processing tracking_number_added rules for order {order.get('order_number')} (stage: {current_stage}, status: {current_status})")
+        
+        # Find matching rule
+        matching_rule = None
+        for rule in tracking_rules:
+            from_stage = rule.get("from_stage")
+            from_status = rule.get("from_status")
+            
+            if from_stage == current_stage and from_status == current_status:
+                matching_rule = rule
+                break
+        
+        if not matching_rule:
+            logger.info(f"No matching tracking_number_added rule found for stage={current_stage}, status={current_status}")
+            return None
+        
+        # Apply the rule - transition to new stage/status
+        to_stage = matching_rule.get("to_stage")
+        to_status = matching_rule.get("to_status")
+        email_action = matching_rule.get("email_action")
+        
+        logger.info(f"Applying workflow rule: {current_stage}/{current_status} -> {to_stage}/{to_status}")
+        
+        # Build update for the transition
+        transition_update = {
+            "stage": to_stage,
+            f"{to_stage}_status": to_status,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "last_updated_by": "workflow_rule",
+            "last_updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Set entered_at timestamp if moving to a new stage
+        if to_stage != current_stage:
+            transition_update[f"{to_stage}_entered_at"] = datetime.now(timezone.utc).isoformat()
+        
+        # Add timeline entry
+        timeline_entry = {
+            "id": str(__import__('uuid').uuid4()),
+            "type": "workflow",
+            "message": f"Auto-transitioned to {to_stage}/{to_status} (tracking number added)",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "created_by": "workflow_rule",
+            "metadata": {
+                "trigger": "tracking_number_added",
+                "from_stage": current_stage,
+                "from_status": current_status,
+                "to_stage": to_stage,
+                "to_status": to_status,
+                "tracking_number": update_fields.get("tracking_number")
+            }
+        }
+        
+        await db.orders.update_one(
+            {"id": order["id"], "tenant_id": tenant["id"]},
+            {
+                "$set": transition_update,
+                "$push": {"timeline": timeline_entry}
+            }
+        )
+        
+        # Send email if configured
+        if email_action and email_action != "none":
+            try:
+                from utils.workflow_scheduler import send_workflow_email
+                # Get updated order for email
+                updated_order = await db.orders.find_one({"id": order["id"]}, {"_id": 0})
+                await send_workflow_email(db, tenant, updated_order, to_stage, to_status, email_action)
+            except Exception as e:
+                logger.error(f"Failed to send workflow email: {e}")
+        
+        # Sync tags to Shopify if configured
+        if order.get("shopify_order_id"):
+            try:
+                await sync_order_tags_to_shopify(order.get("shopify_order_id"), to_stage, to_status)
+            except Exception as e:
+                logger.warning(f"Failed to sync tags to Shopify: {e}")
+        
+        return {
+            "from_stage": current_stage,
+            "from_status": current_status,
+            "to_stage": to_stage,
+            "to_status": to_status,
+            "trigger": "tracking_number_added"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error processing tracking_number_added workflow: {e}")
+        return None
 
 # Alias route for frontend compatibility (without /info suffix)
 @api_router.patch("/admin/orders/{order_id}")
