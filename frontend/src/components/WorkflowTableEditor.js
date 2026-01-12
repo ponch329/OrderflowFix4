@@ -461,7 +461,10 @@ export default function WorkflowTableEditor() {
     }
     
     try {
-      const response = await axios.post(`${API}/settings/custom-email-templates`, newTemplate);
+      const token = localStorage.getItem('admin_token');
+      const response = await axios.post(`${API}/settings/custom-email-templates`, newTemplate, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setCustomTemplates([...customTemplates, response.data.template]);
       setNewTemplate({ name: '', subject: '', body: '', description: '' });
       toast.success("Email template created!");
@@ -474,7 +477,10 @@ export default function WorkflowTableEditor() {
     if (!editingTemplate) return;
     
     try {
-      await axios.patch(`${API}/settings/custom-email-templates/${editingTemplate.id}`, editingTemplate);
+      const token = localStorage.getItem('admin_token');
+      await axios.patch(`${API}/settings/custom-email-templates/${editingTemplate.id}`, editingTemplate, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setCustomTemplates(customTemplates.map(t => 
         t.id === editingTemplate.id ? editingTemplate : t
       ));
@@ -489,7 +495,10 @@ export default function WorkflowTableEditor() {
     if (!confirm("Are you sure you want to delete this template?")) return;
     
     try {
-      await axios.delete(`${API}/settings/custom-email-templates/${templateId}`);
+      const token = localStorage.getItem('admin_token');
+      await axios.delete(`${API}/settings/custom-email-templates/${templateId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setCustomTemplates(customTemplates.filter(t => t.id !== templateId));
       toast.success("Template deleted!");
     } catch (error) {
