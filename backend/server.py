@@ -1599,6 +1599,7 @@ async def sync_orders():
         orders = shopify.Order.find(status='any', limit=250)
         synced_count = 0
         split_count = 0
+        updated_tracking_count = 0
         
         # Batch fetch existing order IDs to avoid individual queries (OPTIMIZATION)
         shopify_order_ids = [str(order.id) for order in orders]
@@ -1606,18 +1607,70 @@ async def sync_orders():
         async def get_existing_orders():
             existing_cursor = db.orders.find(
                 {"tenant_id": tenant_id, "shopify_order_id": {"$in": shopify_order_ids}},
-                {"shopify_order_id": 1, "_id": 0}
+                {"shopify_order_id": 1, "tracking_number": 1, "shopify_fulfillment_status": 1, "_id": 0}
             )
             return await existing_cursor.to_list(length=1000)
         
         existing_orders = await db_operation_with_retry(get_existing_orders)
-        existing_shopify_ids = {doc["shopify_order_id"] for doc in existing_orders}
+        existing_orders_map = {doc["shopify_order_id"]: doc for doc in existing_orders}
+        existing_shopify_ids = set(existing_orders_map.keys())
         logger.info(f"Shopify sync: Found {len(existing_shopify_ids)} existing orders, processing {len(shopify_order_ids)} from Shopify")
         
         for order in orders:
-            # Skip if already exists (using pre-fetched set instead of individual query)
-            if str(order.id) in existing_shopify_ids:
-                continue
+            shopify_order_id = str(order.id)
+            
+            # Check if order already exists
+            if shopify_order_id in existing_shopify_ids:
+                # Update tracking info for existing orders if fulfillment changed
+                existing_order = existing_orders_map[shopify_order_id]
+                fulfillment_status = order.fulfillment_status if hasattr(order, 'fulfillment_status') else None
+                
+                # Check if we need to update tracking (order is now fulfilled and we don't have tracking yet)
+                if fulfillment_status == "fulfilled" and not existing_order.get("tracking_number"):
+                    # Extract tracking from fulfillments
+                    tracking_number = None
+                    tracking_company = None
+                    tracking_url = None
+                    fulfilled_at = None
+                    
+                    if hasattr(order, 'fulfillments') and order.fulfillments:
+                        for fulfillment in order.fulfillments:
+                            if hasattr(fulfillment, 'tracking_number') and fulfillment.tracking_number:
+                                tracking_number = fulfillment.tracking_number
+                            if hasattr(fulfillment, 'tracking_company') and fulfillment.tracking_company:
+                                tracking_company = fulfillment.tracking_company
+                            if hasattr(fulfillment, 'tracking_url') and fulfillment.tracking_url:
+                                tracking_url = fulfillment.tracking_url
+                            if hasattr(fulfillment, 'created_at') and fulfillment.created_at:
+                                fulfilled_at = fulfillment.created_at
+                            if hasattr(fulfillment, 'tracking_urls') and fulfillment.tracking_urls:
+                                tracking_url = fulfillment.tracking_urls[0] if not tracking_url else tracking_url
+                            if tracking_number:
+                                break
+                    
+                    if tracking_number:
+                        # Update the existing order with tracking info
+                        update_data = {
+                            "tracking_number": tracking_number,
+                            "tracking_company": tracking_company,
+                            "carrier": tracking_company,
+                            "tracking_url": tracking_url,
+                            "shopify_fulfillment_status": fulfillment_status,
+                            "fulfilled_at": fulfilled_at.isoformat() if hasattr(fulfilled_at, 'isoformat') and fulfilled_at else datetime.now(timezone.utc).isoformat(),
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }
+                        
+                        async def update_tracking():
+                            return await db.orders.update_one(
+                                {"tenant_id": tenant_id, "shopify_order_id": shopify_order_id},
+                                {"$set": update_data}
+                            )
+                        
+                        await db_operation_with_retry(update_tracking)
+                        updated_tracking_count += 1
+                        logger.info(f"Updated tracking for order {shopify_order_id}: {tracking_number}")
+                
+                continue  # Skip to next order
             
             # Use Shopify's created_at date
             shopify_created_at = order.created_at if hasattr(order, 'created_at') else datetime.now(timezone.utc)
