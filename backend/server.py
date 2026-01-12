@@ -563,6 +563,14 @@ async def update_admin_order_info(order_id: str, update_data: dict):
         update_fields["customer_name"] = update_data["customer_name"]
     if "customer_email" in update_data:
         update_fields["customer_email"] = update_data["customer_email"]
+    # Add tracking fields
+    if "tracking_number" in update_data:
+        update_fields["tracking_number"] = update_data["tracking_number"]
+    if "carrier" in update_data:
+        update_fields["carrier"] = update_data["carrier"]
+        update_fields["tracking_company"] = update_data["carrier"]  # Keep both for compatibility
+    if "tracking_url" in update_data:
+        update_fields["tracking_url"] = update_data["tracking_url"]
     
     await db.orders.update_one(
         {"id": order_id, "tenant_id": tenant_id},
@@ -570,6 +578,14 @@ async def update_admin_order_info(order_id: str, update_data: dict):
     )
     
     return {"message": "Order updated successfully"}
+
+# Alias route for frontend compatibility (without /info suffix)
+@api_router.patch("/admin/orders/{order_id}")
+async def update_admin_order(order_id: str, update_data: dict):
+    """
+    Update order info for admin - alias route for frontend compatibility
+    """
+    return await update_admin_order_info(order_id, update_data)
 
 @api_router.post("/admin/orders/{order_id}/fetch-tracking")
 async def fetch_tracking_from_shopify(order_id: str):
