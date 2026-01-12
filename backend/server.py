@@ -1628,6 +1628,30 @@ async def sync_orders():
             # Get fulfillment status
             fulfillment_status = order.fulfillment_status if hasattr(order, 'fulfillment_status') else None
             
+            # Extract tracking information from fulfillments
+            tracking_number = None
+            tracking_company = None
+            tracking_url = None
+            fulfilled_at = None
+            
+            if hasattr(order, 'fulfillments') and order.fulfillments:
+                # Get tracking from the first fulfillment (most orders have one fulfillment)
+                for fulfillment in order.fulfillments:
+                    if hasattr(fulfillment, 'tracking_number') and fulfillment.tracking_number:
+                        tracking_number = fulfillment.tracking_number
+                    if hasattr(fulfillment, 'tracking_company') and fulfillment.tracking_company:
+                        tracking_company = fulfillment.tracking_company
+                    if hasattr(fulfillment, 'tracking_url') and fulfillment.tracking_url:
+                        tracking_url = fulfillment.tracking_url
+                    if hasattr(fulfillment, 'created_at') and fulfillment.created_at:
+                        fulfilled_at = fulfillment.created_at
+                    # Also check tracking_urls array (some fulfillments use this)
+                    if hasattr(fulfillment, 'tracking_urls') and fulfillment.tracking_urls:
+                        tracking_url = fulfillment.tracking_urls[0] if not tracking_url else tracking_url
+                    # Break after first fulfillment with tracking info
+                    if tracking_number:
+                        break
+            
             # Extract line items with vendor information
             line_items = []
             item_vendor = None
