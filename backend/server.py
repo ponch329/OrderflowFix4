@@ -1152,16 +1152,59 @@ async def admin_upload_proofs_legacy(
 ):
     """
     Upload proofs from admin order details page
-    Optimized for handling zip files up to 25MB
+    Optimized for handling zip files up to 25MB with image compression
     """
     import base64
     import zipfile
     import io
     import uuid
+    from PIL import Image
     
-    # Maximum file size: 25MB for zip files, 15MB per image
+    # Maximum file size: 25MB for zip files
     MAX_ZIP_SIZE = 25 * 1024 * 1024  # 25MB
-    MAX_IMAGE_SIZE = 15 * 1024 * 1024  # 15MB per image
+    MAX_IMAGE_SIZE = 15 * 1024 * 1024  # 15MB per image (before compression)
+    TARGET_IMAGE_SIZE = 500 * 1024  # Target 500KB per image after compression
+    MAX_IMAGE_DIMENSION = 2000  # Max width/height in pixels
+    
+    def compress_image(image_data: bytes, filename: str) -> tuple:
+        """Compress image to reduce size for MongoDB storage"""
+        try:
+            img = Image.open(io.BytesIO(image_data))
+            
+            # Convert RGBA to RGB for JPEG (drop alpha channel)
+            if img.mode in ('RGBA', 'P'):
+                img = img.convert('RGB')
+            
+            # Resize if too large
+            if img.width > MAX_IMAGE_DIMENSION or img.height > MAX_IMAGE_DIMENSION:
+                img.thumbnail((MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION), Image.Resampling.LANCZOS)
+            
+            # Compress to JPEG with quality adjustment
+            output = io.BytesIO()
+            quality = 85
+            
+            # Progressive compression until under target size
+            while quality >= 30:
+                output.seek(0)
+                output.truncate()
+                img.save(output, format='JPEG', quality=quality, optimize=True)
+                if output.tell() <= TARGET_IMAGE_SIZE:
+                    break
+                quality -= 10
+            
+            output.seek(0)
+            compressed_data = output.read()
+            
+            # Log compression ratio
+            original_size = len(image_data)
+            compressed_size = len(compressed_data)
+            ratio = (1 - compressed_size / original_size) * 100
+            logger.info(f"Compressed {filename}: {original_size/1024:.1f}KB -> {compressed_size/1024:.1f}KB ({ratio:.1f}% reduction)")
+            
+            return compressed_data, 'image/jpeg'
+        except Exception as e:
+            logger.warning(f"Could not compress image {filename}: {e}, using original")
+            return image_data, None
     
     logger.info(f"=== PROOF UPLOAD START === order_id={order_id}, stage={stage}, files_count={len(files)}")
     
