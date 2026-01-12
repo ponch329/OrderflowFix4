@@ -1163,8 +1163,8 @@ async def admin_upload_proofs_legacy(
     # Maximum file size: 25MB for zip files
     MAX_ZIP_SIZE = 25 * 1024 * 1024  # 25MB
     MAX_IMAGE_SIZE = 15 * 1024 * 1024  # 15MB per image (before compression)
-    TARGET_IMAGE_SIZE = 500 * 1024  # Target 500KB per image after compression
-    MAX_IMAGE_DIMENSION = 2000  # Max width/height in pixels
+    TARGET_IMAGE_SIZE = 300 * 1024  # Target 300KB per image after compression (reduced for safety)
+    MAX_IMAGE_DIMENSION = 1500  # Max width/height in pixels (reduced)
     
     def compress_image(image_data: bytes, filename: str) -> tuple:
         """Compress image to reduce size for MongoDB storage"""
