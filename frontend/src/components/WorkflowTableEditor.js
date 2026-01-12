@@ -437,8 +437,11 @@ export default function WorkflowTableEditor() {
         ),
       };
       
+      const token = localStorage.getItem('admin_token');
       await axios.patch(`${API}/settings/tenant`, {
         settings: { workflow_config: workflowConfig }
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       toast.success("Workflow configuration saved successfully!");
