@@ -1288,13 +1288,18 @@ async def admin_upload_proofs_legacy(
                                 if len(image_data) > MAX_IMAGE_SIZE:
                                     logger.warning(f"Skipping large image {name} ({len(image_data) / (1024*1024):.2f}MB)")
                                     continue
-                                    
-                                image_base64 = base64.b64encode(image_data).decode('utf-8')
                                 
-                                # Determine correct MIME type
-                                ext = name.lower().split('.')[-1]
-                                mime_type = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 
-                                            'gif': 'image/gif', 'webp': 'image/webp'}.get(ext, 'image/jpeg')
+                                # Compress image to reduce MongoDB document size
+                                compressed_data, compressed_mime = compress_image(image_data, name)
+                                image_base64 = base64.b64encode(compressed_data).decode('utf-8')
+                                
+                                # Determine MIME type
+                                if compressed_mime:
+                                    mime_type = compressed_mime
+                                else:
+                                    ext = name.lower().split('.')[-1]
+                                    mime_type = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 
+                                                'gif': 'image/gif', 'webp': 'image/webp'}.get(ext, 'image/jpeg')
                                 
                                 # Get just the filename without directory path
                                 clean_filename = name.split('/')[-1]
