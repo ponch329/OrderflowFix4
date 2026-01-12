@@ -107,6 +107,8 @@ async def startup_event():
         await db.orders.create_index([("tenant_id", 1), ("stage", 1), ("is_archived", 1), ("created_at", -1)])
         await db.orders.create_index([("order_number", 1)])
         await db.orders.create_index([("customer_email", 1)])
+        # Index for Shopify sync - speeds up checking existing orders
+        await db.orders.create_index([("tenant_id", 1), ("shopify_order_id", 1)])
         logger.info("✅ MongoDB indexes ensured")
     except Exception as e:
         logger.warning(f"⚠️ Could not create indexes: {e}")
