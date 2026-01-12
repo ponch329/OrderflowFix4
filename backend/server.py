@@ -78,6 +78,29 @@ async def db_operation_with_retry(operation, max_retries=3, delay=1):
 # Create the main app without a prefix
 app = FastAPI(title="Bobblehead Proof Approval System - Multi-Tenant SaaS")
 
+# Increase max request body size for large file uploads (30MB)
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+
+class MaxBodySizeMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, max_body_size: int = 30 * 1024 * 1024):  # 30MB default
+        super().__init__(app)
+        self.max_body_size = max_body_size
+    
+    async def dispatch(self, request: Request, call_next):
+        # Check content length header
+        content_length = request.headers.get('content-length')
+        if content_length and int(content_length) > self.max_body_size:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=413,
+                content={"detail": f"Request body too large. Maximum size is {self.max_body_size // (1024*1024)}MB"}
+            )
+        return await call_next(request)
+
+# Add middleware for large file uploads
+app.add_middleware(MaxBodySizeMiddleware, max_body_size=30 * 1024 * 1024)  # 30MB
+
 @app.on_event("startup")
 async def startup_event():
     """Log application startup"""
