@@ -1775,11 +1775,23 @@ async def sync_orders():
                 sub_order_ids = await split_order_by_vendor(db, order_doc, line_items, workflow_config)
                 split_count += len(sub_order_ids)
         
+        # Build response message
+        message_parts = []
+        if synced_count > 0:
+            message_parts.append(f"Synced {synced_count} new orders")
+        if split_count > 0:
+            message_parts.append(f"split {split_count} sub-orders")
+        if updated_tracking_count > 0:
+            message_parts.append(f"updated tracking for {updated_tracking_count} orders")
+        
+        message = ", ".join(message_parts) if message_parts else "No new orders to sync"
+        
         return {
-            "message": f"Synced {synced_count} new orders, split {split_count} sub-orders",
+            "message": message,
             "total": len(orders),
             "synced": synced_count,
-            "split": split_count
+            "split": split_count,
+            "tracking_updated": updated_tracking_count
         }
     except HTTPException:
         raise
