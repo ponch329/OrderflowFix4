@@ -1148,11 +1148,15 @@ async def admin_upload_proofs_legacy(
     order_id: str,
     stage: str = Form(...),
     revision_note: str = Form(None),
+    clear_other_stage: bool = Form(False),
     files: List[UploadFile] = File(...)
 ):
     """
     Upload proofs from admin order details page
     Optimized for handling zip files up to 25MB with image compression
+    
+    Args:
+        clear_other_stage: If True, clears proofs from the other stage to free up space
     """
     import base64
     import zipfile
