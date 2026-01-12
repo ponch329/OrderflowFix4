@@ -1327,12 +1327,17 @@ async def admin_upload_proofs_legacy(
                     if len(content) > MAX_IMAGE_SIZE:
                         raise HTTPException(status_code=413, detail=f"Image file too large. Maximum size is {MAX_IMAGE_SIZE // (1024*1024)}MB")
                     
-                    image_base64 = base64.b64encode(content).decode('utf-8')
+                    # Compress image to reduce MongoDB document size
+                    compressed_data, compressed_mime = compress_image(content, file.filename or 'image.jpg')
+                    image_base64 = base64.b64encode(compressed_data).decode('utf-8')
                     
-                    # Determine correct MIME type
-                    ext = (file.filename or '').lower().split('.')[-1] if file.filename else 'jpg'
-                    mime_type = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 
-                                'gif': 'image/gif', 'webp': 'image/webp'}.get(ext, 'image/jpeg')
+                    # Determine MIME type
+                    if compressed_mime:
+                        mime_type = compressed_mime
+                    else:
+                        ext = (file.filename or '').lower().split('.')[-1] if file.filename else 'jpg'
+                        mime_type = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 
+                                    'gif': 'image/gif', 'webp': 'image/webp'}.get(ext, 'image/jpeg')
                     
                     proof = {
                         "id": str(uuid.uuid4()),
@@ -1343,7 +1348,7 @@ async def admin_upload_proofs_legacy(
                         "revision_note": revision_note
                     }
                     uploaded_proofs.append(proof)
-                    logger.info(f"Step 4.{idx}: Image file processed successfully")
+                    logger.info(f"Step 4.{idx}: Image file processed and compressed successfully")
             except HTTPException:
                 raise
             except Exception as file_err:
