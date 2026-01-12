@@ -598,7 +598,7 @@ async def update_admin_order_info(order_id: str, update_data: dict):
 
 async def process_tracking_added_workflow(tenant, order, update_fields):
     """
-    Process workflow rules that trigger on "tracking_number_added".
+    Process workflow rules that trigger on "tracking_number_added" or "tracking_added".
     Finds matching rules based on the order's current stage/status and applies them.
     """
     try:
@@ -606,8 +606,8 @@ async def process_tracking_added_workflow(tenant, order, update_fields):
         workflow_config = settings.get("workflow_config", {})
         rules = workflow_config.get("rules", [])
         
-        # Filter to only tracking_number_added rules
-        tracking_rules = [r for r in rules if r.get("trigger") == "tracking_number_added"]
+        # Filter to tracking rules (check both trigger names for compatibility)
+        tracking_rules = [r for r in rules if r.get("trigger") in ["tracking_number_added", "tracking_added"]]
         
         if not tracking_rules:
             return None
