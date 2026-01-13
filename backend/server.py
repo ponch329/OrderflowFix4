@@ -101,6 +101,12 @@ class MaxBodySizeMiddleware(BaseHTTPMiddleware):
 # Add middleware for large file uploads
 app.add_middleware(MaxBodySizeMiddleware, max_body_size=30 * 1024 * 1024)  # 30MB
 
+# Root-level health check (no database dependency) for Kubernetes probes
+@app.get("/health")
+async def root_health():
+    """Basic health check - responds immediately without database check"""
+    return {"status": "ok", "service": "orderdesk-backend"}
+
 @app.on_event("startup")
 async def startup_event():
     """Log application startup"""
