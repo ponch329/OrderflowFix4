@@ -1839,6 +1839,159 @@ async def bulk_sync_shopify_tags(request_data: dict = None):
         "total": len(orders)
     }
 
+@api_router.post("/admin/orders/fix-stages")
+async def fix_order_stages(request_data: dict = None):
+    """
+    Fix orders with incorrect stages:
+    1. Convert "Fulfilled" stage to "Shipped" stage
+    2. Apply workflow rules to orders with tracking numbers that are stuck in Clay/Paint
+    
+    This is a one-time migration endpoint to fix historical data.
+    """
+    if request_data is None:
+        request_data = {}
+    
+    dry_run = request_data.get("dry_run", False)
+    
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=500, detail="No tenant found")
+    
+    settings = tenant.get("settings", {})
+    workflow_config = settings.get("workflow_config", {})
+    
+    # Get the correct "shipped" stage from workflow config
+    shipped_stage = get_shipped_stage(workflow_config)
+    shipped_status = get_first_status_for_shipped_stage(workflow_config)
+    
+    results = {
+        "fulfilled_to_shipped": {"found": 0, "fixed": 0},
+        "tracking_workflow_applied": {"found": 0, "fixed": 0},
+        "errors": []
+    }
+    
+    # 1. Fix orders with "fulfilled" stage -> convert to "shipped"
+    fulfilled_orders = await db.orders.find(
+        {"tenant_id": tenant["id"], "stage": "fulfilled"},
+        {"_id": 0}
+    ).to_list(None)
+    
+    results["fulfilled_to_shipped"]["found"] = len(fulfilled_orders)
+    
+    for order in fulfilled_orders:
+        try:
+            if not dry_run:
+                await db.orders.update_one(
+                    {"id": order["id"], "tenant_id": tenant["id"]},
+                    {
+                        "$set": {
+                            "stage": shipped_stage,
+                            f"{shipped_stage}_status": shipped_status,
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                            "last_updated_by": "stage_fix_migration"
+                        },
+                        "$push": {
+                            "timeline": {
+                                "id": str(__import__('uuid').uuid4()),
+                                "type": "system",
+                                "message": f"Stage corrected from 'fulfilled' to '{shipped_stage}'",
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                                "created_by": "stage_fix_migration"
+                            }
+                        }
+                    }
+                )
+            results["fulfilled_to_shipped"]["fixed"] += 1
+            logger.info(f"Fixed order {order.get('order_number')}: fulfilled -> {shipped_stage}")
+        except Exception as e:
+            results["errors"].append(f"Order {order.get('order_number')}: {str(e)}")
+    
+    # 2. Apply workflow rules to orders with tracking numbers stuck in wrong stages
+    # Find orders with tracking numbers that are in Clay or Paint stage
+    stuck_orders = await db.orders.find(
+        {
+            "tenant_id": tenant["id"],
+            "tracking_number": {"$exists": True, "$ne": None, "$ne": ""},
+            "stage": {"$in": ["clay", "paint"]},
+            "is_archived": {"$ne": True}
+        },
+        {"_id": 0}
+    ).to_list(None)
+    
+    results["tracking_workflow_applied"]["found"] = len(stuck_orders)
+    
+    # Get workflow rules for tracking_added trigger
+    rules = workflow_config.get("rules", [])
+    tracking_rules = [r for r in rules if r.get("trigger") in ["tracking_number_added", "tracking_added"]]
+    
+    for order in stuck_orders:
+        current_stage = order.get("stage")
+        current_status = order.get(f"{current_stage}_status")
+        
+        # Find matching rule
+        matching_rule = None
+        for rule in tracking_rules:
+            from_stage = rule.get("from_stage")
+            from_status = rule.get("from_status")
+            if from_stage == current_stage and from_status == current_status:
+                matching_rule = rule
+                break
+        
+        if not matching_rule:
+            # No matching rule, but order has tracking - move to shipped stage
+            logger.info(f"No matching workflow rule for {order.get('order_number')} ({current_stage}/{current_status}), moving to shipped")
+            matching_rule = {
+                "to_stage": shipped_stage,
+                "to_status": shipped_status
+            }
+        
+        to_stage = matching_rule.get("to_stage")
+        to_status = matching_rule.get("to_status")
+        
+        try:
+            if not dry_run:
+                await db.orders.update_one(
+                    {"id": order["id"], "tenant_id": tenant["id"]},
+                    {
+                        "$set": {
+                            "stage": to_stage,
+                            f"{to_stage}_status": to_status,
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                            "last_updated_by": "tracking_workflow_migration",
+                            f"{to_stage}_entered_at": datetime.now(timezone.utc).isoformat()
+                        },
+                        "$push": {
+                            "timeline": {
+                                "id": str(__import__('uuid').uuid4()),
+                                "type": "workflow",
+                                "message": f"Stage corrected to {to_stage}/{to_status} (has tracking number)",
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                                "created_by": "tracking_workflow_migration",
+                                "metadata": {
+                                    "trigger": "tracking_migration",
+                                    "from_stage": current_stage,
+                                    "from_status": current_status,
+                                    "to_stage": to_stage,
+                                    "to_status": to_status,
+                                    "tracking_number": order.get("tracking_number")
+                                }
+                            }
+                        }
+                    }
+                )
+            results["tracking_workflow_applied"]["fixed"] += 1
+            logger.info(f"Fixed order {order.get('order_number')}: {current_stage}/{current_status} -> {to_stage}/{to_status} (has tracking)")
+        except Exception as e:
+            results["errors"].append(f"Order {order.get('order_number')}: {str(e)}")
+    
+    return {
+        "dry_run": dry_run,
+        "shipped_stage_used": shipped_stage,
+        "shipped_status_used": shipped_status,
+        "results": results,
+        "message": f"Fixed {results['fulfilled_to_shipped']['fixed']} fulfilled orders and {results['tracking_workflow_applied']['fixed']} orders with tracking" if not dry_run else "Dry run complete - no changes made"
+    }
+
 # ============== END SHOPIFY TAG SYNC ==============
 
 @api_router.get("/admin/workflow/time-delay-rules")
