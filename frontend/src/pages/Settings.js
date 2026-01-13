@@ -317,6 +317,33 @@ const Settings = () => {
     }
   };
   
+  const handleBulkTagSync = async () => {
+    setSyncingTags(true);
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await axios.post(`${API}/admin/orders/bulk-sync-shopify-tags`, 
+        { all_orders: true },
+        { 
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 300000 // 5 minute timeout for large syncs
+        }
+      );
+      
+      const result = response.data;
+      toast.success(`Synced ${result.success} order tags to Shopify! (${result.failed} failed)`);
+      console.log("Bulk tag sync result:", result);
+    } catch (error) {
+      if (error.code === 'ECONNABORTED') {
+        toast.info("Sync is still running in the background. Check Shopify to verify.");
+      } else {
+        toast.error(error.response?.data?.detail || "Failed to sync tags");
+      }
+      console.error("Bulk tag sync error:", error);
+    } finally {
+      setSyncingTags(false);
+    }
+  };
+  
   // Extract values for button state
   const shopifyShop = shopifySettings.shopify_shop_name;
   const shopifyAccessToken = shopifySettings.shopify_access_token;
