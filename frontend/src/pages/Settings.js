@@ -345,6 +345,32 @@ const Settings = () => {
     }
   };
   
+  const handleFixOrderStages = async () => {
+    setFixingStages(true);
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await axios.post(`${API}/admin/orders/fix-stages`, 
+        { dry_run: false },
+        { 
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 300000 // 5 minute timeout for large operations
+        }
+      );
+      
+      const result = response.data;
+      const { results } = result;
+      toast.success(
+        `Fixed ${results.fulfilled_to_shipped.fixed} "Fulfilled" orders and ${results.tracking_workflow_applied.fixed} orders with tracking!`
+      );
+      console.log("Fix stages result:", result);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to fix order stages");
+      console.error("Fix stages error:", error);
+    } finally {
+      setFixingStages(false);
+    }
+  };
+  
   // Extract values for button state
   const shopifyShop = shopifySettings.shopify_shop_name;
   const shopifyAccessToken = shopifySettings.shopify_access_token;
