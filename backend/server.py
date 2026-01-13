@@ -2059,6 +2059,15 @@ async def sync_orders():
                 if hasattr(first_item, 'vendor'):
                     item_vendor = first_item.vendor
             
+            # Determine the stage for this order
+            # If order is fulfilled in Shopify, use the "shipped" stage from workflow config
+            if fulfillment_status == "fulfilled":
+                order_stage = get_shipped_stage(workflow_config)
+                order_status = get_first_status_for_shipped_stage(workflow_config)
+            else:
+                order_stage = first_stage
+                order_status = first_status
+            
             order_doc = {
                 "id": str(__import__('uuid').uuid4()),
                 "tenant_id": tenant_id,
@@ -2070,8 +2079,8 @@ async def sync_orders():
                 "parent_order_id": None,
                 "line_items": line_items,
                 # Use workflow config for default stage/status (single source of truth)
-                "stage": "fulfilled" if fulfillment_status == "fulfilled" else first_stage,
-                f"{first_stage}_status": first_status,
+                "stage": order_stage,
+                f"{order_stage}_status": order_status,
                 # Initialize other stage statuses as pending
                 "clay_status": first_status if first_stage == "clay" else "pending",
                 "paint_status": "pending",
