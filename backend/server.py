@@ -1764,11 +1764,21 @@ async def sync_order_shopify_tags(order_id: str):
         raise HTTPException(status_code=500, detail="Failed to sync tags to Shopify")
 
 @api_router.post("/admin/orders/bulk-sync-shopify-tags")
-async def bulk_sync_shopify_tags(order_ids: List[str] = None, all_orders: bool = False):
+async def bulk_sync_shopify_tags(request_data: dict = None):
     """
     Bulk sync order tags to Shopify.
     Either provide a list of order_ids or set all_orders=True to sync all orders with Shopify IDs.
+    
+    Request body:
+    - order_ids: List of order IDs to sync (optional)
+    - all_orders: Set to true to sync all orders (optional)
     """
+    if request_data is None:
+        request_data = {}
+    
+    order_ids = request_data.get("order_ids")
+    all_orders = request_data.get("all_orders", False)
+    
     tenant = await db.tenants.find_one({}, {"_id": 0})
     if not tenant:
         raise HTTPException(status_code=500, detail="No tenant found")
