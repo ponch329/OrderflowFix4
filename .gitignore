@@ -82,7 +82,8 @@ android-sdk/
 # Cache files
 frontend/node_modules/.cache/
 frontend/node_modules/.cache/default-development/0.pack
--e 
-# Environment files
-*.env
-*.env.*
+
+# Note: .env files are NOT ignored - they need to be deployed
+# Only ignore local override files
+*.env.local
+*.env.*.local
