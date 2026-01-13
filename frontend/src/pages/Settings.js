@@ -741,6 +741,16 @@ const Settings = () => {
                     {syncingShopify ? "Syncing..." : "Sync Orders from Shopify"}
                   </Button>
                   
+                  <Button 
+                    onClick={handleBulkTagSync} 
+                    disabled={syncingTags || !shopifyShop}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${syncingTags ? 'animate-spin' : ''}`} />
+                    {syncingTags ? "Syncing Tags..." : "Sync All Order Tags to Shopify"}
+                  </Button>
+                  
                   {(!shopifyShop || !shopifyAccessToken) && (
                     <p className="text-xs text-gray-500 text-center">
                       Save your Shopify credentials first before syncing
