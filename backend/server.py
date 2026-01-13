@@ -1936,7 +1936,7 @@ async def fix_order_stages(request_data: dict = None):
     stuck_orders = await db.orders.find(
         {
             "tenant_id": tenant["id"],
-            "tracking_number": {"$exists": True, "$ne": None, "$ne": ""},
+            "tracking_number": {"$exists": True, "$nin": [None, ""]},
             "stage": {"$in": ["clay", "paint"]},
             "is_archived": {"$ne": True}
         },
