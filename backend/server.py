@@ -119,26 +119,29 @@ async def startup_event():
     logger.info(f"CORS Origins: {os.environ.get('CORS_ORIGINS', '*')}")
     logger.info("=" * 50)
     
-    # Test MongoDB connection
+    # Test MongoDB connection with timeout - don't block startup if slow
     try:
-        await db.command("ping")
+        await asyncio.wait_for(db.command("ping"), timeout=10.0)
         logger.info("✅ MongoDB connection successful")
+    except asyncio.TimeoutError:
+        logger.warning("⚠️ MongoDB connection timed out - will retry on first request")
     except Exception as e:
-        logger.error(f"❌ MongoDB connection failed: {str(e)}")
-        raise
+        logger.warning(f"⚠️ MongoDB connection check failed: {str(e)} - will retry on first request")
     
     # Ensure indexes exist for performance (idempotent - won't recreate if exists)
     try:
-        await db.orders.create_index([("tenant_id", 1), ("stage", 1)])
-        await db.orders.create_index([("tenant_id", 1), ("is_archived", 1)])
-        await db.orders.create_index([("tenant_id", 1), ("created_at", -1)])
-        await db.orders.create_index([("tenant_id", 1), ("updated_at", -1)])
-        await db.orders.create_index([("tenant_id", 1), ("stage", 1), ("is_archived", 1), ("created_at", -1)])
-        await db.orders.create_index([("order_number", 1)])
-        await db.orders.create_index([("customer_email", 1)])
+        await asyncio.wait_for(db.orders.create_index([("tenant_id", 1), ("stage", 1)]), timeout=5.0)
+        await asyncio.wait_for(db.orders.create_index([("tenant_id", 1), ("is_archived", 1)]), timeout=5.0)
+        await asyncio.wait_for(db.orders.create_index([("tenant_id", 1), ("created_at", -1)]), timeout=5.0)
+        await asyncio.wait_for(db.orders.create_index([("tenant_id", 1), ("updated_at", -1)]), timeout=5.0)
+        await asyncio.wait_for(db.orders.create_index([("tenant_id", 1), ("stage", 1), ("is_archived", 1), ("created_at", -1)]), timeout=5.0)
+        await asyncio.wait_for(db.orders.create_index([("order_number", 1)]), timeout=5.0)
+        await asyncio.wait_for(db.orders.create_index([("customer_email", 1)]), timeout=5.0)
         # Index for Shopify sync - speeds up checking existing orders
-        await db.orders.create_index([("tenant_id", 1), ("shopify_order_id", 1)])
+        await asyncio.wait_for(db.orders.create_index([("tenant_id", 1), ("shopify_order_id", 1)]), timeout=5.0)
         logger.info("✅ MongoDB indexes ensured")
+    except asyncio.TimeoutError:
+        logger.warning("⚠️ Index creation timed out - will be created on next startup")
     except Exception as e:
         logger.warning(f"⚠️ Could not create indexes: {e}")
     
