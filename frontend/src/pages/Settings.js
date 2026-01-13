@@ -778,11 +778,25 @@ const Settings = () => {
                     {syncingTags ? "Syncing Tags..." : "Sync All Order Tags to Shopify"}
                   </Button>
                   
+                  <Button 
+                    onClick={handleFixOrderStages} 
+                    disabled={fixingStages}
+                    variant="outline"
+                    className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
+                    data-testid="fix-order-stages-btn"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${fixingStages ? 'animate-spin' : ''}`} />
+                    {fixingStages ? "Fixing Stages..." : "Fix Order Stages (Fulfilled → Shipped)"}
+                  </Button>
+                  <p className="text-xs text-gray-500 text-center">
+                    Converts "Fulfilled" orders to "Shipped" and applies workflow rules to orders with tracking
+                  </p>
+                  
                   {(!shopifyShop || !shopifyAccessToken) && (
                     <p className="text-xs text-gray-500 text-center">
                       Save your Shopify credentials first before syncing
                     </p>
-                  )}
+                  )}}
                 </div>
               </CardContent>
             </Card>
