@@ -142,32 +142,46 @@ async def startup_event():
         logger.info("✅ MongoDB indexes ensured")
     except asyncio.TimeoutError:
         logger.warning("⚠️ Index creation timed out - will be created on next startup")
+    except asyncio.TimeoutError:
+        logger.warning("⚠️ Index creation timed out - will be created on next startup")
     except Exception as e:
         logger.warning(f"⚠️ Could not create indexes: {e}")
     
     # Data migration: Normalize is_archived field for all orders (one-time migration)
     # This ensures all orders have a consistent is_archived field for faster queries
+    # Skip if it takes too long - can be done later
     try:
         # Set is_archived=True for orders with archived=True (legacy field)
-        result1 = await db.orders.update_many(
-            {"archived": True, "is_archived": {"$ne": True}},
-            {"$set": {"is_archived": True}}
+        result1 = await asyncio.wait_for(
+            db.orders.update_many(
+                {"archived": True, "is_archived": {"$ne": True}},
+                {"$set": {"is_archived": True}}
+            ),
+            timeout=10.0
         )
         # Set is_archived=False for orders without is_archived field
-        result2 = await db.orders.update_many(
-            {"is_archived": {"$exists": False}},
-            {"$set": {"is_archived": False}}
+        result2 = await asyncio.wait_for(
+            db.orders.update_many(
+                {"is_archived": {"$exists": False}},
+                {"$set": {"is_archived": False}}
+            ),
+            timeout=10.0
         )
         # Set is_archived=False for orders with is_archived=None
-        result3 = await db.orders.update_many(
-            {"is_archived": None},
-            {"$set": {"is_archived": False}}
+        result3 = await asyncio.wait_for(
+            db.orders.update_many(
+                {"is_archived": None},
+                {"$set": {"is_archived": False}}
+            ),
+            timeout=10.0
         )
         total_migrated = result1.modified_count + result2.modified_count + result3.modified_count
         if total_migrated > 0:
             logger.info(f"✅ Migrated {total_migrated} orders to normalized is_archived field")
+    except asyncio.TimeoutError:
+        logger.warning("⚠️ Data migration timed out - will complete on next startup")
     except Exception as e:
-        logger.warning(f"⚠️ Could not create indexes: {e}")
+        logger.warning(f"⚠️ Data migration warning: {e}")
     
     # Start workflow scheduler as background task
     try:
@@ -176,6 +190,8 @@ async def startup_event():
         logger.info("✅ Workflow scheduler started (runs every 5 minutes)")
     except Exception as e:
         logger.warning(f"⚠️ Could not start workflow scheduler: {e}")
+    
+    logger.info("✅ Application startup complete")
 
 @app.on_event("shutdown")
 async def shutdown_event():
