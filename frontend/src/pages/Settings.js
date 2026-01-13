@@ -61,6 +61,7 @@ const Settings = () => {
     shopify_access_token: ""
   });
   const [syncingShopify, setSyncingShopify] = useState(false);
+  const [syncingTags, setSyncingTags] = useState(false);
   
   // Workflow settings
   const [workflowSettings, setWorkflowSettings] = useState({
