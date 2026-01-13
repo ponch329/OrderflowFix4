@@ -305,6 +305,23 @@ def get_all_valid_statuses_for_stage(workflow_config, stage_id):
             return [st.get("id") for st in stage.get("statuses", []) if st.get("id")]
     return []
 
+def get_shipped_stage(workflow_config):
+    """Get the shipped stage ID from workflow config. Returns 'shipped' as default."""
+    stages = workflow_config.get("stages", [])
+    for stage in stages:
+        stage_id = stage.get("id", "").lower()
+        stage_name = stage.get("name", "").lower()
+        # Match by id or name containing "ship"
+        if "ship" in stage_id or "ship" in stage_name:
+            return stage.get("id")
+    # Fallback to "shipped" if not found
+    return "shipped"
+
+def get_first_status_for_shipped_stage(workflow_config):
+    """Get the first status for the shipped stage."""
+    shipped_stage = get_shipped_stage(workflow_config)
+    return get_first_status_for_stage(workflow_config, shipped_stage)
+
 # ============== END WORKFLOW CONFIG HELPERS ==============
 
 @api_router.post("/admin/login")
