@@ -2081,9 +2081,10 @@ async def sync_orders():
                 # Use workflow config for default stage/status (single source of truth)
                 "stage": order_stage,
                 f"{order_stage}_status": order_status,
-                # Initialize other stage statuses as pending
-                "clay_status": first_status if first_stage == "clay" else "pending",
-                "paint_status": "pending",
+                # Initialize other stage statuses appropriately
+                "clay_status": order_status if order_stage == "clay" else ("completed" if order_stage == "shipped" else "pending"),
+                "paint_status": order_status if order_stage == "paint" else ("completed" if order_stage == "shipped" else "pending"),
+                "shipped_status": order_status if order_stage == "shipped" else "pending",
                 "is_manual_order": False,
                 "is_archived": False,
                 "shopify_fulfillment_status": fulfillment_status,
@@ -2093,7 +2094,8 @@ async def sync_orders():
                 "carrier": tracking_company,  # Alias for UI compatibility
                 "tracking_url": tracking_url,
                 "clay_entered_at": shopify_created_at.isoformat() if hasattr(shopify_created_at, 'isoformat') else shopify_created_at,
-                "paint_entered_at": None,
+                "paint_entered_at": fulfilled_at.isoformat() if (fulfillment_status == "fulfilled" and hasattr(fulfilled_at, 'isoformat') and fulfilled_at) else None,
+                "shipped_entered_at": fulfilled_at.isoformat() if (fulfillment_status == "fulfilled" and hasattr(fulfilled_at, 'isoformat') and fulfilled_at) else None,
                 "fulfilled_at": fulfilled_at.isoformat() if hasattr(fulfilled_at, 'isoformat') and fulfilled_at else None,
                 "canceled_at": None,
                 "clay_proofs": [],
