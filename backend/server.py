@@ -2479,7 +2479,7 @@ async def approve_stage(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    # Create timeline event
+    # Create timeline event - don't store full images in timeline, just count
     from utils.timeline import create_timeline_event
     if status == "approved":
         timeline_event = create_timeline_event(
@@ -2495,16 +2495,28 @@ async def approve_stage(
             user_name=order.get('customer_name', 'Customer'),
             user_role="customer",
             description=f"Requested changes for {stage} stage",
-            metadata={"stage": stage, "message": message, "images": additional_images}
+            metadata={"stage": stage, "message": message, "image_count": len(additional_images)}
         )
     
-    await db.orders.update_one(
-        {"id": order_id}, 
-        {
-            "$set": update_data,
-            "$push": {"timeline": timeline_event}
-        }
-    )
+    try:
+        await db.orders.update_one(
+            {"id": order_id}, 
+            {
+                "$set": update_data,
+                "$push": {"timeline": timeline_event}
+            }
+        )
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"Failed to save customer response for order {order_id}: {error_msg}")
+        
+        # Check if it's a document size issue
+        if "BSONObj size" in error_msg or "object to insert too large" in error_msg or "too large" in error_msg.lower():
+            raise HTTPException(
+                status_code=413, 
+                detail="The reference image is too large. Please try a smaller image (under 2MB)."
+            )
+        raise HTTPException(status_code=500, detail=f"Failed to save response: {error_msg}")
     
     # Send email notification and log to sheets
     from utils.helpers import log_to_sheets
