@@ -2395,6 +2395,7 @@ async def approve_stage(
 ):
     """Customer approves or requests changes for a stage"""
     import base64
+    import io
     from utils.workflow_rules_engine import get_workflow_engine_from_tenant
     
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
@@ -2408,13 +2409,51 @@ async def approve_stage(
     # Initialize workflow engine with rules
     workflow_engine = get_workflow_engine_from_tenant(tenant.get("settings", {}) if tenant else {})
     
-    # Handle additional images if provided
+    # Handle additional images if provided - with compression to avoid document size issues
     additional_images = []
     if files:
-        for file in files:
-            content = await file.read()
-            image_base64 = base64.b64encode(content).decode('utf-8')
-            additional_images.append(f"data:image/jpeg;base64,{image_base64}")
+        try:
+            from PIL import Image
+            
+            for file in files:
+                content = await file.read()
+                
+                # Compress image if it's too large (> 500KB)
+                if len(content) > 500 * 1024:
+                    try:
+                        img = Image.open(io.BytesIO(content))
+                        
+                        # Convert to RGB if necessary
+                        if img.mode in ('RGBA', 'P'):
+                            img = img.convert('RGB')
+                        
+                        # Resize if very large
+                        max_dimension = 1200
+                        if max(img.size) > max_dimension:
+                            ratio = max_dimension / max(img.size)
+                            new_size = tuple(int(dim * ratio) for dim in img.size)
+                            img = img.resize(new_size, Image.Resampling.LANCZOS)
+                        
+                        # Compress
+                        output = io.BytesIO()
+                        img.save(output, format='JPEG', quality=70, optimize=True)
+                        content = output.getvalue()
+                        logger.info(f"Compressed customer reference image to {len(content)} bytes")
+                    except Exception as e:
+                        logger.warning(f"Could not compress image: {e}, using original")
+                
+                image_base64 = base64.b64encode(content).decode('utf-8')
+                # Detect content type
+                content_type = "image/jpeg"
+                if file.content_type:
+                    content_type = file.content_type
+                additional_images.append(f"data:{content_type};base64,{image_base64}")
+        except ImportError:
+            # Pillow not available, store images without compression
+            for file in files:
+                content = await file.read()
+                image_base64 = base64.b64encode(content).decode('utf-8')
+                additional_images.append(f"data:image/jpeg;base64,{image_base64}")
     
     approval = {
         "id": str(__import__('uuid').uuid4()),
