@@ -493,17 +493,34 @@ const OrderDetailsAdminNew = () => {
             </Badge>
           </div>
           {isExpanded && (
-            <Button 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                setUploadStage(stage); 
-                setUploadDialogOpen(true); 
-              }}
-              className="mt-4 w-full"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Proofs
-            </Button>
+            <div className="mt-4 flex gap-2">
+              <Button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setUploadStage(stage); 
+                  setUploadDialogOpen(true); 
+                }}
+                className="flex-1"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Proofs
+              </Button>
+              {status === 'feedback_needed' && proofs?.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePingCustomer(stage);
+                  }}
+                  disabled={pingingCustomer}
+                  className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                  data-testid={`ping-customer-${stage}-btn`}
+                >
+                  <Bell className="w-4 h-4 mr-2" />
+                  {pingingCustomer ? "Sending..." : "Ping Customer"}
+                </Button>
+              )}
+            </div>
           )}
         </CardHeader>
         
