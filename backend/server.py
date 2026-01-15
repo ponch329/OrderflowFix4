@@ -408,7 +408,7 @@ async def get_admin_orders_legacy(
             else:
                 query[f"{stage}_status"] = status
         
-        # Search filter - need to handle $and/$or conflict
+        # Search filter - need to handle $and/$or conflict properly
         if search:
             search_regex = {"$regex": search, "$options": "i"}
             search_conditions = [
@@ -416,11 +416,15 @@ async def get_admin_orders_legacy(
                 {"customer_email": search_regex},
                 {"customer_name": search_regex}
             ]
-            # Add search to existing $and or create new one
-            if "$and" in query:
-                query["$and"].append({"$or": search_conditions})
-            else:
-                query["$or"] = search_conditions
+            # When combining search with other filters, we need to use $and
+            # to ensure both the search OR conditions AND other filters apply
+            existing_conditions = {k: v for k, v in query.items() if k not in ["$and", "$or"]}
+            query = {
+                "$and": [
+                    existing_conditions,
+                    {"$or": search_conditions}
+                ]
+            }
         
         # Get total count for pagination with retry
         async def get_count():
