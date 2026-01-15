@@ -1213,9 +1213,45 @@ async def admin_upload_proofs_legacy(
     MAX_IMAGE_DIMENSION = 1500  # Max width/height in pixels (reduced)
     
     def compress_image(image_data: bytes, filename: str) -> tuple:
-        """Compress image to reduce size for MongoDB storage"""
+        """Compress image to reduce size for MongoDB storage and fix EXIF orientation"""
         try:
             img = Image.open(io.BytesIO(image_data))
+            
+            # Fix EXIF orientation - this is crucial for mobile photos
+            try:
+                from PIL import ExifTags
+                
+                # Find the orientation tag
+                orientation_key = None
+                for key in ExifTags.TAGS.keys():
+                    if ExifTags.TAGS[key] == 'Orientation':
+                        orientation_key = key
+                        break
+                
+                if orientation_key and hasattr(img, '_getexif') and img._getexif():
+                    exif = img._getexif()
+                    if exif and orientation_key in exif:
+                        orientation = exif[orientation_key]
+                        
+                        # Apply rotation based on EXIF orientation value
+                        if orientation == 2:
+                            img = img.transpose(Image.FLIP_LEFT_RIGHT)
+                        elif orientation == 3:
+                            img = img.rotate(180, expand=True)
+                        elif orientation == 4:
+                            img = img.transpose(Image.FLIP_TOP_BOTTOM)
+                        elif orientation == 5:
+                            img = img.rotate(-90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
+                        elif orientation == 6:
+                            img = img.rotate(-90, expand=True)
+                        elif orientation == 7:
+                            img = img.rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
+                        elif orientation == 8:
+                            img = img.rotate(90, expand=True)
+                        
+                        logger.info(f"Fixed EXIF orientation {orientation} for {filename}")
+            except Exception as exif_error:
+                logger.debug(f"Could not process EXIF data for {filename}: {exif_error}")
             
             # Convert RGBA to RGB for JPEG (drop alpha channel)
             if img.mode in ('RGBA', 'P'):
