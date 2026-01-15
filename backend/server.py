@@ -2445,47 +2445,76 @@ async def approve_stage(
     # Initialize workflow engine with rules
     workflow_engine = get_workflow_engine_from_tenant(tenant.get("settings", {}) if tenant else {})
     
-    # Handle additional images if provided - with compression to avoid document size issues
+    # Handle additional images if provided - with compression and EXIF orientation fix
     additional_images = []
     if files:
         try:
-            from PIL import Image
+            from PIL import Image, ExifTags
+            
+            # Find EXIF orientation key
+            orientation_key = None
+            for key in ExifTags.TAGS.keys():
+                if ExifTags.TAGS[key] == 'Orientation':
+                    orientation_key = key
+                    break
+            
+            def fix_exif_orientation(img):
+                """Fix image orientation based on EXIF data"""
+                try:
+                    if orientation_key and hasattr(img, '_getexif') and img._getexif():
+                        exif = img._getexif()
+                        if exif and orientation_key in exif:
+                            orientation = exif[orientation_key]
+                            if orientation == 2:
+                                return img.transpose(Image.FLIP_LEFT_RIGHT)
+                            elif orientation == 3:
+                                return img.rotate(180, expand=True)
+                            elif orientation == 4:
+                                return img.transpose(Image.FLIP_TOP_BOTTOM)
+                            elif orientation == 5:
+                                return img.rotate(-90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
+                            elif orientation == 6:
+                                return img.rotate(-90, expand=True)
+                            elif orientation == 7:
+                                return img.rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
+                            elif orientation == 8:
+                                return img.rotate(90, expand=True)
+                except Exception:
+                    pass
+                return img
             
             for file in files:
                 content = await file.read()
                 
-                # Compress image if it's too large (> 500KB)
-                if len(content) > 500 * 1024:
-                    try:
-                        img = Image.open(io.BytesIO(content))
-                        
-                        # Convert to RGB if necessary
-                        if img.mode in ('RGBA', 'P'):
-                            img = img.convert('RGB')
-                        
-                        # Resize if very large
-                        max_dimension = 1200
-                        if max(img.size) > max_dimension:
-                            ratio = max_dimension / max(img.size)
-                            new_size = tuple(int(dim * ratio) for dim in img.size)
-                            img = img.resize(new_size, Image.Resampling.LANCZOS)
-                        
-                        # Compress
-                        output = io.BytesIO()
-                        img.save(output, format='JPEG', quality=70, optimize=True)
-                        content = output.getvalue()
-                        logger.info(f"Compressed customer reference image to {len(content)} bytes")
-                    except Exception as e:
-                        logger.warning(f"Could not compress image: {e}, using original")
+                try:
+                    img = Image.open(io.BytesIO(content))
+                    
+                    # Fix EXIF orientation first
+                    img = fix_exif_orientation(img)
+                    
+                    # Convert to RGB if necessary
+                    if img.mode in ('RGBA', 'P'):
+                        img = img.convert('RGB')
+                    
+                    # Resize if very large
+                    max_dimension = 1200
+                    if max(img.size) > max_dimension:
+                        ratio = max_dimension / max(img.size)
+                        new_size = tuple(int(dim * ratio) for dim in img.size)
+                        img = img.resize(new_size, Image.Resampling.LANCZOS)
+                    
+                    # Compress
+                    output = io.BytesIO()
+                    img.save(output, format='JPEG', quality=70, optimize=True)
+                    content = output.getvalue()
+                    logger.info(f"Processed customer reference image to {len(content)} bytes")
+                except Exception as e:
+                    logger.warning(f"Could not process image: {e}, using original")
                 
                 image_base64 = base64.b64encode(content).decode('utf-8')
-                # Detect content type
-                content_type = "image/jpeg"
-                if file.content_type:
-                    content_type = file.content_type
-                additional_images.append(f"data:{content_type};base64,{image_base64}")
+                additional_images.append(f"data:image/jpeg;base64,{image_base64}")
         except ImportError:
-            # Pillow not available, store images without compression
+            # Pillow not available, store images without processing
             for file in files:
                 content = await file.read()
                 image_base64 = base64.b64encode(content).decode('utf-8')
