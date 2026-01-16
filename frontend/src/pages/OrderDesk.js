@@ -35,7 +35,8 @@ import {
   Bell,
   RefreshCw,
   Archive,
-  AlertCircle
+  AlertCircle,
+  Edit
 } from "lucide-react";
 import { toast } from "sonner";
 import {
