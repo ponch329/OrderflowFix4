@@ -1143,6 +1143,57 @@ export default function OrderDesk() {
           )}
         </div>
       </div>
+
+      {/* Bulk Update Stage/Status Dialog */}
+      <Dialog open={bulkUpdateDialogOpen} onOpenChange={setBulkUpdateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Change Stage & Status</DialogTitle>
+            <DialogDescription>
+              Update {selectedOrders.length} selected order(s) to a new stage and status.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Stage</label>
+              <Select value={bulkStage} onValueChange={(v) => { setBulkStage(v); setBulkStatus(''); }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select stage" />
+                </SelectTrigger>
+                <SelectContent>
+                  {workflowStages.filter(s => s.id !== 'archived').map(stage => (
+                    <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Status</label>
+              <Select value={bulkStatus} onValueChange={setBulkStatus} disabled={!bulkStage}>
+                <SelectTrigger>
+                  <SelectValue placeholder={bulkStage ? "Select status" : "Select stage first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {getBulkStatusOptions().map(status => (
+                    <SelectItem key={status.id} value={status.id}>{status.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setBulkUpdateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleBulkUpdateStageStatus}
+              disabled={!bulkStage || !bulkStatus || isBulkUpdating}
+            >
+              {isBulkUpdating ? 'Updating...' : `Update ${selectedOrders.length} Order(s)`}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
