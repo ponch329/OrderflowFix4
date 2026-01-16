@@ -909,6 +909,15 @@ export default function OrderDesk() {
               {selectedOrders.length > 0 && (
                 <>
                   <Button 
+                    onClick={() => setBulkUpdateDialogOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-400 text-blue-700 hover:bg-blue-50"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Change Stage ({selectedOrders.length})
+                  </Button>
+                  <Button 
                     onClick={handleArchiveOrders}
                     variant="outline"
                     size="sm"
