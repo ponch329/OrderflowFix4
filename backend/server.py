@@ -2675,43 +2675,85 @@ async def ping_customer(order_id: str, stage: str):
     if not tenant:
         raise HTTPException(status_code=500, detail="Tenant not found")
     
-    # Send reminder email
-    subject = f"Reminder: Please Review Order #{order['order_number']} - {stage.capitalize()} Proofs"
-    html_content = f"""
+    # Get email template settings
+    email_templates = tenant.get("settings", {}).get("email_templates", {})
+    template_id = f"reminder_{stage}"
+    template_settings = email_templates.get(template_id, {})
+    
+    # Check if template is enabled (default to True)
+    if not template_settings.get("enabled", True):
+        raise HTTPException(status_code=400, detail="Reminder email template is disabled")
+    
+    # Get company info
+    company_name = tenant.get("name", "AllBobbleheads.com")
+    company_email = tenant.get("settings", {}).get("smtp_from_email") or tenant.get("smtp_from_email", "orders@allbobbleheads.com")
+    portal_url = f"{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/customer"
+    
+    # Build subject and body from template or defaults
+    default_subject = f"Reminder: Please Review Your {stage.capitalize()} Proofs - Order #{order['order_number']}"
+    default_body = f"""
     <html>
-    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #2196F3;">🔔 Proof Review Reminder</h2>
-        <p>Hi {order['customer_name']},</p>
-        <p>This is a friendly reminder that your bobblehead proofs are ready for review!</p>
-        
-        <div style="background: #f0f8ff; padding: 20px; border-left: 4px solid #2196F3; margin: 20px 0;">
-            <p><strong>Order Number:</strong> #{order['order_number']}</p>
-            <p><strong>Stage:</strong> {stage.capitalize()}</p>
-            <p><strong>Proofs Available:</strong> {len(proofs)} image(s)</p>
-        </div>
-        
-        <p>Please review your proofs and let us know if you'd like to:</p>
-        <ul>
-            <li>✓ Approve the {stage} stage</li>
-            <li>📝 Request any changes</li>
-        </ul>
-        
-        <p style="text-align: center; margin: 30px 0;">
-            <a href="{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/customer" 
-               style="background: #2196F3; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Review Your Proofs
-            </a>
-        </p>
-        
-        <p style="color: #666; font-size: 14px;">To view your order, visit the customer portal and enter your email and order number.</p>
-        
-        <p>Thank you!</p>
-        <p style="color: #888; font-size: 12px; margin-top: 30px;">
-            {tenant.get('name', 'AllBobbleheads.com')} | {tenant.get('smtp_from_email', 'orders@allbobbleheads.com')}
-        </p>
+    <head><style>
+    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+    .header {{ background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }}
+    .content {{ background: #ffffff; padding: 30px 20px; border: 1px solid #e0e0e0; }}
+    .info-box {{ background: #e3f2fd; padding: 20px; border-left: 4px solid #2196F3; margin: 20px 0; }}
+    .button {{ background: #2196F3; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }}
+    .footer {{ text-align: center; padding: 20px; color: #888; font-size: 12px; background: #f5f5f5; }}
+    </style></head>
+    <body>
+    <div class="container">
+    <div class="header"><div style="font-size: 48px;">🔔</div><h1>Proof Review Reminder</h1></div>
+    <div class="content">
+    <p>Hi {{customer_name}},</p>
+    <p>This is a friendly reminder that your bobblehead {stage} proofs are ready and waiting for your review!</p>
+    <div class="info-box">
+    <p><strong>Order Number:</strong> #{{order_number}}</p>
+    <p><strong>Stage:</strong> {stage.capitalize()}</p>
+    <p><strong>Proofs Available:</strong> {{num_images}} image(s)</p>
+    </div>
+    <p>Please review your proofs and let us know if you'd like to:</p>
+    <ul>
+    <li>✓ Approve the {stage} stage</li>
+    <li>📝 Request any changes</li>
+    </ul>
+    <p style="text-align: center;">
+    <a href="{{portal_url}}" class="button">Review Your Proofs</a>
+    </p>
+    <p style="color: #666; font-size: 14px;">To view your order, visit the customer portal and enter your email and order number.</p>
+    </div>
+    <div class="footer"><p>{{company_name}} | {{company_email}}</p></div>
+    </div>
     </body>
     </html>
     """
+    
+    subject = template_settings.get("subject", default_subject)
+    html_content = template_settings.get("body", default_body)
+    
+    # Replace placeholders
+    replacements = {
+        "{order_number}": str(order['order_number']),
+        "{customer_name}": order.get('customer_name', 'Customer'),
+        "{num_images}": str(len(proofs)),
+        "{portal_url}": portal_url,
+        "{company_name}": company_name,
+        "{company_email}": company_email,
+        "{stage}": stage.capitalize(),
+        "{{order_number}}": str(order['order_number']),
+        "{{customer_name}}": order.get('customer_name', 'Customer'),
+        "{{num_images}}": str(len(proofs)),
+        "{{portal_url}}": portal_url,
+        "{{company_name}}": company_name,
+        "{{company_email}}": company_email,
+        "{{stage}}": stage.capitalize(),
+        "#{order_number}": f"#{order['order_number']}"
+    }
+    
+    for key, value in replacements.items():
+        subject = subject.replace(key, value)
+        html_content = html_content.replace(key, value)
     
     try:
         from utils.helpers import send_email, log_to_sheets
