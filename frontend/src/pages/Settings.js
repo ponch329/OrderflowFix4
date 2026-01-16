@@ -562,7 +562,7 @@ const Settings = () => {
                     className="border-blue-500 text-blue-600 hover:bg-blue-50"
                   >
                     <Mail className="w-4 h-4 mr-2" />
-                    Manage Email Templates (7)
+                    Manage Email Templates (9)
                   </Button>
                 </div>
 
