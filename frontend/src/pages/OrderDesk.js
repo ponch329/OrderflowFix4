@@ -168,6 +168,12 @@ export default function OrderDesk() {
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
   
+  // Bulk update state
+  const [bulkUpdateDialogOpen, setBulkUpdateDialogOpen] = useState(false);
+  const [bulkStage, setBulkStage] = useState('');
+  const [bulkStatus, setBulkStatus] = useState('');
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  
   // Authentication ready state
   const [authReady, setAuthReady] = useState(false);
   
