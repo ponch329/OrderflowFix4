@@ -1724,6 +1724,193 @@ async def admin_delete_proof(order_id: str, proof_id: str, stage: str):
         logger.error(f"=== PROOF DELETE FAILED === order_id={order_id}, error={str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to delete proof: {str(e)}")
 
+@api_router.post("/admin/orders/{order_id}/proofs/bulk-delete")
+async def admin_bulk_delete_proofs(order_id: str, request_data: dict):
+    """
+    Delete multiple proofs from an order at once
+    Request body: { "proof_ids": ["id1", "id2", ...], "stage": "clay" | "paint" }
+    """
+    proof_ids = request_data.get("proof_ids", [])
+    stage = request_data.get("stage")
+    
+    if not proof_ids:
+        raise HTTPException(status_code=400, detail="No proof IDs provided")
+    if not stage:
+        raise HTTPException(status_code=400, detail="Stage is required")
+    
+    logger.info(f"=== BULK PROOF DELETE START === order_id={order_id}, count={len(proof_ids)}, stage={stage}")
+    
+    try:
+        tenant = await db.tenants.find_one({}, {"_id": 0})
+        if not tenant:
+            raise HTTPException(status_code=500, detail="No tenant found")
+        
+        tenant_id = tenant["id"]
+        
+        order = await db.orders.find_one({
+            "id": order_id,
+            "tenant_id": tenant_id
+        }, {"_id": 0})
+        
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        field = f"{stage}_proofs"
+        existing_proofs = order.get(field, [])
+        
+        # Find proofs to delete
+        proofs_to_delete = [p for p in existing_proofs if p.get("id") in proof_ids]
+        deleted_count = len(proofs_to_delete)
+        
+        if deleted_count == 0:
+            raise HTTPException(status_code=404, detail="No matching proofs found")
+        
+        # Create timeline event
+        from utils.timeline import create_timeline_event
+        timeline_event = create_timeline_event(
+            event_type="proofs_bulk_deleted",
+            user_name="Admin",
+            user_role="admin",
+            description=f"Deleted {deleted_count} proof(s) from {stage} stage",
+            metadata={"stage": stage, "count": deleted_count, "proof_ids": proof_ids}
+        )
+        
+        # Remove all matching proofs
+        new_proofs = [p for p in existing_proofs if p.get("id") not in proof_ids]
+        
+        await db.orders.update_one(
+            {"id": order_id, "tenant_id": tenant_id},
+            {
+                "$set": {
+                    field: new_proofs,
+                    "last_updated_by": "admin",
+                    "last_updated_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                },
+                "$push": {"timeline": timeline_event}
+            }
+        )
+        
+        logger.info(f"=== BULK PROOF DELETE COMPLETE === order_id={order_id}, deleted={deleted_count}")
+        
+        return {"message": f"Deleted {deleted_count} proof(s)", "deleted_count": deleted_count}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"=== BULK PROOF DELETE FAILED === order_id={order_id}, error={str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to delete proofs: {str(e)}")
+
+@api_router.post("/admin/orders/bulk-update")
+async def admin_bulk_update_orders(request_data: dict):
+    """
+    Update stage and status for multiple orders at once
+    Request body: { "order_ids": ["id1", "id2", ...], "stage": "clay", "status": "in_progress" }
+    """
+    order_ids = request_data.get("order_ids", [])
+    new_stage = request_data.get("stage")
+    new_status = request_data.get("status")
+    
+    if not order_ids:
+        raise HTTPException(status_code=400, detail="No order IDs provided")
+    if not new_stage or not new_status:
+        raise HTTPException(status_code=400, detail="Both stage and status are required")
+    
+    logger.info(f"=== BULK ORDER UPDATE START === count={len(order_ids)}, stage={new_stage}, status={new_status}")
+    
+    try:
+        tenant = await db.tenants.find_one({}, {"_id": 0})
+        if not tenant:
+            raise HTTPException(status_code=500, detail="No tenant found")
+        
+        tenant_id = tenant["id"]
+        settings = tenant.get("settings", {})
+        workflow_config = settings.get("workflow_config", {})
+        
+        now = datetime.now(timezone.utc)
+        success_count = 0
+        failed_ids = []
+        
+        for order_id in order_ids:
+            try:
+                order = await db.orders.find_one({
+                    "id": order_id,
+                    "tenant_id": tenant_id
+                }, {"_id": 0})
+                
+                if not order:
+                    failed_ids.append(order_id)
+                    continue
+                
+                old_stage = order.get("stage")
+                old_status = order.get(f"{old_stage}_status")
+                
+                # Create timeline event
+                from utils.timeline import create_timeline_event
+                timeline_event = create_timeline_event(
+                    event_type="bulk_status_change",
+                    user_name="Admin",
+                    user_role="admin",
+                    description=f"Bulk update: {old_stage}/{old_status} → {new_stage}/{new_status}",
+                    metadata={
+                        "from_stage": old_stage,
+                        "from_status": old_status,
+                        "to_stage": new_stage,
+                        "to_status": new_status
+                    }
+                )
+                
+                update_data = {
+                    "stage": new_stage,
+                    f"{new_stage}_status": new_status,
+                    "last_updated_by": "admin",
+                    "last_updated_at": now.isoformat(),
+                    "updated_at": now.isoformat()
+                }
+                
+                # Set stage entry timestamp if moving to a new stage
+                if new_stage != old_stage:
+                    update_data[f"{new_stage}_entered_at"] = now.isoformat()
+                
+                await db.orders.update_one(
+                    {"id": order_id, "tenant_id": tenant_id},
+                    {
+                        "$set": update_data,
+                        "$push": {"timeline": timeline_event}
+                    }
+                )
+                
+                # Sync tags to Shopify if configured
+                try:
+                    shopify_order_id = order.get("shopify_order_id")
+                    if shopify_order_id:
+                        await sync_order_tags_to_shopify(
+                            shopify_order_id, new_stage, new_status, tenant, workflow_config
+                        )
+                except Exception as shopify_err:
+                    logger.warning(f"Shopify sync failed for order {order_id}: {shopify_err}")
+                
+                success_count += 1
+                
+            except Exception as e:
+                logger.error(f"Failed to update order {order_id}: {e}")
+                failed_ids.append(order_id)
+        
+        logger.info(f"=== BULK ORDER UPDATE COMPLETE === success={success_count}, failed={len(failed_ids)}")
+        
+        return {
+            "message": f"Updated {success_count} order(s)",
+            "success_count": success_count,
+            "failed_count": len(failed_ids),
+            "failed_ids": failed_ids
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"=== BULK ORDER UPDATE FAILED === error={str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to update orders: {str(e)}")
+
 # Analytics endpoint
 @api_router.get("/admin/analytics")
 async def get_analytics(days: int = 7, compare_days: int = 7):
