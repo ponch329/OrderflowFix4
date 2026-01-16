@@ -271,6 +271,53 @@ const OrderDetailsAdminNew = () => {
     }
   };
 
+  // Multi-select proof helpers
+  const toggleProofSelection = (stage, proofId) => {
+    setSelectedProofs(prev => {
+      const stageProofs = prev[stage] || [];
+      if (stageProofs.includes(proofId)) {
+        return { ...prev, [stage]: stageProofs.filter(id => id !== proofId) };
+      } else {
+        return { ...prev, [stage]: [...stageProofs, proofId] };
+      }
+    });
+  };
+
+  const selectAllProofs = (stage, proofIds) => {
+    setSelectedProofs(prev => ({ ...prev, [stage]: proofIds }));
+  };
+
+  const clearProofSelection = (stage) => {
+    setSelectedProofs(prev => ({ ...prev, [stage]: [] }));
+  };
+
+  const handleBulkDeleteProofs = async (stage) => {
+    const proofIds = selectedProofs[stage] || [];
+    if (proofIds.length === 0) {
+      toast.error("No proofs selected");
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete ${proofIds.length} selected proof(s)?`)) return;
+    
+    setIsDeletingProofs(true);
+    try {
+      const token = localStorage.getItem('admin_token');
+      await axios.post(`${API}/admin/orders/${orderId}/proofs/bulk-delete`, 
+        { proof_ids: proofIds, stage },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      toast.success(`Deleted ${proofIds.length} proof(s)`);
+      clearProofSelection(stage);
+      fetchOrder();
+    } catch (error) {
+      toast.error("Failed to delete proofs");
+      console.error(error);
+    } finally {
+      setIsDeletingProofs(false);
+    }
+  };
+
   const handleEditApproval = (stage) => {
     const approval = stage === 'clay' ? order.clay_approval : order.paint_approval;
     if (!approval) return;
