@@ -599,6 +599,9 @@ const OrderDetailsAdminNew = () => {
                               // Get the upload timestamp from the first proof in this round
                               const firstProofInRound = group.items.find(item => item.type === 'proof');
                               const uploadedAt = firstProofInRound?.data?.uploaded_at;
+                              const roundProofIds = group.items.filter(i => i.type === 'proof').map(i => i.data.id);
+                              const selectedInRound = (selectedProofs[stage] || []).filter(id => roundProofIds.includes(id));
+                              const allSelectedInRound = selectedInRound.length === roundProofIds.length && roundProofIds.length > 0;
                               
                               return (
                                 <>
@@ -617,47 +620,84 @@ const OrderDetailsAdminNew = () => {
                                       ⭐ LATEST REVISION
                                     </Badge>
                                   )}
+                                  {/* Select All / Clear buttons */}
+                                  <button
+                                    onClick={() => allSelectedInRound 
+                                      ? setSelectedProofs(prev => ({...prev, [stage]: prev[stage]?.filter(id => !roundProofIds.includes(id)) || []}))
+                                      : setSelectedProofs(prev => ({...prev, [stage]: [...new Set([...(prev[stage] || []), ...roundProofIds])]}))
+                                    }
+                                    className="text-xs text-blue-600 hover:text-blue-800 ml-2"
+                                  >
+                                    {allSelectedInRound ? 'Deselect All' : 'Select All'}
+                                  </button>
                                 </>
                               );
                             })()}
                           </div>
-                          {/* Ping Customer Button - only show for latest round with feedback_needed status */}
-                          {(() => {
-                            const allRounds = [...new Set(proofs.map(p => p.round || 1))].sort((a, b) => a - b);
-                            const isLatestRound = group.round === Math.max(...allRounds);
-                            const stageStatus = order?.[`${stage}_status`];
-                            
-                            if (isLatestRound && stageStatus === 'feedback_needed') {
-                              return (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handlePingCustomer(stage)}
-                                  disabled={pingingCustomer}
-                                  className="text-orange-600 border-orange-300 hover:bg-orange-50"
-                                >
-                                  <Bell className="w-4 h-4 mr-1" />
-                                  {pingingCustomer ? "Sending..." : "Remind Customer"}
-                                </Button>
-                              );
-                            }
-                            return null;
-                          })()}
+                          <div className="flex items-center gap-2">
+                            {/* Bulk Delete Button - show when proofs are selected */}
+                            {(selectedProofs[stage]?.length || 0) > 0 && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleBulkDeleteProofs(stage)}
+                                disabled={isDeletingProofs}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                {isDeletingProofs ? "Deleting..." : `Delete (${selectedProofs[stage]?.length})`}
+                              </Button>
+                            )}
+                            {/* Ping Customer Button - only show for latest round with feedback_needed status */}
+                            {(() => {
+                              const allRounds = [...new Set(proofs.map(p => p.round || 1))].sort((a, b) => a - b);
+                              const isLatestRound = group.round === Math.max(...allRounds);
+                              const stageStatus = order?.[`${stage}_status`];
+                              
+                              if (isLatestRound && stageStatus === 'feedback_needed') {
+                                return (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePingCustomer(stage)}
+                                    disabled={pingingCustomer}
+                                    className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                                  >
+                                    <Bell className="w-4 h-4 mr-1" />
+                                    {pingingCustomer ? "Sending..." : "Remind Customer"}
+                                  </Button>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
                         </div>
                         
                         <div className="grid grid-cols-3 gap-4">
-                          {group.items.filter(item => item.type === 'proof').map((item, idx) => (
-                            <div key={idx} className="relative group">
-                              <img 
-                                src={item.data.url} 
-                                alt={`Proof ${idx + 1}`}
-                                loading="lazy"
-                                className="w-full h-48 object-cover rounded border-2 cursor-pointer hover:border-blue-500 transition"
-                                onClick={() => setSelectedImage(item.data.url)}
-                              />
-                              <button
-                                onClick={() => handleDeleteProof(stage, item.data.id)}
-                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          {group.items.filter(item => item.type === 'proof').map((item, idx) => {
+                            const isSelected = (selectedProofs[stage] || []).includes(item.data.id);
+                            return (
+                              <div key={idx} className={`relative group ${isSelected ? 'ring-2 ring-blue-500 rounded' : ''}`}>
+                                {/* Checkbox overlay */}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); toggleProofSelection(stage, item.data.id); }}
+                                  className={`absolute top-2 left-2 z-10 w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
+                                    isSelected 
+                                      ? 'bg-blue-500 border-blue-500 text-white' 
+                                      : 'bg-white/80 border-gray-400 hover:border-blue-400'
+                                  }`}
+                                >
+                                  {isSelected && <Check className="w-4 h-4" />}
+                                </button>
+                                <img 
+                                  src={item.data.url} 
+                                  alt={`Proof ${idx + 1}`}
+                                  loading="lazy"
+                                  className="w-full h-48 object-cover rounded border-2 cursor-pointer hover:border-blue-500 transition"
+                                  onClick={() => setSelectedImage(item.data.url)}
+                                />
+                                <button
+                                  onClick={() => handleDeleteProof(stage, item.data.id)}
+                                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="Delete proof"
                               >
                                 <Trash2 className="w-4 h-4" />
