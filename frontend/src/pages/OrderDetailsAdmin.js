@@ -75,6 +75,10 @@ const OrderDetailsAdminNew = () => {
   const [replyDialogOpen, setReplyDialogOpen] = useState(false);
   const [replyMessage, setReplyMessage] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
+  
+  // Multi-select proofs for bulk delete
+  const [selectedProofs, setSelectedProofs] = useState({});  // { "clay": ["id1", "id2"], "paint": [] }
+  const [isDeletingProofs, setIsDeletingProofs] = useState(false);
 
   useEffect(() => {
     // Set up authentication
