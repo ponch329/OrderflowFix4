@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Package, Upload, Edit, Save, Trash2, ChevronDown, ChevronUp, MessageCircle, Send, Bell, Loader2 } from "lucide-react";
+import { ArrowLeft, Package, Upload, Edit, Save, Trash2, ChevronDown, ChevronUp, MessageCircle, Send, Bell, Loader2, Check, Square, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import DragDropUpload from "@/components/DragDropUpload";
 import { getStageLabel, getStatusLabel } from "@/utils/labelMapper";
