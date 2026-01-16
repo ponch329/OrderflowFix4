@@ -646,6 +646,45 @@ export default function OrderDesk() {
     }
   };
 
+  const handleBulkUpdateStageStatus = async () => {
+    if (!bulkStage || !bulkStatus) {
+      toast.error("Please select both stage and status");
+      return;
+    }
+    if (selectedOrders.length === 0) {
+      toast.error("No orders selected");
+      return;
+    }
+    
+    setIsBulkUpdating(true);
+    try {
+      const response = await axios.post(`${API}/admin/orders/bulk-update`, {
+        order_ids: selectedOrders,
+        stage: bulkStage,
+        status: bulkStatus
+      });
+      
+      toast.success(`Updated ${response.data.success_count} order(s) to ${bulkStage}/${bulkStatus}`);
+      setBulkUpdateDialogOpen(false);
+      setBulkStage('');
+      setBulkStatus('');
+      setSelectedOrders([]);
+      await Promise.all([fetchOrders(), fetchOrderCounts()]);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update orders");
+      console.error(error);
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  // Get statuses for selected bulk stage
+  const getBulkStatusOptions = () => {
+    if (!bulkStage) return [];
+    const stage = workflowStages.find(s => s.id === bulkStage);
+    return stage?.statuses || [];
+  };
+
   // Build folder structure dynamically from workflow stages
   const folderStructure = [
     {
