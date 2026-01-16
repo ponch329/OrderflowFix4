@@ -200,6 +200,90 @@ body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
 </div>
 </body>
 </html>`
+  },
+  {
+    id: "reminder_clay",
+    name: "Clay Reminder (Customer)",
+    description: "Sent to customer to remind them to review their clay proofs",
+    trigger: "Manually triggered via 'Ping Customer' button when proofs are awaiting feedback",
+    default_subject: "Reminder: Please Review Your Clay Proofs - Order #{order_number}",
+    default_body: `<html>
+<head><style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+.content { background: #ffffff; padding: 30px 20px; border: 1px solid #e0e0e0; }
+.info-box { background: #e3f2fd; padding: 20px; border-left: 4px solid #2196F3; margin: 20px 0; }
+.button { background: #2196F3; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }
+.footer { text-align: center; padding: 20px; color: #888; font-size: 12px; background: #f5f5f5; }
+</style></head>
+<body>
+<div class="container">
+<div class="header"><div style="font-size: 48px;">🔔</div><h1>Proof Review Reminder</h1></div>
+<div class="content">
+<p>Hi {customer_name},</p>
+<p>This is a friendly reminder that your bobblehead clay proofs are ready and waiting for your review!</p>
+<div class="info-box">
+<p><strong>Order Number:</strong> #{order_number}</p>
+<p><strong>Stage:</strong> Clay</p>
+<p><strong>Proofs Available:</strong> {num_images} image(s)</p>
+</div>
+<p>Please review your proofs and let us know if you'd like to:</p>
+<ul>
+<li>✓ Approve the clay stage</li>
+<li>📝 Request any changes</li>
+</ul>
+<p style="text-align: center;">
+<a href="{portal_url}" class="button">Review Your Proofs</a>
+</p>
+<p style="color: #666; font-size: 14px;">To view your order, visit the customer portal and enter your email and order number.</p>
+</div>
+<div class="footer"><p>{company_name} | {company_email}</p></div>
+</div>
+</body>
+</html>`
+  },
+  {
+    id: "reminder_paint",
+    name: "Paint Reminder (Customer)",
+    description: "Sent to customer to remind them to review their paint proofs",
+    trigger: "Manually triggered via 'Ping Customer' button when proofs are awaiting feedback",
+    default_subject: "Reminder: Please Review Your Paint Proofs - Order #{order_number}",
+    default_body: `<html>
+<head><style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+.content { background: #ffffff; padding: 30px 20px; border: 1px solid #e0e0e0; }
+.info-box { background: #f3e5f5; padding: 20px; border-left: 4px solid #9C27B0; margin: 20px 0; }
+.button { background: #9C27B0; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }
+.footer { text-align: center; padding: 20px; color: #888; font-size: 12px; background: #f5f5f5; }
+</style></head>
+<body>
+<div class="container">
+<div class="header"><div style="font-size: 48px;">🔔</div><h1>Proof Review Reminder</h1></div>
+<div class="content">
+<p>Hi {customer_name},</p>
+<p>This is a friendly reminder that your bobblehead paint proofs are ready and waiting for your review!</p>
+<div class="info-box">
+<p><strong>Order Number:</strong> #{order_number}</p>
+<p><strong>Stage:</strong> Paint</p>
+<p><strong>Proofs Available:</strong> {num_images} image(s)</p>
+</div>
+<p>Please review your proofs and let us know if you'd like to:</p>
+<ul>
+<li>✓ Approve the paint stage</li>
+<li>📝 Request any adjustments</li>
+</ul>
+<p style="text-align: center;">
+<a href="{portal_url}" class="button">Review Your Proofs</a>
+</p>
+<p style="color: #666; font-size: 14px;">We're excited for you to see the final painted result!</p>
+</div>
+<div class="footer"><p>{company_name} | {company_email}</p></div>
+</div>
+</body>
+</html>`
   }
 ];
 
