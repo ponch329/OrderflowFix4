@@ -137,11 +137,22 @@ async def startup_event():
         await asyncio.wait_for(db.orders.create_index([("tenant_id", 1), ("stage", 1), ("is_archived", 1), ("created_at", -1)]), timeout=5.0)
         await asyncio.wait_for(db.orders.create_index([("order_number", 1)]), timeout=5.0)
         await asyncio.wait_for(db.orders.create_index([("customer_email", 1)]), timeout=5.0)
+        await asyncio.wait_for(db.orders.create_index([("customer_name", 1)]), timeout=5.0)
         # Index for Shopify sync - speeds up checking existing orders
         await asyncio.wait_for(db.orders.create_index([("tenant_id", 1), ("shopify_order_id", 1)]), timeout=5.0)
+        # Text index for fast search across multiple fields
+        try:
+            await asyncio.wait_for(
+                db.orders.create_index([
+                    ("order_number", "text"),
+                    ("customer_email", "text"),
+                    ("customer_name", "text")
+                ], default_language="english", name="search_text_index"),
+                timeout=5.0
+            )
+        except Exception:
+            pass  # Text index might already exist with different config
         logger.info("✅ MongoDB indexes ensured")
-    except asyncio.TimeoutError:
-        logger.warning("⚠️ Index creation timed out - will be created on next startup")
     except asyncio.TimeoutError:
         logger.warning("⚠️ Index creation timed out - will be created on next startup")
     except Exception as e:
