@@ -698,12 +698,13 @@ const OrderDetailsAdminNew = () => {
                                 <button
                                   onClick={() => handleDeleteProof(stage, item.data.id)}
                                   className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Delete proof"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
+                                  title="Delete proof"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
