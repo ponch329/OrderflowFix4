@@ -1049,8 +1049,20 @@ const OrderDetailsAdminNew = () => {
               <DialogTitle>Notify Customer?</DialogTitle>
             </DialogHeader>
             <p className="text-gray-600 mb-4">
-              Would you like to send an email notification to the customer about this status change?
+              Would you like to send an email notification to <strong>{order?.customer_email}</strong> about this change?
             </p>
+            <div className="bg-gray-50 p-3 rounded mb-4 text-sm">
+              <p><strong>Changes:</strong></p>
+              {selectedStage !== order?.stage && (
+                <p>• Stage: {order?.stage} → {selectedStage}</p>
+              )}
+              {selectedClayStatus !== order?.clay_status && (
+                <p>• Clay Status: {order?.clay_status} → {selectedClayStatus}</p>
+              )}
+              {selectedPaintStatus !== order?.paint_status && (
+                <p>• Paint Status: {order?.paint_status} → {selectedPaintStatus}</p>
+              )}
+            </div>
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
