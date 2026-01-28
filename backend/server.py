@@ -2048,7 +2048,7 @@ async def sync_order_shopify_tags(order_id: str):
         raise HTTPException(status_code=500, detail="Failed to sync tags to Shopify")
 
 @api_router.post("/admin/orders/bulk-sync-shopify-tags")
-async def bulk_sync_shopify_tags(request_data: dict = None):
+async def bulk_sync_shopify_tags(request_data: dict = None, background_tasks: BackgroundTasks = None):
     """
     Bulk sync order tags to Shopify.
     Either provide a list of order_ids or set all_orders=True to sync all orders with Shopify IDs.
@@ -2057,6 +2057,8 @@ async def bulk_sync_shopify_tags(request_data: dict = None):
     - order_ids: List of order IDs to sync (optional)
     - all_orders: Set to true to sync all orders (optional)
     """
+    from fastapi import BackgroundTasks
+    
     if request_data is None:
         request_data = {}
     
@@ -2074,36 +2076,86 @@ async def bulk_sync_shopify_tags(request_data: dict = None):
     if order_ids and not all_orders:
         query["id"] = {"$in": order_ids}
     
-    orders = await db.orders.find(query, {"_id": 0}).to_list(1000)
+    # Count total orders to sync
+    total_count = await db.orders.count_documents(query)
     
-    success_count = 0
-    failed_count = 0
+    if total_count == 0:
+        return {"message": "No orders to sync", "total": 0}
     
-    for order in orders:
-        stage = order.get("stage", "clay")
-        status = order.get(f"{stage}_status", "pending")
+    # For small batches (< 50), process immediately
+    if total_count <= 50:
+        orders = await db.orders.find(query, {"_id": 0}).to_list(50)
+        success_count = 0
+        failed_count = 0
         
-        try:
-            result = await sync_order_tags_to_shopify(
-                order["shopify_order_id"],
-                stage,
-                status,
-                tenant,
-                workflow_config
-            )
-            if result:
-                success_count += 1
-            else:
+        for order in orders:
+            stage = order.get("stage", "clay")
+            status = order.get(f"{stage}_status", "pending")
+            
+            try:
+                result = await sync_order_tags_to_shopify(
+                    order["shopify_order_id"],
+                    stage,
+                    status,
+                    tenant,
+                    workflow_config
+                )
+                if result:
+                    success_count += 1
+                else:
+                    failed_count += 1
+            except Exception as e:
+                logger.error(f"Failed to sync tags for order {order.get('order_number')}: {e}")
                 failed_count += 1
-        except Exception as e:
-            logger.error(f"Failed to sync tags for order {order.get('order_number')}: {e}")
-            failed_count += 1
+        
+        return {
+            "message": f"Synced {success_count} orders, {failed_count} failed",
+            "success": success_count,
+            "failed": failed_count,
+            "total": len(orders)
+        }
+    
+    # For large batches, process in background
+    async def sync_tags_background():
+        """Background task to sync tags for all orders"""
+        orders = await db.orders.find(query, {"_id": 0}).to_list(None)
+        success = 0
+        failed = 0
+        
+        for i, order in enumerate(orders):
+            stage = order.get("stage", "clay")
+            status = order.get(f"{stage}_status", "pending")
+            
+            try:
+                result = await sync_order_tags_to_shopify(
+                    order["shopify_order_id"],
+                    stage,
+                    status,
+                    tenant,
+                    workflow_config
+                )
+                if result:
+                    success += 1
+                else:
+                    failed += 1
+            except Exception as e:
+                logger.error(f"Failed to sync tags for order {order.get('order_number')}: {e}")
+                failed += 1
+            
+            # Rate limit to avoid Shopify API throttling
+            if (i + 1) % 10 == 0:
+                await asyncio.sleep(0.5)
+        
+        logger.info(f"Background tag sync complete: {success} success, {failed} failed out of {len(orders)} total")
+    
+    # Start background task
+    import asyncio
+    asyncio.create_task(sync_tags_background())
     
     return {
-        "message": f"Synced {success_count} orders, {failed_count} failed",
-        "success": success_count,
-        "failed": failed_count,
-        "total": len(orders)
+        "message": f"Started syncing {total_count} orders in background. This may take a few minutes.",
+        "status": "processing",
+        "total": total_count
     }
 
 @api_router.post("/admin/orders/fix-stages")
