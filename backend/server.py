@@ -2079,8 +2079,6 @@ async def bulk_sync_shopify_tags(request_data: dict = None, background_tasks: Ba
     - order_ids: List of order IDs to sync (optional)
     - all_orders: Set to true to sync all orders (optional)
     """
-    from fastapi import BackgroundTasks
-    
     if request_data is None:
         request_data = {}
     
