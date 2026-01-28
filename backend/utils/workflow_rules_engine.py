@@ -181,24 +181,20 @@ class WorkflowRulesEngine:
             # Mark current stage as approved or changes requested
             updates[f"{current_stage}_status"] = approval_status
             
-            # SAFETY CHECK: Only auto-advance from clay to paint, NEVER directly to shipped
-            # This prevents any accidental skipping of stages
-            if current_stage.lower() == "clay" and approval_status == "approved":
-                # Only advance to paint, never anything else
-                if self.should_auto_advance(current_stage, approval_status):
-                    next_stage = self.get_next_stage(current_stage)
-                    # CRITICAL: Only allow transition to paint stage from clay
-                    if next_stage and next_stage.lower() == "paint":
-                        updates["stage"] = next_stage
-                        next_status = self.get_initial_status_for_stage(next_stage)
-                        if next_status:
-                            updates[f"{next_stage}_status"] = next_status
-                    elif next_stage and next_stage.lower() != "paint":
-                        # Log warning if trying to skip to a stage other than paint
-                        import logging
-                        logging.warning(f"BLOCKED: Attempted to advance from clay directly to {next_stage}. Only paint is allowed.")
-            # From paint stage, NEVER auto-advance (user mentioned this explicitly)
-            # Paint approval should NOT move to shipped automatically
+            # Check for workflow rule-based transition first
+            # If there's a rule for this stage+status, use it
+            rule_transition = self.get_next_state(current_stage, approval_status)
+            if rule_transition:
+                next_stage, next_status = rule_transition
+                updates["stage"] = next_stage
+                updates[f"{next_stage}_status"] = next_status
+            # If no rule exists, use auto-advance logic (clay->paint only)
+            elif current_stage.lower() == "clay" and approval_status == "approved":
+                # Default: Clay approved goes to Paint (if auto-advance enabled)
+                if self.config.get('auto_advance_on_approval', True):
+                    updates["stage"] = "paint"
+                    updates["paint_status"] = self.get_initial_status_for_stage("paint")
+            # Paint and other stages: NO auto-advance without explicit workflow rule
         
         return updates
     
