@@ -134,16 +134,28 @@ const OrderDetailsAdminNew = () => {
   };
 
   const handleStageStatusChange = async () => {
-    // If customer status changed, show notification dialog
-    if (selectedClayStatus !== order.clay_status || selectedPaintStatus !== order.paint_status) {
-      setChangesStage(selectedClayStatus === 'changes_requested' ? 'clay' : 'paint');
+    // Check if stage or status changed - if so, ask about notification
+    const stageChanged = selectedStage !== order.stage;
+    const clayStatusChanged = selectedClayStatus !== order.clay_status;
+    const paintStatusChanged = selectedPaintStatus !== order.paint_status;
+    
+    if (stageChanged || clayStatusChanged || paintStatusChanged) {
+      // Determine which stage changed for the notification message
+      if (stageChanged) {
+        setChangesStage(selectedStage);
+      } else if (clayStatusChanged) {
+        setChangesStage('clay');
+      } else {
+        setChangesStage('paint');
+      }
       setEditStageDialogOpen(false);
       setConfirmDialogOpen(true);
       return;
     }
 
-    // Otherwise just update
-    await confirmStageStatusChange();
+    // No changes, just close dialog
+    setEditStageDialogOpen(false);
+    toast.info("No changes made");
   };
 
   const confirmStageStatusChange = async () => {
