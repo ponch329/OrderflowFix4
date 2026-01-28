@@ -2740,24 +2740,22 @@ async def approve_stage(
         approval_status=status
     )
     
-    # CRITICAL SAFETY CHECK: Prevent jumping directly to shipped
-    # Only clay -> paint is allowed for auto-advance
+    # SAFETY CHECK: Only block transitions that have NO workflow rule backing them
+    # If a workflow rule exists for this transition, it's intentional and should be allowed
     if "stage" in workflow_updates:
         new_stage = workflow_updates["stage"]
-        if stage.lower() == "clay" and new_stage.lower() not in ["paint"]:
-            logger.warning(f"BLOCKED invalid transition: {stage} -> {new_stage} for order {order_id}. Only clay->paint is allowed.")
-            del workflow_updates["stage"]
-            # Also remove any status update for the invalid stage
-            invalid_status_key = f"{new_stage}_status"
-            if invalid_status_key in workflow_updates:
-                del workflow_updates[invalid_status_key]
-        elif stage.lower() == "paint":
-            # NEVER auto-advance from paint - paint approval stays at paint stage
-            logger.warning(f"BLOCKED paint auto-advance: {stage} -> {new_stage} for order {order_id}. Paint should not auto-advance.")
-            del workflow_updates["stage"]
-            invalid_status_key = f"{new_stage}_status"
-            if invalid_status_key in workflow_updates:
-                del workflow_updates[invalid_status_key]
+        # Check if there's a workflow rule that defines this transition
+        has_rule = workflow_engine.get_next_state(stage.lower(), status.lower()) is not None
+        
+        if not has_rule:
+            # No rule exists - only allow default clay->paint transition
+            if stage.lower() == "clay" and new_stage.lower() != "paint":
+                logger.warning(f"BLOCKED invalid transition (no rule): {stage} -> {new_stage} for order {order_id}. Only clay->paint is allowed without a rule.")
+                del workflow_updates["stage"]
+                invalid_status_key = f"{new_stage}_status"
+                if invalid_status_key in workflow_updates:
+                    del workflow_updates[invalid_status_key]
+        # If has_rule is True, the transition is allowed (workflow rule takes precedence)
     
     # Build update data
     field = f"{stage}_approval"
