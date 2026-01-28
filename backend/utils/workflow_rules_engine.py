@@ -181,15 +181,24 @@ class WorkflowRulesEngine:
             # Mark current stage as approved or changes requested
             updates[f"{current_stage}_status"] = approval_status
             
-            # Check if should auto-advance (but NOT from paint stage)
-            if current_stage != "paint" and self.should_auto_advance(current_stage, approval_status):
-                next_stage = self.get_next_stage(current_stage)
-                if next_stage:
-                    updates["stage"] = next_stage
-                    # Find the initial status for next stage
-                    next_status = self.get_initial_status_for_stage(next_stage)
-                    if next_status:
-                        updates[f"{next_stage}_status"] = next_status
+            # SAFETY CHECK: Only auto-advance from clay to paint, NEVER directly to shipped
+            # This prevents any accidental skipping of stages
+            if current_stage.lower() == "clay" and approval_status == "approved":
+                # Only advance to paint, never anything else
+                if self.should_auto_advance(current_stage, approval_status):
+                    next_stage = self.get_next_stage(current_stage)
+                    # CRITICAL: Only allow transition to paint stage from clay
+                    if next_stage and next_stage.lower() == "paint":
+                        updates["stage"] = next_stage
+                        next_status = self.get_initial_status_for_stage(next_stage)
+                        if next_status:
+                            updates[f"{next_stage}_status"] = next_status
+                    elif next_stage and next_stage.lower() != "paint":
+                        # Log warning if trying to skip to a stage other than paint
+                        import logging
+                        logging.warning(f"BLOCKED: Attempted to advance from clay directly to {next_stage}. Only paint is allowed.")
+            # From paint stage, NEVER auto-advance (user mentioned this explicitly)
+            # Paint approval should NOT move to shipped automatically
         
         return updates
     
