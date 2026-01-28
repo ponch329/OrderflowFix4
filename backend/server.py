@@ -1010,13 +1010,35 @@ async def sync_order_tags_to_shopify(shopify_order_id: str, stage: str, status: 
             
             # Add the new tag
             filtered_tags.append(new_tag)
+            new_tags_str = ", ".join(filtered_tags)
             
-            # Update the order tags
-            shopify_order.tags = ", ".join(filtered_tags)
-            shopify_order.save()
+            # Use PUT with only the tags field to avoid validation errors on other fields
+            # Create a minimal order update with just the ID and tags
+            import requests
             
-            logger.info(f"Synced tag '{new_tag}' to Shopify order {shopify_order_id}")
-            return True
+            shop_url = tenant.get("shopify_shop") or tenant.get("settings", {}).get("shopify_shop")
+            access_token = tenant.get("shopify_access_token") or tenant.get("settings", {}).get("shopify_access_token")
+            
+            update_url = f"https://{shop_url}/admin/api/2024-01/orders/{shopify_order_id}.json"
+            headers = {
+                "X-Shopify-Access-Token": access_token,
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "order": {
+                    "id": int(shopify_order_id),
+                    "tags": new_tags_str
+                }
+            }
+            
+            response = requests.put(update_url, json=payload, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                logger.info(f"Synced tag '{new_tag}' to Shopify order {shopify_order_id}")
+                return True
+            else:
+                logger.error(f"Failed to sync tags to Shopify: {response.status_code} - {response.text[:200]}")
+                return False
             
         finally:
             shopify.ShopifyResource.clear_session()
