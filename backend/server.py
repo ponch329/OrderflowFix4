@@ -519,7 +519,11 @@ async def get_orders_counts():
         
         # Build dynamic aggregation pipeline
         facet_stages = {
-            "total": [{"$count": "count"}],
+            # Total count should EXCLUDE archived orders (for "All Orders" folder)
+            "total": [
+                {"$match": non_archived_filter},
+                {"$count": "count"}
+            ],
             "archived": [
                 {"$match": archived_filter},
                 {"$count": "count"}
