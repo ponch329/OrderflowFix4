@@ -2162,14 +2162,17 @@ async def bulk_sync_shopify_tags(request_data: dict = None, background_tasks: Ba
                 logger.error(f"Failed to sync tags for order {order.get('order_number')}: {e}")
                 failed += 1
             
-            # Rate limit to avoid Shopify API throttling
-            if (i + 1) % 10 == 0:
-                await asyncio.sleep(0.5)
+            # Rate limit to respect Shopify's 2 calls/second limit
+            # Wait 600ms between each call to stay safely under the limit
+            await asyncio.sleep(0.6)
+            
+            # Log progress every 50 orders
+            if (i + 1) % 50 == 0:
+                logger.info(f"Shopify tag sync progress: {i + 1}/{len(orders)} ({success} success, {failed} failed)")
         
         logger.info(f"Background tag sync complete: {success} success, {failed} failed out of {len(orders)} total")
     
     # Start background task
-    import asyncio
     asyncio.create_task(sync_tags_background())
     
     return {
