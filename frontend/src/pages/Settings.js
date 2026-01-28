@@ -326,16 +326,20 @@ const Settings = () => {
         { all_orders: true },
         { 
           headers: { Authorization: `Bearer ${token}` },
-          timeout: 300000 // 5 minute timeout for large syncs
+          timeout: 30000 // 30 second timeout - large syncs run in background
         }
       );
       
       const result = response.data;
-      toast.success(`Synced ${result.success} order tags to Shopify! (${result.failed} failed)`);
+      if (result.status === 'processing') {
+        toast.success(`Started syncing ${result.total} orders in background. This may take a few minutes.`);
+      } else {
+        toast.success(`Synced ${result.success} order tags to Shopify! (${result.failed} failed)`);
+      }
       console.log("Bulk tag sync result:", result);
     } catch (error) {
       if (error.code === 'ECONNABORTED') {
-        toast.info("Sync is still running in the background. Check Shopify to verify.");
+        toast.info("Sync is running in the background. Check Shopify to verify.");
       } else {
         toast.error(error.response?.data?.detail || "Failed to sync tags");
       }
