@@ -1016,8 +1016,8 @@ async def sync_order_tags_to_shopify(shopify_order_id: str, stage: str, status: 
             # Create a minimal order update with just the ID and tags
             import requests
             
-            shop_url = tenant.get("shopify_shop") or tenant.get("settings", {}).get("shopify_shop")
-            access_token = tenant.get("shopify_access_token") or tenant.get("settings", {}).get("shopify_access_token")
+            shop_url = tenant_settings.get("shopify_shop") or tenant_settings.get("settings", {}).get("shopify_shop") or shopify_shop_name
+            access_token = tenant_settings.get("shopify_access_token") or tenant_settings.get("settings", {}).get("shopify_access_token") or shopify_access_token
             
             update_url = f"https://{shop_url}/admin/api/2024-01/orders/{shopify_order_id}.json"
             headers = {
