@@ -1125,6 +1125,65 @@ async def update_admin_order_status(order_id: str, update_data: dict):
         {"$set": update_fields}
     )
     
+    # Send notification email if requested
+    notify_customer = update_data.get("notify_customer", False)
+    if notify_customer:
+        try:
+            settings = tenant.get("settings", {})
+            
+            # Determine what changed for the email
+            new_stage = update_fields.get("stage", order.get("stage"))
+            new_clay_status = update_fields.get("clay_status", order.get("clay_status"))
+            new_paint_status = update_fields.get("paint_status", order.get("paint_status"))
+            
+            # Get workflow config for display labels
+            workflow_config = settings.get("workflow_config", {})
+            
+            # Build stage/status display names
+            stage_name = new_stage.title()
+            status_name = None
+            if new_stage == "clay" and new_clay_status:
+                status_name = new_clay_status.replace("_", " ").title()
+            elif new_stage == "paint" and new_paint_status:
+                status_name = new_paint_status.replace("_", " ").title()
+            elif new_stage == "shipped":
+                status_name = "In Transit"
+            
+            # Try to get labels from workflow config
+            if workflow_config.get("stages"):
+                for s in workflow_config["stages"]:
+                    if s.get("id") == new_stage:
+                        stage_name = s.get("name", stage_name)
+                        for st in s.get("statuses", []):
+                            current_status = new_clay_status if new_stage == "clay" else new_paint_status
+                            if st.get("id") == current_status:
+                                status_name = st.get("name", status_name)
+                                break
+                        break
+            
+            # Send the notification email
+            from email_templates import get_status_change_email
+            subject, html_content = get_status_change_email(
+                customer_name=order.get("customer_name", "Customer"),
+                order_number=order.get("order_number", order_id),
+                stage_name=stage_name,
+                status_name=status_name or "Updated",
+                company_name=tenant.get("name", "OrderFlow"),
+                logo_url=settings.get("logo_url", "")
+            )
+            
+            from utils.email_sender import send_email
+            await send_email(
+                to_email=order.get("customer_email"),
+                subject=subject,
+                html_content=html_content,
+                tenant_settings=settings
+            )
+            logger.info(f"Sent status change notification to {order.get('customer_email')} for order {order_id}")
+        except Exception as e:
+            logger.error(f"Failed to send notification email for order {order_id}: {e}")
+            # Don't fail the request if email fails - just log it
+    
     # Sync tags to Shopify (non-blocking) when stage or status changes
     if order.get("shopify_order_id") and ("stage" in update_data or "clay_status" in update_data or "paint_status" in update_data):
         import asyncio
