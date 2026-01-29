@@ -1120,6 +1120,9 @@ async def update_admin_order_status(order_id: str, update_data: dict):
     if "paint_status" in update_data:
         update_fields["paint_status"] = update_data["paint_status"]
     
+    if "shipped_status" in update_data:
+        update_fields["shipped_status"] = update_data["shipped_status"]
+    
     await db.orders.update_one(
         {"id": order_id, "tenant_id": tenant_id},
         {"$set": update_fields}
