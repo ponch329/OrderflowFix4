@@ -140,15 +140,18 @@ const OrderDetailsAdminNew = () => {
     const stageChanged = selectedStage !== order.stage;
     const clayStatusChanged = selectedClayStatus !== order.clay_status;
     const paintStatusChanged = selectedPaintStatus !== order.paint_status;
+    const shippedStatusChanged = selectedShippedStatus !== (order.shipped_status || 'in_transit');
     
-    if (stageChanged || clayStatusChanged || paintStatusChanged) {
+    if (stageChanged || clayStatusChanged || paintStatusChanged || shippedStatusChanged) {
       // Determine which stage changed for the notification message
       if (stageChanged) {
         setChangesStage(selectedStage);
       } else if (clayStatusChanged) {
         setChangesStage('clay');
-      } else {
+      } else if (paintStatusChanged) {
         setChangesStage('paint');
+      } else {
+        setChangesStage('shipped');
       }
       setEditStageDialogOpen(false);
       setConfirmDialogOpen(true);
@@ -166,6 +169,7 @@ const OrderDetailsAdminNew = () => {
         stage: selectedStage,
         clay_status: selectedClayStatus,
         paint_status: selectedPaintStatus,
+        shipped_status: selectedShippedStatus,
         notify_customer: notifyCustomer
       });
       
