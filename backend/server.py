@@ -2201,6 +2201,23 @@ async def debug_workflow_config():
     from utils.workflow_rules_engine import get_workflow_engine_from_tenant
     workflow_engine = get_workflow_engine_from_tenant(settings)
     
+    # Find any inconsistencies
+    issues = []
+    if workflow_legacy and workflow_config_new:
+        if workflow_legacy.get("auto_advance_on_approval") != workflow_config_new.get("auto_advance_on_approval"):
+            issues.append("auto_advance_on_approval differs between legacy and new config")
+    
+    if not workflow_config_new.get("stages"):
+        issues.append("workflow_config has no stages defined - using defaults")
+    
+    if workflow_config_new.get("rules"):
+        # Check rule format
+        sample_rule = workflow_config_new["rules"][0] if workflow_config_new["rules"] else {}
+        if "from_stage" in sample_rule:
+            issues.append("Rules use snake_case (from_stage) - engine now supports this")
+        elif "fromStage" in sample_rule:
+            issues.append("Rules use camelCase (fromStage) - standard format")
+    
     return {
         "has_workflow_legacy": bool(workflow_legacy),
         "has_workflow_config_new": bool(workflow_config_new),
@@ -2221,9 +2238,12 @@ async def debug_workflow_config():
             "available_stages": workflow_engine.get_available_stages(),
             "available_statuses": workflow_engine.get_available_statuses(),
             "transitions_count": len(workflow_engine.transitions),
+            "transitions": dict(list(workflow_engine.transitions.items())[:10]),  # First 10 transitions
             "config_auto_advance": workflow_engine.config.get("auto_advance_on_approval"),
+            "config_status_after_upload": workflow_engine.config.get("status_after_upload"),
         },
-        "recommendation": "If workflow_config_new has rules but engine shows 0 transitions, check the rule format (fromStage/toStage vs stage/nextStage)"
+        "issues": issues,
+        "recommendation": "Both workflow systems should be unified. The new workflow_config format is preferred."
     }
 
 
