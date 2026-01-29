@@ -2247,6 +2247,141 @@ async def debug_workflow_config():
     }
 
 
+@api_router.post("/admin/workflow/initialize-config")
+async def initialize_workflow_config():
+    """
+    Initialize workflow_config with proper stage definitions.
+    This migrates your legacy workflow settings to the new unified format.
+    """
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="No tenant found")
+    
+    settings = tenant.get("settings", {})
+    legacy_workflow = settings.get("workflow", {})
+    existing_config = settings.get("workflow_config", {})
+    
+    # Define complete stages with all statuses
+    default_stages = [
+        {
+            "id": "clay",
+            "name": "Clay",
+            "order": 1,
+            "statuses": [
+                {"id": "sculpting", "name": "In Progress"},
+                {"id": "feedback_needed", "name": "Feedback Needed"},
+                {"id": "changes_requested", "name": "Changes Requested"},
+                {"id": "approved", "name": "Approved"},
+            ]
+        },
+        {
+            "id": "paint",
+            "name": "Paint",
+            "order": 2,
+            "statuses": [
+                {"id": "painting", "name": "In Progress"},
+                {"id": "feedback_needed", "name": "Feedback Needed"},
+                {"id": "changes_requested", "name": "Changes Requested"},
+                {"id": "approved", "name": "Approved"},
+            ]
+        },
+        {
+            "id": "shipped",
+            "name": "Shipped",
+            "order": 3,
+            "statuses": [
+                {"id": "in_transit", "name": "In Transit"},
+                {"id": "delivered", "name": "Delivered"},
+            ]
+        },
+        {
+            "id": "archived",
+            "name": "Archived",
+            "order": 4,
+            "statuses": [
+                {"id": "completed", "name": "Completed"},
+                {"id": "canceled", "name": "Canceled"},
+            ]
+        }
+    ]
+    
+    # Define workflow rules that match the expected behavior
+    # These rules define what happens on specific triggers
+    default_rules = [
+        # Clay stage rules
+        {"id": 1, "fromStage": "clay", "fromStatus": "sculpting", "trigger": "proof_uploaded", "toStage": "clay", "toStatus": "feedback_needed", "emailAction": "proof_ready"},
+        {"id": 2, "fromStage": "clay", "fromStatus": "feedback_needed", "trigger": "proof_approved", "toStage": "clay", "toStatus": "approved", "emailAction": "approval_received"},
+        {"id": 3, "fromStage": "clay", "fromStatus": "feedback_needed", "trigger": "changes_requested", "toStage": "clay", "toStatus": "changes_requested", "emailAction": "changes_received"},
+        {"id": 4, "fromStage": "clay", "fromStatus": "changes_requested", "trigger": "proof_uploaded", "toStage": "clay", "toStatus": "feedback_needed", "emailAction": "proof_ready"},
+        {"id": 5, "fromStage": "clay", "fromStatus": "approved", "trigger": "manual_change", "toStage": "paint", "toStatus": "painting", "emailAction": "stage_complete"},
+        
+        # Paint stage rules
+        {"id": 6, "fromStage": "paint", "fromStatus": "painting", "trigger": "proof_uploaded", "toStage": "paint", "toStatus": "feedback_needed", "emailAction": "proof_ready"},
+        {"id": 7, "fromStage": "paint", "fromStatus": "feedback_needed", "trigger": "proof_approved", "toStage": "paint", "toStatus": "approved", "emailAction": "approval_received"},
+        {"id": 8, "fromStage": "paint", "fromStatus": "feedback_needed", "trigger": "changes_requested", "toStage": "paint", "toStatus": "changes_requested", "emailAction": "changes_received"},
+        {"id": 9, "fromStage": "paint", "fromStatus": "changes_requested", "trigger": "proof_uploaded", "toStage": "paint", "toStatus": "feedback_needed", "emailAction": "proof_ready"},
+        {"id": 10, "fromStage": "paint", "fromStatus": "approved", "trigger": "tracking_added", "toStage": "shipped", "toStatus": "in_transit", "emailAction": "order_shipped"},
+    ]
+    
+    # Preserve existing rules if they exist and merge
+    existing_rules = existing_config.get("rules", [])
+    if existing_rules:
+        # Keep existing rules, add defaults for missing transitions
+        existing_transitions = set()
+        for rule in existing_rules:
+            from_stage = rule.get("fromStage") or rule.get("from_stage", "")
+            from_status = rule.get("fromStatus") or rule.get("from_status", "")
+            trigger = rule.get("trigger", "")
+            existing_transitions.add((from_stage.lower(), from_status.lower(), trigger.lower()))
+        
+        # Add default rules that don't conflict
+        for rule in default_rules:
+            key = (rule["fromStage"].lower(), rule["fromStatus"].lower(), rule["trigger"].lower())
+            if key not in existing_transitions:
+                existing_rules.append(rule)
+        
+        final_rules = existing_rules
+    else:
+        final_rules = default_rules
+    
+    # Preserve existing timers
+    existing_timers = existing_config.get("timers", [])
+    
+    # Merge behavior settings from legacy workflow
+    new_workflow_config = {
+        "stages": default_stages,
+        "rules": final_rules,
+        "timers": existing_timers or [
+            {"id": 1, "stage": "clay", "status": "feedback_needed", "days": 2, "hours": 0, "backgroundColor": "#fff3cd", "description": "Customer hasn't reviewed clay proofs"},
+            {"id": 2, "stage": "paint", "status": "feedback_needed", "days": 2, "hours": 0, "backgroundColor": "#fff3cd", "description": "Customer hasn't reviewed paint proofs"},
+        ],
+        # Behavior settings
+        "auto_advance_on_approval": legacy_workflow.get("auto_advance_on_approval", True),
+        "status_after_upload": legacy_workflow.get("status_after_upload", "feedback_needed"),
+        "notify_customer_on_upload": legacy_workflow.get("notify_customer_on_upload", True),
+        "notify_admin_on_customer_response": legacy_workflow.get("notify_admin_on_customer_response", True),
+    }
+    
+    # Update tenant settings
+    result = await db.tenants.update_one(
+        {"id": tenant["id"]},
+        {"$set": {"settings.workflow_config": new_workflow_config}}
+    )
+    
+    return {
+        "success": True,
+        "message": "Workflow configuration initialized successfully",
+        "stages_created": len(default_stages),
+        "rules_created": len(final_rules),
+        "timers_created": len(new_workflow_config["timers"]),
+        "settings_migrated": {
+            "auto_advance_on_approval": new_workflow_config["auto_advance_on_approval"],
+            "status_after_upload": new_workflow_config["status_after_upload"],
+            "notify_customer_on_upload": new_workflow_config["notify_customer_on_upload"],
+        }
+    }
+
+
 @api_router.post("/admin/orders/fix-stages")
 async def fix_order_stages(request_data: dict = None):
     """
