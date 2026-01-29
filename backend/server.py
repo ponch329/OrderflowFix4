@@ -2238,7 +2238,7 @@ async def debug_workflow_config():
             "available_stages": workflow_engine.get_available_stages(),
             "available_statuses": workflow_engine.get_available_statuses(),
             "transitions_count": len(workflow_engine.transitions),
-            "transitions": dict(list(workflow_engine.transitions.items())[:10]),  # First 10 transitions
+            "transitions": {f"{k[0]}/{k[1]}": f"{v[0]}/{v[1]}" for k, v in list(workflow_engine.transitions.items())[:10]},  # First 10 transitions
             "config_auto_advance": workflow_engine.config.get("auto_advance_on_approval"),
             "config_status_after_upload": workflow_engine.config.get("status_after_upload"),
         },
