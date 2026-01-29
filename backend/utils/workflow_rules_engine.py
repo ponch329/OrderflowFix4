@@ -281,18 +281,19 @@ def get_workflow_engine_from_tenant(tenant_settings: Dict) -> WorkflowRulesEngin
     workflow_rules = workflow_config.get('rules') or workflow_config.get('workflow_rules', [])
     
     # Convert new format rules to engine format if needed
+    # Support multiple naming conventions: camelCase, snake_case
     converted_rules = []
     for rule in workflow_rules:
         # Ensure rule is a dictionary
         if not isinstance(rule, dict):
             continue
-        # New format has fromStage/toStage, legacy has stage/nextStage
+        # Support multiple formats: fromStage (camelCase), from_stage (snake_case), stage (legacy)
         converted_rule = {
-            'stage': rule.get('fromStage') or rule.get('stage', ''),
-            'status': rule.get('fromStatus') or rule.get('status', ''),
-            'triggeredBy': rule.get('trigger') or rule.get('triggeredBy', ''),
-            'nextStage': rule.get('toStage') or rule.get('nextStage', ''),
-            'nextStatus': rule.get('toStatus') or rule.get('nextStatus', '')
+            'stage': rule.get('fromStage') or rule.get('from_stage') or rule.get('stage', ''),
+            'status': rule.get('fromStatus') or rule.get('from_status') or rule.get('status', ''),
+            'triggeredBy': rule.get('trigger') or rule.get('triggeredBy') or rule.get('triggered_by', ''),
+            'nextStage': rule.get('toStage') or rule.get('to_stage') or rule.get('nextStage', ''),
+            'nextStatus': rule.get('toStatus') or rule.get('to_status') or rule.get('nextStatus', '')
         }
         converted_rules.append(converted_rule)
     
