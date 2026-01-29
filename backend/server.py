@@ -2181,6 +2181,52 @@ async def bulk_sync_shopify_tags(request_data: dict = None, background_tasks: Ba
         "total": total_count
     }
 
+@api_router.get("/admin/debug/workflow-config")
+async def debug_workflow_config():
+    """
+    Debug endpoint to view the workflow configuration stored in the database.
+    This helps diagnose issues where workflow and workflow_config are not in sync.
+    """
+    tenant = await db.tenants.find_one({}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="No tenant found")
+    
+    settings = tenant.get("settings", {})
+    
+    # Extract both workflow systems
+    workflow_legacy = settings.get("workflow", {})
+    workflow_config_new = settings.get("workflow_config", {})
+    
+    # Determine which one is being used by the engine
+    from utils.workflow_rules_engine import get_workflow_engine_from_tenant
+    workflow_engine = get_workflow_engine_from_tenant(settings)
+    
+    return {
+        "has_workflow_legacy": bool(workflow_legacy),
+        "has_workflow_config_new": bool(workflow_config_new),
+        "workflow_legacy": {
+            "stage_transitions": workflow_legacy.get("stage_transitions"),
+            "auto_advance_on_approval": workflow_legacy.get("auto_advance_on_approval"),
+            "stage_labels": workflow_legacy.get("stage_labels"),
+            "status_labels": workflow_legacy.get("status_labels"),
+        } if workflow_legacy else None,
+        "workflow_config_new": {
+            "stages_count": len(workflow_config_new.get("stages", [])),
+            "rules_count": len(workflow_config_new.get("rules", [])),
+            "timers_count": len(workflow_config_new.get("timers", [])),
+            "stages": [{"id": s.get("id"), "name": s.get("name")} for s in workflow_config_new.get("stages", [])] if workflow_config_new.get("stages") else None,
+            "rules": workflow_config_new.get("rules", [])[:5],  # First 5 rules only
+        } if workflow_config_new else None,
+        "engine_info": {
+            "available_stages": workflow_engine.get_available_stages(),
+            "available_statuses": workflow_engine.get_available_statuses(),
+            "transitions_count": len(workflow_engine.transitions),
+            "config_auto_advance": workflow_engine.config.get("auto_advance_on_approval"),
+        },
+        "recommendation": "If workflow_config_new has rules but engine shows 0 transitions, check the rule format (fromStage/toStage vs stage/nextStage)"
+    }
+
+
 @api_router.post("/admin/orders/fix-stages")
 async def fix_order_stages(request_data: dict = None):
     """
