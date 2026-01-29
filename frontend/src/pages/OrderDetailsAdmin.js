@@ -109,6 +109,7 @@ const OrderDetailsAdminNew = () => {
         setSelectedStage(foundOrder.stage);
         setSelectedClayStatus(foundOrder.clay_status);
         setSelectedPaintStatus(foundOrder.paint_status);
+        setSelectedShippedStatus(foundOrder.shipped_status || 'in_transit');
         setEditedOrderInfo({
           customer_name: foundOrder.customer_name,
           customer_email: foundOrder.customer_email,
