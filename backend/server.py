@@ -1140,7 +1140,7 @@ async def update_admin_order_status(order_id: str, update_data: dict):
             workflow_config = settings.get("workflow_config", {})
             
             # Build stage/status display names
-            stage_name = new_stage.title()
+            stage_name = new_stage.title() if new_stage else "Unknown"
             status_name = None
             if new_stage == "clay" and new_clay_status:
                 status_name = new_clay_status.replace("_", " ").title()
@@ -1172,12 +1172,12 @@ async def update_admin_order_status(order_id: str, update_data: dict):
                 logo_url=settings.get("logo_url", "")
             )
             
-            from utils.email_sender import send_email
+            from utils.helpers import send_email
             await send_email(
+                tenant_config=tenant,
                 to_email=order.get("customer_email"),
                 subject=subject,
-                html_content=html_content,
-                tenant_settings=settings
+                html_content=html_content
             )
             logger.info(f"Sent status change notification to {order.get('customer_email')} for order {order_id}")
         except Exception as e:
