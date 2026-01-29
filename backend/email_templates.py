@@ -624,3 +624,113 @@ def get_customer_reply_email(order_number, customer_name, message, logo_url=None
     """
     
     return subject, html_content
+
+
+def get_status_change_email(customer_name, order_number, stage_name, status_name, company_name="OrderFlow", logo_url=None):
+    """
+    Template for when admin manually changes order stage/status and wants to notify customer
+    
+    Args:
+        customer_name: Customer's full name
+        order_number: The order number
+        stage_name: Display name of the new stage
+        status_name: Display name of the new status
+        company_name: Company name
+        logo_url: Company logo URL (optional)
+    """
+    subject = f"Order #{order_number} - Status Update"
+    
+    # Logo section HTML
+    logo_html = f'<img src="{logo_url}" alt="{company_name}" style="max-width: 200px; max-height: 80px; margin-bottom: 15px;" />' if logo_url else f'<h2 style="margin: 0;">{company_name}</h2>'
+    
+    html_content = f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                margin: 0;
+                padding: 0;
+            }}
+            .container {{
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+            }}
+            .header {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px 20px;
+                text-align: center;
+                border-radius: 8px 8px 0 0;
+            }}
+            .content {{
+                background: #ffffff;
+                padding: 30px;
+                border: 1px solid #e0e0e0;
+                border-top: none;
+            }}
+            .status-badge {{
+                display: inline-block;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 25px;
+                font-weight: bold;
+                margin: 15px 0;
+            }}
+            .info-box {{
+                background: #f8f9fa;
+                border-left: 4px solid #667eea;
+                padding: 15px;
+                margin: 20px 0;
+                border-radius: 0 8px 8px 0;
+            }}
+            .footer {{
+                background: #f5f5f5;
+                padding: 20px;
+                text-align: center;
+                font-size: 12px;
+                color: #666;
+                border-radius: 0 0 8px 8px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                {logo_html}
+                <h1 style="margin: 10px 0 0 0; font-size: 24px;">Order Status Update</h1>
+            </div>
+            
+            <div class="content">
+                <p>Hi {customer_name},</p>
+                
+                <p>We wanted to let you know that your order has been updated:</p>
+                
+                <div class="info-box">
+                    <p style="margin: 0;"><strong>Order Number:</strong> #{order_number}</p>
+                    <p style="margin: 10px 0 0 0;"><strong>Current Stage:</strong> {stage_name}</p>
+                    <p style="margin: 10px 0 0 0;"><strong>Status:</strong> {status_name}</p>
+                </div>
+                
+                <p>If you have any questions about your order, please don't hesitate to reach out to us.</p>
+                
+                <p>Thank you for your patience!</p>
+                
+                <p>Best regards,<br>
+                The {company_name} Team</p>
+            </div>
+            
+            <div class="footer">
+                <p>This is an automated notification from {company_name}</p>
+                <p>If you did not place this order, please contact us immediately.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return subject, html_content
