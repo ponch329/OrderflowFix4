@@ -1225,8 +1225,17 @@ const OrderDetailsAdminNew = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="clay">Clay</SelectItem>
-                    <SelectItem value="paint">Paint</SelectItem>
+                    {workflowConfig?.stages?.filter(s => 
+                      // Only show stages that can have changes requested (not shipped/archived)
+                      s.id !== 'shipped' && s.id !== 'archived'
+                    ).map(stage => (
+                      <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>
+                    )) || (
+                      <>
+                        <SelectItem value="clay">Clay</SelectItem>
+                        <SelectItem value="paint">Paint</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
