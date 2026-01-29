@@ -800,7 +800,59 @@ const Settings = () => {
                     <p className="text-xs text-gray-500 text-center">
                       Save your Shopify credentials first before syncing
                     </p>
-                  )}}
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Workflow Configuration Migration */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Workflow Configuration</CardTitle>
+                <CardDescription>
+                  Initialize or reset your workflow stages, rules, and settings
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800 mb-3">
+                    <strong>Initialize Workflow Config</strong>
+                  </p>
+                  <p className="text-sm text-gray-600 mb-3">
+                    This will set up your workflow with proper stage definitions (Clay, Paint, Shipped, Archived) 
+                    and default rules. Your existing settings will be preserved.
+                  </p>
+                  <Button 
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem('admin_token');
+                        const response = await fetch(`${API}/admin/workflow/initialize-config`, {
+                          method: 'POST',
+                          headers: { 
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                          }
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                          toast.success(`Workflow initialized: ${result.stages_created} stages, ${result.rules_created} rules created`);
+                          // Reload to refresh workflow config
+                          setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                          toast.error(result.detail || "Failed to initialize workflow");
+                        }
+                      } catch (error) {
+                        toast.error("Failed to initialize workflow configuration");
+                        console.error(error);
+                      }
+                    }}
+                    variant="outline"
+                    className="w-full border-blue-500 text-blue-600 hover:bg-blue-50"
+                    data-testid="initialize-workflow-btn"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Initialize Workflow Configuration
+                  </Button>
                 </div>
               </CardContent>
             </Card>
