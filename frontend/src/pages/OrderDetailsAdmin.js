@@ -1087,9 +1087,7 @@ const OrderDetailsAdminNew = () => {
               {selectedStage === 'shipped' && workflowConfig?.stages?.find(s => s.id === 'shipped') && (
                 <div>
                   <Label>Shipped Status</Label>
-                  <Select value={order?.shipped_status || 'in_transit'} onValueChange={(value) => {
-                    // This would need a new state variable if you want to track shipped status
-                  }}>
+                  <Select value={selectedShippedStatus} onValueChange={setSelectedShippedStatus}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
