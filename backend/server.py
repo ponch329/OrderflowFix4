@@ -1138,6 +1138,7 @@ async def update_admin_order_status(order_id: str, update_data: dict):
             new_stage = update_fields.get("stage", order.get("stage"))
             new_clay_status = update_fields.get("clay_status", order.get("clay_status"))
             new_paint_status = update_fields.get("paint_status", order.get("paint_status"))
+            new_shipped_status = update_fields.get("shipped_status", order.get("shipped_status"))
             
             # Get workflow config for display labels
             workflow_config = settings.get("workflow_config", {})
@@ -1149,16 +1150,24 @@ async def update_admin_order_status(order_id: str, update_data: dict):
                 status_name = new_clay_status.replace("_", " ").title()
             elif new_stage == "paint" and new_paint_status:
                 status_name = new_paint_status.replace("_", " ").title()
-            elif new_stage == "shipped":
-                status_name = "In Transit"
+            elif new_stage == "shipped" and new_shipped_status:
+                status_name = new_shipped_status.replace("_", " ").title()
             
             # Try to get labels from workflow config
             if workflow_config.get("stages"):
                 for s in workflow_config["stages"]:
                     if s.get("id") == new_stage:
                         stage_name = s.get("name", stage_name)
+                        # Get the correct status based on stage
+                        current_status = None
+                        if new_stage == "clay":
+                            current_status = new_clay_status
+                        elif new_stage == "paint":
+                            current_status = new_paint_status
+                        elif new_stage == "shipped":
+                            current_status = new_shipped_status
+                        
                         for st in s.get("statuses", []):
-                            current_status = new_clay_status if new_stage == "clay" else new_paint_status
                             if st.get("id") == current_status:
                                 status_name = st.get("name", status_name)
                                 break
