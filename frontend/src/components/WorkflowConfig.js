@@ -692,7 +692,7 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
                     <h4 className="font-semibold">When Customer Approves</h4>
                     <p className="text-sm text-gray-600 mt-1">
                       • Set status to "approved" for current stage<br />
-                      {(initialSettings?.auto_advance_on_approval ?? true) && "• Automatically advance to next stage (if configured)"}
+                      {(workflowSettings.auto_advance_on_approval ?? initialSettings?.auto_advance_on_approval ?? true) && "• Automatically advance to next stage (if configured)"}
                     </p>
                   </div>
                 </div>
@@ -722,8 +722,8 @@ export default function WorkflowConfig({ initialSettings, onSave }) {
                   <div className="flex-1">
                     <h4 className="font-semibold">When Admin Uploads Proofs</h4>
                     <p className="text-sm text-gray-600 mt-1">
-                      • Set status to "{initialSettings?.status_after_upload || 'feedback_needed'}"<br />
-                      {(initialSettings?.notify_customer_on_upload ?? true) && "• Send email notification to customer"}
+                      • Set status to "{workflowSettings.status_after_upload ?? initialSettings?.status_after_upload ?? 'feedback_needed'}"<br />
+                      {(workflowSettings.notify_customer_on_upload ?? initialSettings?.notify_customer_on_upload ?? true) && "• Send email notification to customer"}
                     </p>
                   </div>
                 </div>
