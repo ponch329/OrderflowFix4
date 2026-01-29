@@ -993,48 +993,111 @@ const OrderDetailsAdminNew = () => {
             <div className="space-y-4">
               <div>
                 <Label>Stage</Label>
-                <Select value={selectedStage} onValueChange={setSelectedStage}>
+                <Select value={selectedStage} onValueChange={(value) => {
+                  setSelectedStage(value);
+                  // Reset status fields when stage changes
+                  const stage = workflowConfig?.stages?.find(s => s.id === value);
+                  if (stage?.statuses?.length > 0) {
+                    // Set first status as default for the selected stage
+                    if (value === 'clay') {
+                      setSelectedClayStatus(stage.statuses[0]?.id || '');
+                    } else if (value === 'paint') {
+                      setSelectedPaintStatus(stage.statuses[0]?.id || '');
+                    }
+                  }
+                }}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="clay">Clay</SelectItem>
-                    <SelectItem value="paint">Paint</SelectItem>
-                    <SelectItem value="shipped">Shipped</SelectItem>
-                    <SelectItem value="fulfilled">Fulfilled</SelectItem>
-                    <SelectItem value="canceled">Canceled</SelectItem>
+                    {workflowConfig?.stages?.map(stage => (
+                      <SelectItem key={stage.id} value={stage.id}>
+                        {stage.name}
+                      </SelectItem>
+                    )) || (
+                      <>
+                        <SelectItem value="clay">Clay</SelectItem>
+                        <SelectItem value="paint">Paint</SelectItem>
+                        <SelectItem value="shipped">Shipped</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Clay Status</Label>
-                <Select value={selectedClayStatus} onValueChange={setSelectedClayStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sculpting">Sculpting</SelectItem>
-                    <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="changes_requested">Changes Requested</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Paint Status</Label>
-                <Select value={selectedPaintStatus} onValueChange={setSelectedPaintStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="sculpting">Painting</SelectItem>
-                    <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="changes_requested">Changes Requested</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              
+              {/* Show Clay Status only if clay stage exists and is relevant */}
+              {workflowConfig?.stages?.find(s => s.id === 'clay') && (
+                <div>
+                  <Label>Clay Status</Label>
+                  <Select value={selectedClayStatus} onValueChange={setSelectedClayStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {workflowConfig?.stages?.find(s => s.id === 'clay')?.statuses?.map(status => (
+                        <SelectItem key={status.id} value={status.id}>
+                          {status.name}
+                        </SelectItem>
+                      )) || (
+                        <>
+                          <SelectItem value="sculpting">In Progress</SelectItem>
+                          <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
+                          <SelectItem value="approved">Approved</SelectItem>
+                          <SelectItem value="changes_requested">Changes Requested</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {/* Show Paint Status only if paint stage exists and is relevant */}
+              {workflowConfig?.stages?.find(s => s.id === 'paint') && (
+                <div>
+                  <Label>Paint Status</Label>
+                  <Select value={selectedPaintStatus} onValueChange={setSelectedPaintStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {workflowConfig?.stages?.find(s => s.id === 'paint')?.statuses?.map(status => (
+                        <SelectItem key={status.id} value={status.id}>
+                          {status.name}
+                        </SelectItem>
+                      )) || (
+                        <>
+                          <SelectItem value="painting">In Progress</SelectItem>
+                          <SelectItem value="feedback_needed">Feedback Needed</SelectItem>
+                          <SelectItem value="approved">Approved</SelectItem>
+                          <SelectItem value="changes_requested">Changes Requested</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {/* Show Shipped Status only if shipped stage is selected */}
+              {selectedStage === 'shipped' && workflowConfig?.stages?.find(s => s.id === 'shipped') && (
+                <div>
+                  <Label>Shipped Status</Label>
+                  <Select value={order?.shipped_status || 'in_transit'} onValueChange={(value) => {
+                    // This would need a new state variable if you want to track shipped status
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {workflowConfig?.stages?.find(s => s.id === 'shipped')?.statuses?.map(status => (
+                        <SelectItem key={status.id} value={status.id}>
+                          {status.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
               <Button onClick={handleStageStatusChange} className="w-full">
                 Update Stage & Status
               </Button>
