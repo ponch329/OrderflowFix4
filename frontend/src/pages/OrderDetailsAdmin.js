@@ -38,6 +38,7 @@ const OrderDetailsAdminNew = () => {
   const [selectedStage, setSelectedStage] = useState("");
   const [selectedClayStatus, setSelectedClayStatus] = useState("");
   const [selectedPaintStatus, setSelectedPaintStatus] = useState("");
+  const [selectedShippedStatus, setSelectedShippedStatus] = useState("");
   const [notifyCustomer, setNotifyCustomer] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   
