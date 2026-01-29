@@ -297,6 +297,18 @@ def get_workflow_engine_from_tenant(tenant_settings: Dict) -> WorkflowRulesEngin
         }
         converted_rules.append(converted_rule)
     
+    # Merge settings from both workflow_config (new) and workflow (legacy)
+    # Legacy settings act as fallback for missing new settings
+    legacy_workflow = tenant_settings.get('workflow', {})
+    
+    # Merge auto_advance and other behavior settings
+    if 'auto_advance_on_approval' not in workflow_config and 'auto_advance_on_approval' in legacy_workflow:
+        workflow_config['auto_advance_on_approval'] = legacy_workflow['auto_advance_on_approval']
+    if 'status_after_upload' not in workflow_config and 'status_after_upload' in legacy_workflow:
+        workflow_config['status_after_upload'] = legacy_workflow['status_after_upload']
+    if 'notify_customer_on_upload' not in workflow_config and 'notify_customer_on_upload' in legacy_workflow:
+        workflow_config['notify_customer_on_upload'] = legacy_workflow['notify_customer_on_upload']
+    
     # Build stage and status labels from new format if available
     stages_config = workflow_config.get('stages', [])
     if stages_config and isinstance(stages_config, list):
@@ -318,5 +330,11 @@ def get_workflow_engine_from_tenant(tenant_settings: Dict) -> WorkflowRulesEngin
                             status_labels[status_id] = status_name
         workflow_config['stage_labels'] = stage_labels
         workflow_config['status_labels'] = status_labels
+    else:
+        # Fall back to legacy labels if new format doesn't have stages
+        if legacy_workflow.get('stage_labels'):
+            workflow_config['stage_labels'] = legacy_workflow['stage_labels']
+        if legacy_workflow.get('status_labels'):
+            workflow_config['status_labels'] = legacy_workflow['status_labels']
     
     return WorkflowRulesEngine(converted_rules, workflow_config)
