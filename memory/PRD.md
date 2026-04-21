@@ -1,58 +1,87 @@
-# OrderDesk - Bobblehead Proof Approval System
+# OrderDesk - Bobblehead Order Management
 
 ## Original Problem Statement
-A multi-tenant SaaS application for managing bobblehead order workflows with proof approval processes, integrating with Shopify for order syncing and tracking.
+A full-stack order management system for Bobbleheads vendors, integrating with Shopify. Orders flow through configurable workflow stages (Clay → Paint → Shipped) with proofs, customer approvals, email reminders, and timeline tracking.
 
-## Core Features Implemented
-- **Order Management Dashboard**: View, filter, and manage orders across stages (Clay, Paint, Shipped, Archived)
-- **Shopify Integration**: Sync orders from Shopify, import tracking numbers, sync order tags back to Shopify
-- **Proof Upload & Approval**: Upload clay and paint proofs with image compression, customer approval workflow
-- **Workflow Rules**: Configurable rules for automatic stage transitions based on triggers (time delay, tracking added)
-- **Email Notifications**: Automated emails for workflow events
-- **Customer Portal**: Customers can view and approve proofs
+## Core Stack
+- **Backend**: FastAPI + MongoDB (motor async). Single-tenant.
+- **Frontend**: React CRA + Shadcn UI + Tailwind.
+- **Integrations**: Shopify (order ingestion + tag sync), Google Sheets (optional backup).
 
-## Architecture
-- **Frontend**: React with shadcn/ui components
-- **Backend**: FastAPI (Python)
-- **Database**: MongoDB
-- **External Integrations**: Shopify API, Google Sheets (logging)
+## Key Architecture
+- Workflow is defined by `tenant.settings.workflow_config` (stages + statuses + rules).
+- Dynamic stage/status dropdowns throughout the UI via `BrandingContext`.
+- `workflow_rules_engine.py` validates stage transitions.
+- Order splitting: a Shopify order is split into sub-orders ONLY when it contains
+  multiple distinct SKUs. Identical items (same SKU × N) are kept as a single
+  order with `total_quantity = N` since they share one proof workflow.
 
-## Key Files
-- `/app/backend/server.py` - Main backend API
-- `/app/backend/utils/order_splitting.py` - Order splitting by quantity
-- `/app/frontend/src/pages/OrderDesk.js` - Main dashboard
-- `/app/frontend/src/pages/OrderDetailsAdmin.js` - Order details page
-- `/app/frontend/src/pages/Settings.js` - Settings/configuration page
+## Key Endpoints
+- `POST /api/admin/login` → `{token}`
+- `GET  /api/admin/orders` (paginated list, excludes heavy fields, returns `total_quantity`)
+- `GET  /api/orders/{id}` (full detail, includes line_items/timeline/proofs)
+- `PATCH /api/admin/orders/{id}/status` (stage/status change + email notify)
+- `POST /api/admin/orders/bulk-update` (IDs → stage + status)
+- `POST /api/admin/orders/bulk-archive` (IDs)
+- `POST /api/admin/orders/bulk-delete` (IDs, cascades sub-orders) ✨ NEW
+- `POST /api/admin/orders/bulk-delete-by-filter` (filter-based, `expected_count` safety) ✨ NEW
+- `DELETE /api/admin/orders/{id}` (single order, cascades) ✨ NEW
 
-## Recent Changes (Jan 2026)
+## What's been implemented
+### 2026-04-21 — Bulk Delete + Smart Splitting
+- **Bulk delete** from OrderDesk: red Delete button in multi-select toolbar,
+  confirmation AlertDialog, cascades to sub-orders.
+- **"Select all N matching this filter"** Gmail-style banner when full page is
+  selected; delete applies server-side by filter via `bulk-delete-by-filter`
+  with an `expected_count` guard (409 on mismatch).
+- **Single-order delete** button in OrderDetailsAdmin header, confirmation dialog.
+- **Splitting logic rewritten** in `utils/order_splitting.py`:
+  identical items do not split; multiple distinct SKUs create one sub-order
+  per unique SKU with quantity preserved.
+- **`total_quantity`** field added to order documents (set on create/sync;
+  backfilled at startup — 283 existing orders updated).
+- **"Qty N" badge** shown on OrderDesk rows and OrderDetailsAdmin header when
+  `total_quantity > 1`.
+- Pytest suite at `/app/backend/tests/test_bulk_delete_and_splitting.py`
+  (17 cases, 100% pass).
 
-### Stage Fix Implementation
-- **Fixed "Fulfilled" stage bug**: New Shopify orders with fulfilled status now correctly use the "Shipped" stage from workflow config instead of creating a non-existent "fulfilled" stage
-- **Added helper functions**: `get_shipped_stage()` and `get_first_status_for_shipped_stage()` in server.py
-- **Added `/api/admin/orders/fix-stages` endpoint**: One-time migration to fix historical data
-- **Added UI button**: "Fix Order Stages (Fulfilled → Shipped)" in Settings → Integrations
+### Earlier (previous sessions)
+- Unified workflow config (backend parses `workflow_config`, merges legacy).
+- Email notifications on manual stage/status change.
+- Custom `shipped_status` support (e.g., "Ready to ship").
+- Dynamic dropdowns in OrderDetailsAdmin (removed hardcoded "Pending" etc.).
+- Settings → "Initialize Workflow Configuration" button.
 
-### Previous Session Fixes
-- MongoDB timeout optimization (connection settings, retry logic)
-- Proof upload 16MB limit workaround (image compression, old proof clearing)
-- Tracking number sync from Shopify fulfillments
-- Workflow rules for tracking_added trigger
-- Bulk tag sync to Shopify endpoint
+## Backlog / Roadmap
 
-## Pending Issues
-1. **P0**: User needs to redeploy to push all fixes to production
-2. **P1**: Bulk Shopify tag sync times out - needs background task refactoring
-3. **P2**: Google Sheets sync not working (uninvestigated carry-over)
+### P1
+- **Google Sheets Sync** stopped on live site — investigate credentials & logic.
+- Enhance data-export feature.
 
-## Upcoming Tasks
-- P1: Refactor bulk-sync to background task
-- P1: Enhance export functionality
-- P2: Email scheduler safeguards (dry run mode)
-- P2: Real-time tracking API integration (Ship24)
+### P2
+- Dry-run mode for email scheduler.
+- Ship24 real-time tracking API.
+- Bulk operations: bulk archive/change-stage already exist; add bulk "send reminder"
+  by filter (similar pattern to bulk-delete-by-filter).
 
-## Backlog
-- Workflow Import/Export functionality
-- User-configurable timezone setting
+### Refactoring backlog
+- `server.py` is 4,000+ lines — migrate remaining routes into `/app/backend/routes/`.
+- `OrderDesk.js`, `OrderDetailsAdmin.js`, `Settings.js` each 1k+ lines — split into subcomponents.
+- Dead code to remove: `server_new.py`, `server_old_backup.py`, `utils/workflow.py`,
+  `components/WorkflowConfig.js` (confirmed unused).
+- Stale `/app/*.py` test files & `/app/*.md` docs from earlier sessions.
+- Proofs stored as base64 in MongoDB docs — move to object storage.
+- Shopify sync button should be replaced with webhooks.
+- No frontend query cache (React Query / SWR) — every nav refetches.
+- `routes/orders.py` `get_db()` creates a new MongoClient per request (leak).
 
-## Test Credentials
-- **Admin**: username: `admin`, password: `admin123`
+### Future
+- Workflow Import/Export.
+- User-configurable timezone.
+- Workflow analytics (avg days per stage, bottleneck detection, WIP limits).
+- Audit log UI (model exists, no view).
+- Saved filter presets on OrderDesk.
+- Keyboard shortcuts for admin power users.
+
+## Credentials
+- **Admin**: username `admin`, password `admin123`
