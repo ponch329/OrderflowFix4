@@ -14,11 +14,12 @@ from middleware.auth import AuthContext, get_current_user, require_permissions
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
 def get_db():
-    """Dependency to get database connection"""
-    mongo_url = os.environ['MONGO_URL']
-    client = AsyncIOMotorClient(mongo_url)
-    db = client[os.environ['DB_NAME']]
-    return db
+    """Dependency that returns the shared tenant-scoped database handle."""
+    return _db
+
+# Shared MongoDB client (module singleton - avoids per-request connection leak)
+_mongo_client = AsyncIOMotorClient(os.environ['MONGO_URL'])
+_db = _mongo_client[os.environ['DB_NAME']]
 
 @router.get("/tenant")
 async def get_tenant_settings(
@@ -83,6 +84,14 @@ async def update_tenant_settings(
         {"id": auth.tenant_id},
         {"$set": update_doc}
     )
+
+    # If workflow_config was part of the update, clear the in-process cache
+    if "settings" in update_data and "workflow_config" in (update_data.get("settings") or {}):
+        try:
+            from server import invalidate_workflow_config_cache
+            invalidate_workflow_config_cache()
+        except Exception:
+            pass
     
     return {
         "message": "Settings updated successfully",

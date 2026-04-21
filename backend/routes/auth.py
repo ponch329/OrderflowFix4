@@ -18,11 +18,12 @@ JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 
 def get_db():
-    """Dependency to get database connection"""
-    mongo_url = os.environ['MONGO_URL']
-    client = AsyncIOMotorClient(mongo_url)
-    db = client[os.environ['DB_NAME']]
-    return db
+    """Dependency that returns the shared tenant-scoped database handle."""
+    return _db
+
+# Shared MongoDB client (module singleton - avoids per-request connection leak)
+_mongo_client = AsyncIOMotorClient(os.environ['MONGO_URL'])
+_db = _mongo_client[os.environ['DB_NAME']]
 
 @router.post("/login")
 async def login(login_data: UserLogin, db = Depends(get_db)):

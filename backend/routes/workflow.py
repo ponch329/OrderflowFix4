@@ -10,11 +10,12 @@ import os
 router = APIRouter(prefix="/workflow", tags=["workflow"])
 
 def get_db():
-    """Dependency to get database connection"""
-    mongo_url = os.environ['MONGO_URL']
-    client = AsyncIOMotorClient(mongo_url)
-    db = client[os.environ['DB_NAME']]
-    return db
+    """Dependency that returns the shared tenant-scoped database handle."""
+    return _db
+
+# Shared MongoDB client (module singleton - avoids per-request connection leak)
+_mongo_client = AsyncIOMotorClient(os.environ['MONGO_URL'])
+_db = _mongo_client[os.environ['DB_NAME']]
 
 @router.post("/validate")
 async def validate_workflow_config(
@@ -157,6 +158,13 @@ async def import_workflow_config(
                 }
             }
         )
+
+        # Clear cached workflow config in server.py
+        try:
+            from server import invalidate_workflow_config_cache
+            invalidate_workflow_config_cache()
+        except Exception:
+            pass
         
         if result.modified_count == 0:
             raise HTTPException(status_code=404, detail="Tenant not found")

@@ -285,22 +285,47 @@ JWT_EXPIRATION_HOURS = 24
 # ============== WORKFLOW CONFIG HELPERS ==============
 # These functions get stage/status configuration from the database
 
+# Lightweight in-memory cache for the workflow config.
+# Single-tenant deployment: we only cache one entry.
+# Short TTL (30s) provides self-healing if an explicit invalidation is ever
+# missed; write paths call invalidate_workflow_config_cache() for immediacy.
+_workflow_config_cache = {"value": None, "expires_at": 0.0}
+_WORKFLOW_CONFIG_CACHE_TTL_SECONDS = 30.0
+
+
+def invalidate_workflow_config_cache():
+    """Clear the cached workflow config. Call from any write path that mutates
+    tenant.settings.workflow_config."""
+    _workflow_config_cache["value"] = None
+    _workflow_config_cache["expires_at"] = 0.0
+
+
 async def get_workflow_config_from_db():
     """
     Get workflow configuration from database - single source of truth.
     Returns default config if none exists in DB.
+    Cached in-process for a short TTL to avoid hitting MongoDB on every request.
     """
+    import time
+    now = time.monotonic()
+    cached = _workflow_config_cache["value"]
+    if cached is not None and now < _workflow_config_cache["expires_at"]:
+        return cached
+
     tenant = await db.tenants.find_one({}, {"_id": 0})
     if not tenant:
-        return get_default_workflow_config()
-    
-    settings = tenant.get("settings", {})
-    workflow_config = settings.get("workflow_config", {})
-    
-    if not workflow_config.get("stages"):
-        return get_default_workflow_config()
-    
-    return workflow_config
+        config = get_default_workflow_config()
+    else:
+        settings = tenant.get("settings", {})
+        workflow_config = settings.get("workflow_config", {})
+        if not workflow_config.get("stages"):
+            config = get_default_workflow_config()
+        else:
+            config = workflow_config
+
+    _workflow_config_cache["value"] = config
+    _workflow_config_cache["expires_at"] = now + _WORKFLOW_CONFIG_CACHE_TTL_SECONDS
+    return config
 
 def get_default_workflow_config():
     """
@@ -1339,7 +1364,7 @@ async def admin_upload_proofs_legacy(
     import zipfile
     import io
     import uuid
-    from PIL import Image
+    from PIL import Image, ImageOps
     
     # Maximum file size: 25MB for zip files
     MAX_ZIP_SIZE = 25 * 1024 * 1024  # 25MB
@@ -1351,42 +1376,14 @@ async def admin_upload_proofs_legacy(
         """Compress image to reduce size for MongoDB storage and fix EXIF orientation"""
         try:
             img = Image.open(io.BytesIO(image_data))
-            
-            # Fix EXIF orientation - this is crucial for mobile photos
+
+            # Fix EXIF orientation (critical for mobile photos). ImageOps.exif_transpose
+            # handles all 8 orientation values and strips the EXIF tag, which would
+            # otherwise cause browsers to rotate again on display.
             try:
-                from PIL import ExifTags
-                
-                # Find the orientation tag
-                orientation_key = None
-                for key in ExifTags.TAGS.keys():
-                    if ExifTags.TAGS[key] == 'Orientation':
-                        orientation_key = key
-                        break
-                
-                if orientation_key and hasattr(img, '_getexif') and img._getexif():
-                    exif = img._getexif()
-                    if exif and orientation_key in exif:
-                        orientation = exif[orientation_key]
-                        
-                        # Apply rotation based on EXIF orientation value
-                        if orientation == 2:
-                            img = img.transpose(Image.FLIP_LEFT_RIGHT)
-                        elif orientation == 3:
-                            img = img.rotate(180, expand=True)
-                        elif orientation == 4:
-                            img = img.transpose(Image.FLIP_TOP_BOTTOM)
-                        elif orientation == 5:
-                            img = img.rotate(-90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
-                        elif orientation == 6:
-                            img = img.rotate(-90, expand=True)
-                        elif orientation == 7:
-                            img = img.rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
-                        elif orientation == 8:
-                            img = img.rotate(90, expand=True)
-                        
-                        logger.info(f"Fixed EXIF orientation {orientation} for {filename}")
+                img = ImageOps.exif_transpose(img)
             except Exception as exif_error:
-                logger.debug(f"Could not process EXIF data for {filename}: {exif_error}")
+                logger.debug(f"Could not apply EXIF orientation for {filename}: {exif_error}")
             
             # Convert RGBA to RGB for JPEG (drop alpha channel)
             if img.mode in ('RGBA', 'P'):
@@ -2643,6 +2640,7 @@ async def initialize_workflow_config():
         {"id": tenant["id"]},
         {"$set": {"settings.workflow_config": new_workflow_config}}
     )
+    invalidate_workflow_config_cache()
     
     return {
         "success": True,
@@ -3208,60 +3206,32 @@ async def approve_stage(
     additional_images = []
     if files:
         try:
-            from PIL import Image, ExifTags
-            
-            # Find EXIF orientation key
-            orientation_key = None
-            for key in ExifTags.TAGS.keys():
-                if ExifTags.TAGS[key] == 'Orientation':
-                    orientation_key = key
-                    break
-            
-            def fix_exif_orientation(img):
-                """Fix image orientation based on EXIF data"""
-                try:
-                    if orientation_key and hasattr(img, '_getexif') and img._getexif():
-                        exif = img._getexif()
-                        if exif and orientation_key in exif:
-                            orientation = exif[orientation_key]
-                            if orientation == 2:
-                                return img.transpose(Image.FLIP_LEFT_RIGHT)
-                            elif orientation == 3:
-                                return img.rotate(180, expand=True)
-                            elif orientation == 4:
-                                return img.transpose(Image.FLIP_TOP_BOTTOM)
-                            elif orientation == 5:
-                                return img.rotate(-90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
-                            elif orientation == 6:
-                                return img.rotate(-90, expand=True)
-                            elif orientation == 7:
-                                return img.rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
-                            elif orientation == 8:
-                                return img.rotate(90, expand=True)
-                except Exception:
-                    pass
-                return img
-            
+            from PIL import Image, ImageOps
+
             for file in files:
                 content = await file.read()
-                
+
                 try:
                     img = Image.open(io.BytesIO(content))
-                    
-                    # Fix EXIF orientation first
-                    img = fix_exif_orientation(img)
-                    
+
+                    # Fix EXIF orientation first (handles all 8 orientation codes
+                    # and strips the tag so browsers don't rotate again).
+                    try:
+                        img = ImageOps.exif_transpose(img)
+                    except Exception:
+                        pass
+
                     # Convert to RGB if necessary
                     if img.mode in ('RGBA', 'P'):
                         img = img.convert('RGB')
-                    
+
                     # Resize if very large
                     max_dimension = 1200
                     if max(img.size) > max_dimension:
                         ratio = max_dimension / max(img.size)
                         new_size = tuple(int(dim * ratio) for dim in img.size)
                         img = img.resize(new_size, Image.Resampling.LANCZOS)
-                    
+
                     # Compress
                     output = io.BytesIO()
                     img.save(output, format='JPEG', quality=70, optimize=True)
@@ -3269,7 +3239,7 @@ async def approve_stage(
                     logger.info(f"Processed customer reference image to {len(content)} bytes")
                 except Exception as e:
                     logger.warning(f"Could not process image: {e}, using original")
-                
+
                 image_base64 = base64.b64encode(content).decode('utf-8')
                 additional_images.append(f"data:image/jpeg;base64,{image_base64}")
         except ImportError:
