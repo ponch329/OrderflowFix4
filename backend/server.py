@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Form, File, UploadFile, BackgroundTasks
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -8,6 +8,7 @@ import os
 import re
 import logging
 import asyncio
+import uuid
 from pathlib import Path
 
 # Configure logging first
@@ -216,7 +217,22 @@ async def startup_event():
         logger.warning("⚠️ total_quantity backfill timed out - will retry next startup")
     except Exception as e:
         logger.warning(f"⚠️ total_quantity backfill warning: {e}")
-    
+
+    # Initialize Emergent object storage (best-effort; upload/get endpoints lazy-init too)
+    try:
+        await asyncio.wait_for(
+            asyncio.get_event_loop().run_in_executor(None, init_object_storage),
+            timeout=10.0,
+        )
+    except Exception as e:
+        logger.warning(f"⚠️ Object storage init warning (will retry on first upload): {e}")
+
+    # Migrate existing base64 proofs to object storage (runs in background)
+    try:
+        asyncio.create_task(_migrate_base64_proofs_to_storage())
+    except Exception as e:
+        logger.warning(f"⚠️ Could not schedule proof migration: {e}")
+
     # Start workflow scheduler as background task
     try:
         from utils.workflow_scheduler import start_scheduler_loop
@@ -272,6 +288,33 @@ async def health_check():
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
+
+@api_router.get("/files/{file_id}")
+async def get_file(file_id: str):
+    """Serve a file from object storage by its internal file_id.
+    Public endpoint — file_ids are unguessable UUIDs; customer-approval
+    pages access proofs without an auth token, same threat model as the
+    previous base64 data URIs embedded in the order document."""
+    record = await db.files.find_one({"id": file_id, "is_deleted": False}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=404, detail="File not found")
+    try:
+        content, content_type = await asyncio.get_event_loop().run_in_executor(
+            None, storage_get_object, record["storage_path"]
+        )
+    except Exception as e:
+        logger.error(f"Object storage fetch failed for {file_id}: {e}")
+        raise HTTPException(status_code=502, detail="Storage backend unavailable")
+    return Response(
+        content=content,
+        media_type=content_type or record.get("content_type") or "application/octet-stream",
+        headers={
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "Content-Disposition": f'inline; filename="{record.get("filename", "file")}"',
+        },
+    )
+
+
 # Legacy admin routes (for backwards compatibility during transition)
 import hashlib
 import jwt
@@ -281,6 +324,115 @@ from models.user import User
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
+
+# Object storage (Emergent) helpers — used by proof upload + migration
+from utils.object_storage import (
+    init_storage as init_object_storage,
+    put_object as storage_put_object,
+    get_object as storage_get_object,
+    build_proof_path,
+    guess_mime,
+)
+
+
+# ============== FILE STORAGE HELPERS ==============
+
+async def save_file_reference(
+    *,
+    tenant_id: str,
+    order_id: str,
+    filename: str,
+    content_type: str,
+    data: bytes,
+) -> dict:
+    """Upload bytes to object storage and record a reference in the `files`
+    collection. Returns the file reference dict (for embedding in proof).
+    """
+    ext = (filename.rsplit(".", 1)[-1] if "." in filename else "jpg").lower()
+    path = build_proof_path(tenant_id, order_id, ext)
+    # Offload the blocking HTTP call to a thread
+    await asyncio.get_event_loop().run_in_executor(
+        None, storage_put_object, path, data, content_type
+    )
+    file_id = str(uuid.uuid4())
+    record = {
+        "id": file_id,
+        "tenant_id": tenant_id,
+        "order_id": order_id,
+        "storage_path": path,
+        "content_type": content_type,
+        "filename": filename,
+        "size_bytes": len(data),
+        "is_deleted": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.files.insert_one(record)
+    return {"id": file_id, "url": f"/api/files/{file_id}"}
+
+
+async def _migrate_base64_proofs_to_storage():
+    """One-shot migration of existing `data:...;base64,...` proof URLs to
+    object storage. Safe to run repeatedly; processes each doc at most once
+    per startup. Skips orders that have no legacy proofs.
+    """
+    import base64 as _b64
+    try:
+        await asyncio.sleep(3)  # let the app settle first
+        cursor = db.orders.find(
+            {"$or": [
+                {"clay_proofs.url": {"$regex": "^data:"}},
+                {"paint_proofs.url": {"$regex": "^data:"}},
+            ]},
+            {"id": 1, "tenant_id": 1, "clay_proofs": 1, "paint_proofs": 1, "_id": 0},
+        )
+        total_migrated = 0
+        total_failed = 0
+        async for order in cursor:
+            tenant_id = order.get("tenant_id") or ""
+            order_id = order.get("id") or ""
+            for stage_field in ("clay_proofs", "paint_proofs"):
+                proofs = order.get(stage_field) or []
+                changed = False
+                for proof in proofs:
+                    url = proof.get("url", "")
+                    if not url.startswith("data:"):
+                        continue
+                    try:
+                        header, b64data = url.split(",", 1)
+                        content_type = header.split(";")[0].replace("data:", "") or "image/jpeg"
+                        raw = _b64.b64decode(b64data)
+                    except Exception as e:
+                        logger.warning(f"Skip malformed proof on order {order_id}: {e}")
+                        total_failed += 1
+                        continue
+                    try:
+                        ref = await save_file_reference(
+                            tenant_id=tenant_id,
+                            order_id=order_id,
+                            filename=proof.get("filename") or f"proof.{content_type.split('/')[-1]}",
+                            content_type=content_type,
+                            data=raw,
+                        )
+                        proof["url"] = ref["url"]
+                        proof["file_id"] = ref["id"]
+                        changed = True
+                        total_migrated += 1
+                    except Exception as e:
+                        logger.warning(f"Failed to migrate proof on order {order_id}: {e}")
+                        total_failed += 1
+                if changed:
+                    await db.orders.update_one(
+                        {"id": order_id},
+                        {"$set": {stage_field: proofs}},
+                    )
+        if total_migrated or total_failed:
+            logger.info(
+                f"✅ Proof migration: {total_migrated} moved to object storage, "
+                f"{total_failed} failed."
+            )
+    except Exception as e:
+        logger.warning(f"⚠️ Proof migration error: {e}")
+
 
 # ============== WORKFLOW CONFIG HELPERS ==============
 # These functions get stage/status configuration from the database
@@ -1503,24 +1655,33 @@ async def admin_upload_proofs_legacy(
                                     logger.warning(f"Skipping large image {name} ({len(image_data) / (1024*1024):.2f}MB)")
                                     continue
                                 
-                                # Compress image to reduce MongoDB document size
+                                # Compress image to reduce size & normalize EXIF orientation
                                 compressed_data, compressed_mime = compress_image(image_data, name)
-                                image_base64 = base64.b64encode(compressed_data).decode('utf-8')
-                                
+
                                 # Determine MIME type
                                 if compressed_mime:
                                     mime_type = compressed_mime
                                 else:
                                     ext = name.lower().split('.')[-1]
-                                    mime_type = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 
+                                    mime_type = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
                                                 'gif': 'image/gif', 'webp': 'image/webp'}.get(ext, 'image/jpeg')
-                                
+
                                 # Get just the filename without directory path
                                 clean_filename = name.split('/')[-1]
-                                
+
+                                # Upload to object storage and get a file reference URL
+                                file_ref = await save_file_reference(
+                                    tenant_id=tenant_id,
+                                    order_id=order_id,
+                                    filename=clean_filename,
+                                    content_type=mime_type,
+                                    data=compressed_data,
+                                )
+
                                 proof = {
                                     "id": str(uuid.uuid4()),
-                                    "url": f"data:{mime_type};base64,{image_base64}",
+                                    "url": file_ref["url"],
+                                    "file_id": file_ref["id"],
                                     "filename": clean_filename,
                                     "uploaded_at": datetime.now(timezone.utc).isoformat(),
                                     "round": current_round,
@@ -1541,22 +1702,33 @@ async def admin_upload_proofs_legacy(
                     if len(content) > MAX_IMAGE_SIZE:
                         raise HTTPException(status_code=413, detail=f"Image file too large. Maximum size is {MAX_IMAGE_SIZE // (1024*1024)}MB")
                     
-                    # Compress image to reduce MongoDB document size
+                    # Compress image & normalize EXIF orientation
                     compressed_data, compressed_mime = compress_image(content, file.filename or 'image.jpg')
-                    image_base64 = base64.b64encode(compressed_data).decode('utf-8')
-                    
+
                     # Determine MIME type
                     if compressed_mime:
                         mime_type = compressed_mime
                     else:
                         ext = (file.filename or '').lower().split('.')[-1] if file.filename else 'jpg'
-                        mime_type = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 
+                        mime_type = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
                                     'gif': 'image/gif', 'webp': 'image/webp'}.get(ext, 'image/jpeg')
-                    
+
+                    clean_filename = file.filename or f"proof_{idx}.jpg"
+
+                    # Upload to object storage
+                    file_ref = await save_file_reference(
+                        tenant_id=tenant_id,
+                        order_id=order_id,
+                        filename=clean_filename,
+                        content_type=mime_type,
+                        data=compressed_data,
+                    )
+
                     proof = {
                         "id": str(uuid.uuid4()),
-                        "url": f"data:{mime_type};base64,{image_base64}",
-                        "filename": file.filename or f"proof_{idx}.jpg",
+                        "url": file_ref["url"],
+                        "file_id": file_ref["id"],
+                        "filename": clean_filename,
                         "uploaded_at": datetime.now(timezone.utc).isoformat(),
                         "round": current_round,
                         "revision_note": revision_note

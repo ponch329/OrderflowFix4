@@ -28,29 +28,34 @@ A full-stack order management system for Bobbleheads vendors, integrating with S
 - `DELETE /api/admin/orders/{id}` (single order, cascades) ✨ NEW
 
 ## What's been implemented
-### 2026-04-21 — Bulk Delete + Smart Splitting
-- **Bulk delete** from OrderDesk: red Delete button in multi-select toolbar,
-  confirmation AlertDialog, cascades to sub-orders.
-- **"Select all N matching this filter"** Gmail-style banner when full page is
-  selected; delete applies server-side by filter via `bulk-delete-by-filter`
-  with an `expected_count` guard (409 on mismatch).
-- **Single-order delete** button in OrderDetailsAdmin header, confirmation dialog.
-- **Splitting logic rewritten** in `utils/order_splitting.py`:
-  identical items do not split; multiple distinct SKUs create one sub-order
-  per unique SKU with quantity preserved.
-- **`total_quantity`** field added to order documents (set on create/sync;
-  backfilled at startup — 283 existing orders updated).
-- **"Qty N" badge** shown on OrderDesk rows and OrderDetailsAdmin header when
-  `total_quantity > 1`.
-- Pytest suite at `/app/backend/tests/test_bulk_delete_and_splitting.py`
-  (17 cases, 100% pass).
+### 2026-04-21 — Object Storage, React Query infra, Perf & Cleanup
+- **Object storage for proofs** (Emergent object storage):
+  - New `/app/backend/utils/object_storage.py` helper.
+  - `save_file_reference()` uploads bytes + records metadata in `files` collection.
+  - `GET /api/files/{file_id}` serves files (public, cacheable; UUID acts as secret).
+  - Proof upload flow rewritten — no more base64 in order docs.
+  - Startup migration: **36 existing proofs moved to object storage**.
+  - Orders collection **shrunk from 10.76 MB → 0.49 MB (95% reduction)**; max doc from ~4 MB → 30 KB.
+  - Zero frontend changes needed — relative `/api/files/{id}` URLs proxied via ingress.
+- **React Query installed** (`@tanstack/react-query@5.99.2`):
+  - `QueryClientProvider` wraps `App.js`; shared client in `/app/frontend/src/lib/queryClient.js`.
+  - Ready-to-use hooks in `/app/frontend/src/lib/useOrders.js`: `useOrders`, `useOrderCounts`, `useOrder`, `useBulkDeleteOrders`, `useBulkUpdateOrders`, `useDeleteOrder`. Per-page conversion deferred to future session.
+- **MongoClient connection leak fixed** in all 6 `routes/*.py` files — now reuse a module-scoped `AsyncIOMotorClient`.
+- **Workflow config cached** (30s TTL + explicit invalidation at all 3 write sites).
+- **EXIF orientation** — replaced 30-line block with `ImageOps.exif_transpose`.
+- **Dead code removed**: `server_new.py`, `server_old_backup.py`, `utils/workflow.py`, `components/WorkflowConfig.js` (~2,600 lines).
+
+### 2026-04-21 — Bulk Delete + Smart Splitting (earlier)
+- Bulk delete + cascade (IDs and filter-based), single-order delete.
+- "Select all N matching filter" Gmail-style banner.
+- Splitting rewritten: identical SKUs don't split; mixed SKUs split by SKU group.
+- `total_quantity` field on orders + "Qty N" badge in UI.
 
 ### Earlier (previous sessions)
 - Unified workflow config (backend parses `workflow_config`, merges legacy).
 - Email notifications on manual stage/status change.
-- Custom `shipped_status` support (e.g., "Ready to ship").
-- Dynamic dropdowns in OrderDetailsAdmin (removed hardcoded "Pending" etc.).
-- Settings → "Initialize Workflow Configuration" button.
+- Custom `shipped_status` support.
+- Dynamic dropdowns (removed hardcoded "Pending" etc.).
 
 ## Backlog / Roadmap
 
