@@ -8,6 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Package, Upload, Edit, Save, Trash2, ChevronDown, ChevronUp, MessageCircle, Send, Bell, Loader2, Check, Square, CheckSquare } from "lucide-react";
@@ -81,6 +91,10 @@ const OrderDetailsAdminNew = () => {
   const [selectedProofs, setSelectedProofs] = useState({});  // { "clay": ["id1", "id2"], "paint": [] }
   const [isDeletingProofs, setIsDeletingProofs] = useState(false);
 
+  // Delete this order
+  const [deleteOrderDialogOpen, setDeleteOrderDialogOpen] = useState(false);
+  const [isDeletingOrder, setIsDeletingOrder] = useState(false);
+
   useEffect(() => {
     // Set up authentication
     const token = localStorage.getItem('admin_token');
@@ -97,6 +111,27 @@ const OrderDetailsAdminNew = () => {
   // Helper to invalidate dashboard cache when order is modified
   const invalidateDashboardCache = () => {
     sessionStorage.setItem('orders_cache_invalidate', 'true');
+  };
+
+  const handleDeleteOrder = async () => {
+    setIsDeletingOrder(true);
+    try {
+      const response = await axios.delete(`${API}/admin/orders/${orderId}`);
+      // Clear any cached order lists so dashboard reflects the deletion
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('orders_cache')) sessionStorage.removeItem(key);
+      });
+      toast.success(`Deleted ${response.data.deleted_count} order(s)`);
+      const returnPath = sessionStorage.getItem('orderDetailsReturnPath') || '/admin/dashboard';
+      sessionStorage.removeItem('orderDetailsReturnPath');
+      navigate(returnPath);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete order');
+      console.error(error);
+    } finally {
+      setIsDeletingOrder(false);
+      setDeleteOrderDialogOpen(false);
+    }
   };
 
   const fetchOrder = async () => {
@@ -817,10 +852,29 @@ const OrderDetailsAdminNew = () => {
           <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
                   <CardTitle className="text-2xl text-white">
                     Order #{order.order_number}
                   </CardTitle>
+                  {(() => {
+                    let qty = order.total_quantity;
+                    if (!qty && Array.isArray(order.line_items) && order.line_items.length > 0) {
+                      qty = order.line_items.reduce((s, li) => s + (parseInt(li.quantity, 10) || 1), 0);
+                    }
+                    if (qty && qty > 1) {
+                      return (
+                        <span
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-300 text-amber-900 border border-amber-400"
+                          title={`${qty} identical units in this order`}
+                          data-testid="order-details-qty-badge"
+                        >
+                          <Package className="w-3.5 h-3.5" />
+                          Qty {qty}
+                        </span>
+                      );
+                    }
+                    return null;
+                  })()}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -846,6 +900,16 @@ const OrderDetailsAdminNew = () => {
                   )}
                 </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDeleteOrderDialogOpen(true)}
+                className="bg-white/10 hover:bg-red-500 text-white border-white/40 hover:border-red-500"
+                data-testid="delete-order-btn"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Delete Order
+              </Button>
             </div>
           </CardHeader>
         </Card>
@@ -1382,6 +1446,36 @@ const OrderDetailsAdminNew = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Order Confirmation */}
+        <AlertDialog open={deleteOrderDialogOpen} onOpenChange={setDeleteOrderDialogOpen}>
+          <AlertDialogContent data-testid="delete-order-dialog">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-700 flex items-center gap-2">
+                <Trash2 className="w-5 h-5" />
+                Permanently delete this order?
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-2 text-sm">
+                  <div>Order <span className="font-semibold">#{order?.order_number}</span> will be permanently removed.</div>
+                  <div>Any sub-orders of this order will also be deleted (cascade).</div>
+                  <div className="font-semibold text-red-700">This action cannot be undone.</div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeletingOrder} data-testid="delete-order-cancel-btn">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); handleDeleteOrder(); }}
+                disabled={isDeletingOrder}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                data-testid="delete-order-confirm-btn"
+              >
+                {isDeletingOrder ? 'Deleting...' : 'Delete Order'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

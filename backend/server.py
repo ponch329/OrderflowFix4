@@ -193,6 +193,29 @@ async def startup_event():
         logger.warning("⚠️ Data migration timed out - will complete on next startup")
     except Exception as e:
         logger.warning(f"⚠️ Data migration warning: {e}")
+
+    # Backfill: compute total_quantity for any orders missing it
+    # (one-time per-order; safe to run repeatedly because of the {$exists: False} filter)
+    try:
+        async def _backfill_total_quantity():
+            cursor = db.orders.find(
+                {"total_quantity": {"$exists": False}},
+                {"id": 1, "line_items": 1, "_id": 0}
+            )
+            updated = 0
+            async for doc in cursor:
+                line_items = doc.get("line_items") or []
+                total_qty = sum(int((li or {}).get("quantity", 1) or 1) for li in line_items)
+                await db.orders.update_one({"id": doc["id"]}, {"$set": {"total_quantity": total_qty}})
+                updated += 1
+            return updated
+        updated = await asyncio.wait_for(_backfill_total_quantity(), timeout=30.0)
+        if updated:
+            logger.info(f"✅ Backfilled total_quantity on {updated} orders")
+    except asyncio.TimeoutError:
+        logger.warning("⚠️ total_quantity backfill timed out - will retry next startup")
+    except Exception as e:
+        logger.warning(f"⚠️ total_quantity backfill warning: {e}")
     
     # Start workflow scheduler as background task
     try:
@@ -2008,6 +2031,188 @@ async def admin_bulk_update_orders(request_data: dict):
         logger.error(f"=== BULK ORDER UPDATE FAILED === error={str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to update orders: {str(e)}")
 
+
+async def _cascade_delete_orders(tenant_id: str, order_ids: List[str]) -> int:
+    """
+    Permanently delete a set of orders AND any descendant sub-orders (recursive).
+    Returns total deleted count. Scoped to tenant_id.
+    """
+    if not order_ids:
+        return 0
+
+    to_delete = set(order_ids)
+    frontier = list(order_ids)
+    # Expand with all descendants
+    while frontier:
+        children = await db.orders.find(
+            {"tenant_id": tenant_id, "parent_order_id": {"$in": frontier}},
+            {"id": 1, "_id": 0}
+        ).to_list(length=100000)
+        child_ids = [c["id"] for c in children if c.get("id") and c["id"] not in to_delete]
+        if not child_ids:
+            break
+        to_delete.update(child_ids)
+        frontier = child_ids
+
+    result = await db.orders.delete_many(
+        {"tenant_id": tenant_id, "id": {"$in": list(to_delete)}}
+    )
+    return result.deleted_count
+
+
+def _build_orders_query(tenant_id: str, stage=None, status=None, archived=None, search=None) -> dict:
+    """Build the same query used by GET /admin/orders, for filter-based operations."""
+    query = {"tenant_id": tenant_id}
+    if archived is True:
+        query["is_archived"] = True
+    elif archived is False:
+        query["is_archived"] = False
+    if stage:
+        query["stage"] = stage
+    if status and stage:
+        if stage == "paint" and status == "painting":
+            query[f"{stage}_status"] = {"$in": ["painting", "sculpting"]}
+        else:
+            query[f"{stage}_status"] = status
+    if search:
+        search_regex = {"$regex": search, "$options": "i"}
+        search_conditions = [
+            {"order_number": search_regex},
+            {"customer_email": search_regex},
+            {"customer_name": search_regex},
+        ]
+        existing_conditions = {k: v for k, v in query.items() if k not in ["$and", "$or"]}
+        query = {"$and": [existing_conditions, {"$or": search_conditions}]}
+    return query
+
+
+@api_router.post("/admin/orders/bulk-delete")
+async def admin_bulk_delete_orders(request_data: dict):
+    """
+    Permanently delete multiple orders by ID.
+    Cascades to all sub-orders (orders whose parent_order_id matches).
+
+    Body: {
+        "order_ids": ["id1", "id2", ...],
+        "confirm": true
+    }
+    """
+    order_ids = request_data.get("order_ids", [])
+    confirm = request_data.get("confirm", False)
+
+    if not order_ids:
+        raise HTTPException(status_code=400, detail="No order IDs provided")
+    if not confirm:
+        raise HTTPException(status_code=400, detail="Delete not confirmed. Set confirm=true to proceed.")
+
+    logger.info(f"=== BULK ORDER DELETE START === count={len(order_ids)}")
+    try:
+        tenant = await db.tenants.find_one({}, {"_id": 0})
+        if not tenant:
+            raise HTTPException(status_code=500, detail="No tenant found")
+        tenant_id = tenant["id"]
+
+        deleted = await _cascade_delete_orders(tenant_id, order_ids)
+        logger.info(f"=== BULK ORDER DELETE COMPLETE === requested={len(order_ids)}, deleted={deleted}")
+        return {
+            "message": f"Deleted {deleted} order(s)",
+            "requested_count": len(order_ids),
+            "deleted_count": deleted
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"=== BULK ORDER DELETE FAILED === error={str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to delete orders: {str(e)}")
+
+
+@api_router.post("/admin/orders/bulk-delete-by-filter")
+async def admin_bulk_delete_orders_by_filter(request_data: dict):
+    """
+    Permanently delete ALL orders matching a filter (same filters as GET /admin/orders).
+    Cascades to sub-orders. Use for "Select all matching filter" delete flows.
+
+    Body: {
+        "stage": str | null,
+        "status": str | null,
+        "archived": bool | null,
+        "search": str | null,
+        "confirm": true,
+        "expected_count": int  (safety check - fail if mismatched)
+    }
+    """
+    confirm = request_data.get("confirm", False)
+    if not confirm:
+        raise HTTPException(status_code=400, detail="Delete not confirmed. Set confirm=true to proceed.")
+
+    stage = request_data.get("stage")
+    status = request_data.get("status")
+    archived = request_data.get("archived")
+    search = request_data.get("search")
+    expected_count = request_data.get("expected_count")
+
+    try:
+        tenant = await db.tenants.find_one({}, {"_id": 0})
+        if not tenant:
+            raise HTTPException(status_code=500, detail="No tenant found")
+        tenant_id = tenant["id"]
+
+        query = _build_orders_query(tenant_id, stage=stage, status=status, archived=archived, search=search)
+
+        # Collect matching IDs first (so we can cascade). Guard against unbounded deletes.
+        matching = await db.orders.find(query, {"id": 1, "_id": 0}).to_list(length=100000)
+        matching_ids = [m["id"] for m in matching if m.get("id")]
+
+        if not matching_ids:
+            return {"message": "No orders matched filter", "deleted_count": 0, "matched_count": 0}
+
+        # Safety guard: require client to confirm the expected count matches.
+        if expected_count is not None and int(expected_count) != len(matching_ids):
+            raise HTTPException(
+                status_code=409,
+                detail=f"Count mismatch. Filter now matches {len(matching_ids)} orders, expected {expected_count}. Refresh and try again."
+            )
+
+        logger.info(f"=== BULK DELETE BY FILTER START === matched={len(matching_ids)} query={query}")
+        deleted = await _cascade_delete_orders(tenant_id, matching_ids)
+        logger.info(f"=== BULK DELETE BY FILTER COMPLETE === matched={len(matching_ids)}, deleted={deleted}")
+
+        return {
+            "message": f"Deleted {deleted} order(s)",
+            "matched_count": len(matching_ids),
+            "deleted_count": deleted
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"=== BULK DELETE BY FILTER FAILED === error={str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to delete orders: {str(e)}")
+
+
+@api_router.delete("/admin/orders/{order_id}")
+async def admin_delete_order(order_id: str):
+    """
+    Permanently delete a single order (and any sub-orders).
+    """
+    try:
+        tenant = await db.tenants.find_one({}, {"_id": 0})
+        if not tenant:
+            raise HTTPException(status_code=500, detail="No tenant found")
+        tenant_id = tenant["id"]
+
+        order = await db.orders.find_one({"id": order_id, "tenant_id": tenant_id}, {"_id": 0, "id": 1})
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        deleted = await _cascade_delete_orders(tenant_id, [order_id])
+        return {"message": f"Deleted {deleted} order(s)", "deleted_count": deleted}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete order failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to delete order: {str(e)}")
+
+
 # Analytics endpoint
 @api_router.get("/admin/analytics")
 async def get_analytics(days: int = 7, compare_days: int = 7):
@@ -2845,6 +3050,7 @@ async def sync_orders():
                 "item_vendor": item_vendor,
                 "parent_order_id": None,
                 "line_items": line_items,
+                "total_quantity": sum(int(li.get("quantity", 1) or 1) for li in line_items) if line_items else 0,
                 # Use workflow config for default stage/status (single source of truth)
                 "stage": order_stage,
                 f"{order_stage}_status": order_status,

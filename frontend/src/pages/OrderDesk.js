@@ -36,7 +36,9 @@ import {
   RefreshCw,
   Archive,
   AlertCircle,
-  Edit
+  Edit,
+  Trash2,
+  Package
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -47,6 +49,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrackingLink } from "@/components/TrackingWidget";
@@ -175,6 +187,13 @@ export default function OrderDesk() {
   const [bulkStage, setBulkStage] = useState('');
   const [bulkStatus, setBulkStatus] = useState('');
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+
+  // Bulk delete state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  // When true, "Delete" / bulk actions apply to every order matching the
+  // current filter across all pages, not just selectedOrders on the page.
+  const [selectAllMatching, setSelectAllMatching] = useState(false);
   
   // Authentication ready state
   const [authReady, setAuthReady] = useState(false);
@@ -468,6 +487,7 @@ export default function OrderDesk() {
       setSelectedOrders(sortedOrders.map(o => o.id));
     } else {
       setSelectedOrders([]);
+      setSelectAllMatching(false);
     }
   };
 
@@ -476,11 +496,32 @@ export default function OrderDesk() {
       setSelectedOrders([...selectedOrders, orderId]);
     } else {
       setSelectedOrders(selectedOrders.filter(id => id !== orderId));
+      // If user un-selects anything, cancel the "all matching" mode
+      setSelectAllMatching(false);
     }
   };
 
   const isOrderSelected = (orderId) => selectedOrders.includes(orderId);
   const allSelected = sortedOrders.length > 0 && selectedOrders.length === sortedOrders.length;
+  // Number of orders that will be affected by a bulk action.
+  const effectiveBulkCount = selectAllMatching ? totalCount : selectedOrders.length;
+
+  // Build a filter object matching the current server query - used for
+  // "delete all matching filter".
+  const getCurrentFilter = useCallback(() => {
+    const filter = { search: searchDebounce || null };
+    if (selectedFolder === 'archived') {
+      filter.archived = true;
+    } else if (selectedFolder !== 'all') {
+      filter.archived = false;
+      const [stage, status] = selectedFolder.split(':');
+      if (stage) filter.stage = stage;
+      if (status) filter.status = status;
+    } else {
+      filter.archived = false;
+    }
+    return filter;
+  }, [selectedFolder, searchDebounce]);
 
   const handleMouseDown = (e, columnId) => {
     const column = columns.find(c => c.id === columnId);
@@ -677,6 +718,46 @@ export default function OrderDesk() {
       console.error(error);
     } finally {
       setIsBulkUpdating(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setIsDeleting(true);
+    try {
+      let response;
+      if (selectAllMatching) {
+        const filter = getCurrentFilter();
+        response = await axios.post(`${API}/admin/orders/bulk-delete-by-filter`, {
+          ...filter,
+          confirm: true,
+          expected_count: totalCount,
+        });
+      } else {
+        if (selectedOrders.length === 0) {
+          toast.error("No orders selected");
+          setIsDeleting(false);
+          return;
+        }
+        response = await axios.post(`${API}/admin/orders/bulk-delete`, {
+          order_ids: selectedOrders,
+          confirm: true,
+        });
+      }
+      // Clear all cached pages so the UI reflects the deletion immediately.
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('orders_cache')) sessionStorage.removeItem(key);
+      });
+      toast.success(`Deleted ${response.data.deleted_count} order(s)`);
+      setDeleteDialogOpen(false);
+      setSelectedOrders([]);
+      setSelectAllMatching(false);
+      setCurrentPage(1);
+      await Promise.all([fetchOrders(), fetchOrderCounts()]);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete orders");
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -915,15 +996,17 @@ export default function OrderDesk() {
                     variant="outline"
                     size="sm"
                     className="border-blue-400 text-blue-700 hover:bg-blue-50"
+                    data-testid="bulk-change-stage-btn"
                   >
                     <Edit className="w-4 h-4 mr-2" />
-                    Change Stage ({selectedOrders.length})
+                    Change Stage ({effectiveBulkCount})
                   </Button>
                   <Button 
                     onClick={handleArchiveOrders}
                     variant="outline"
                     size="sm"
                     className="border-gray-400 text-gray-700 hover:bg-gray-100"
+                    data-testid="bulk-archive-btn"
                   >
                     <Archive className="w-4 h-4 mr-2" />
                     {selectedFolder === 'archived' ? `Unarchive (${selectedOrders.length})` : `Archive (${selectedOrders.length})`}
@@ -934,9 +1017,20 @@ export default function OrderDesk() {
                     variant="default"
                     size="sm"
                     className="bg-blue-600 hover:bg-blue-700"
+                    data-testid="bulk-reminder-btn"
                   >
                     <Bell className="w-4 h-4 mr-2" />
                     {sendingReminders ? 'Sending...' : `Send Reminder (${selectedOrders.length})`}
+                  </Button>
+                  <Button
+                    onClick={() => setDeleteDialogOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="border-red-400 text-red-700 hover:bg-red-50"
+                    data-testid="bulk-delete-btn"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete ({effectiveBulkCount})
                   </Button>
                 </>
               )}
@@ -947,6 +1041,39 @@ export default function OrderDesk() {
             </div>
           </div>
         </div>
+
+        {/* Select all matching filter banner (Gmail-style) */}
+        {allSelected && totalCount > sortedOrders.length && (
+          <div className="bg-blue-50 border-b border-blue-200 px-6 py-2 text-sm text-blue-800 flex items-center justify-center gap-3" data-testid="select-all-matching-banner">
+            {!selectAllMatching ? (
+              <>
+                <span>
+                  All <strong>{sortedOrders.length}</strong> orders on this page are selected.
+                </span>
+                <button
+                  className="font-semibold underline hover:text-blue-900"
+                  onClick={() => setSelectAllMatching(true)}
+                  data-testid="select-all-matching-btn"
+                >
+                  Select all {totalCount} orders matching this filter
+                </button>
+              </>
+            ) : (
+              <>
+                <span>
+                  All <strong>{totalCount}</strong> orders matching this filter are selected.
+                </span>
+                <button
+                  className="font-semibold underline hover:text-blue-900"
+                  onClick={() => { setSelectAllMatching(false); setSelectedOrders([]); }}
+                  data-testid="clear-all-matching-btn"
+                >
+                  Clear selection
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Order Table */}
         <div className="flex-1 overflow-auto">
@@ -1031,8 +1158,27 @@ export default function OrderDesk() {
                           </div>
                         )}
                         {column.id === 'order_id' && (
-                          <span className="text-blue-700 font-semibold text-base">
+                          <span className="text-blue-700 font-semibold text-base inline-flex items-center gap-2" data-testid={`order-id-${order.order_number}`}>
                             {order.order_number}
+                            {(() => {
+                              let qty = order.total_quantity;
+                              if (!qty && Array.isArray(order.line_items) && order.line_items.length > 0) {
+                                qty = order.line_items.reduce((sum, li) => sum + (parseInt(li.quantity, 10) || 1), 0);
+                              }
+                              if (qty && qty > 1) {
+                                return (
+                                  <span
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200"
+                                    title={`${qty} identical units in this order`}
+                                    data-testid={`order-qty-badge-${order.order_number}`}
+                                  >
+                                    <Package className="w-3 h-3" />
+                                    Qty {qty}
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
                           </span>
                         )}
                         {column.id === 'order_date' && formatDate(order.created_at)}
@@ -1194,6 +1340,41 @@ export default function OrderDesk() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent data-testid="bulk-delete-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-700 flex items-center gap-2">
+              <Trash2 className="w-5 h-5" />
+              Permanently delete {effectiveBulkCount} order{effectiveBulkCount === 1 ? '' : 's'}?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <div>This will permanently remove the selected orders from the database.</div>
+                <div>Any sub-orders of the selected orders will also be deleted (cascade).</div>
+                <div className="font-semibold text-red-700">This action cannot be undone.</div>
+                {selectAllMatching && (
+                  <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-amber-800 text-xs">
+                    You are about to delete <strong>every order matching the current filter</strong> — including orders on other pages you haven't viewed.
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} data-testid="bulk-delete-cancel-btn">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleBulkDelete(); }}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              data-testid="bulk-delete-confirm-btn"
+            >
+              {isDeleting ? 'Deleting...' : `Delete ${effectiveBulkCount} order${effectiveBulkCount === 1 ? '' : 's'}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
